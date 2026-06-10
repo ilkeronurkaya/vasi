@@ -30,26 +30,26 @@ chainlit run manager.py
 | 4 | İyzico ödeme | ✅ |
 | 5 | UX/UI — Auth & Dashboard | ✅ |
 | 6 | UX/UI — Mesaj akışı | ✅ |
-| 7 | UX/UI — Dashboard yenileme | ✅ (commit `c18a7c69`) |
+| 7 | UX/UI — Dashboard yenileme | ✅ |
+| 8 | Gerçek veri (/me, recipient_count, mock temizliği) | ✅ (denetlendi, 3 hata düzeltildi) |
+| 9 | Eksikler (plan limiti, /messages listesi, detay alıcıları) | 📝 Tanımlı — çalıştır + denetle |
+| 10 | Apple tasarım dili (DESIGN.md v2, 5 restyle görevi) | 📝 Tanımlı — 9'dan sonra |
 
-### Sprint 7 kapanışı (2026-06-10)
-- `layout.tsx` — backtick fix + 8 tip hatası düzeltildi
-- `messages/new/page.tsx` — 5 adımlı wizard'a dönüştürüldü (İçerik → Alıcılar → Zamanlama → Önizleme → Gönder). Gerçek API alanları kullanıldı: `message_type`, `content_text`, `full_name`, `scheduled_at`
-- `tsc --noEmit` temiz
-
----
+### Güncel durum (2026-06-10 öğleden sonra)
+- Sprint 8 koştu; denetimde 3 hata bulundu ve düzeltildi: `/me` rotası index.ts'e kayıtsızdı, `layout.tsx`'ten `'use client'` silinmişti, dashboard `/me` yanıtını yanlış parse ediyordu (`ef8118f`).
+- **Ders**: crew "build temiz" dese bile çıktı denetimi şart — tsc `'use client'` eksiğini ve mount edilmemiş rotayı yakalayamıyor. Adım limiti uyarısı (`ADIM LİMİTİ DOLDU`) log'da görünüyorsa o görevin dosyalarına mutlaka bak.
+- **Git akışı**: crew sprint-N branch'i açar; sprint sonrası denetim → `git checkout main && git merge --ff-only sprint-N` → GitHub'a push (origin: `ilkeronurkaya/vasi`, private). Push yetkisi yoksa GitHub device flow ile al (kullanıcıya kod onaylatılır).
+- **Bildirimler**: manager.py sprint bitince ntfy (`vasi-iko-7ca81627`) + iMessage atar; komutlar telefondan ntfy ile gelir (`vasi-iko-cmd-57f994b1`). Manager komutları: sprint N, durum, log, kontrol, migrate, dev, durdur, bildirim.
 
 ## Sıradaki İşler
-
-### Sprint 8 Önerileri
-- Backend: Gerçek API entegrasyonu (layout.tsx'teki mock limit/plan/kullanıcı verilerini kaldır)
-- Abonelik: İyzico entegrasyonu tamamlama
-- E-posta: Gerçek gönderim testi
+1. `sprint 9` çalıştır → çıktı denetimi (API şema uyumu + 'use client' + rota kayıtları) → main'e merge + push
+2. `sprint 10` çalıştır (Apple tasarım dili — referans: DESIGN.md "APPLE TASARIM DİLİ v2") → görsel denetim → merge + push
+3. Tarayıcıda uçtan uca test: `dev` komutu → localhost:3000 → test@vasi.app / Test1234!
+4. Sonrası: İyzico sandbox (ayrı sprint), Resend e-posta testi (API key gerek)
 
 ### Bekleyen Task'lar
 - **Task #9**: crewai 1.x migration (düşük öncelik)
-- **crew.py**: max_steps'i görev tipine göre ayarla (UX=20, diğer=30)
-- Repo kökündeki yanlış yere yazılmış `src/app/(dashboard)/layout.tsx` kalıntısını temizle (commit 16fe7c4e ile gelmiş)
+- Repo kökündeki yanlış yere yazılmış `src/app/(dashboard)/layout.tsx` kalıntısı temizlendi mi kontrol et
 
 ---
 
