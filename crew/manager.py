@@ -79,6 +79,27 @@ _state: dict = {
 
 NTFY_TOPIC = "vasi-iko-7ca81627"
 
+# iMessage hedefi: kendi Apple ID'n veya telefon numaran (örn: "+905xxxxxxxxx")
+IMESSAGE_TO = "ilkeronurkaya@gmail.com"
+
+def _notify_imessage(text: str) -> bool:
+    """Mac'teki Mesajlar uygulamasından iMessage gönderir. Hata olursa sessizce geçer."""
+    script = (
+        'tell application "Messages"\n'
+        '  set targetService to 1st account whose service type = iMessage\n'
+        f'  set targetBuddy to participant "{IMESSAGE_TO}" of targetService\n'
+        f'  send "{text}" to targetBuddy\n'
+        'end tell'
+    )
+    try:
+        r = subprocess.run(
+            ["osascript", "-e", script],
+            capture_output=True, text=True, timeout=15,
+        )
+        return r.returncode == 0
+    except Exception:
+        return False
+
 def _notify(title: str, message: str, tags: str = "bell") -> bool:
     """Sprint bitince telefona push bildirimi atar. Hata olursa sessizce geçer."""
     try:
@@ -280,6 +301,7 @@ async def on_message(message: cl.Message):
                 f"✅ {ok}/{total_t} görev başarılı — {mins}dk {secs}sn\n{summary}",
                 tags="white_check_mark",
             )
+            _notify_imessage(f"Patron Sprint {n} tamamlandı. Bilgine.")
 
             await cl.Message(
                 content=(
@@ -296,6 +318,7 @@ async def on_message(message: cl.Message):
             _state["error"] = str(e)
 
             _notify(f"Sprint {n} BASARISIZ", f"❌ Hata: {str(e)[:300]}", tags="x")
+            _notify_imessage(f"Patron Sprint {n} başarısız oldu. Bilgine.")
 
             await cl.Message(
                 content=(
@@ -399,13 +422,17 @@ async def on_message(message: cl.Message):
         await cl.Message(content=result).send()
 
     elif intent == "test_notify":
-        ok = await asyncio.to_thread(
+        ok_ntfy = await asyncio.to_thread(
             _notify, "Vasi Manager", "Test bildirimi — kurulum çalışıyor 🎉", "tada"
+        )
+        ok_im = await asyncio.to_thread(
+            _notify_imessage, "Patron bu bir test mesajı. Bilgine."
         )
         await cl.Message(
             content=(
-                f"{'✅ Bildirim gönderildi' if ok else '❌ Gönderilemedi (internet/ntfy kontrol et)'} "
-                f"— konu: `{NTFY_TOPIC}`"
+                f"- ntfy: {'✅ gönderildi' if ok_ntfy else '❌ başarısız'} (konu: `{NTFY_TOPIC}`)\n"
+                f"- iMessage: {'✅ gönderildi' if ok_im else '❌ başarısız'} (hedef: `{IMESSAGE_TO}`)\n\n"
+                "iMessage ilk seferde macOS izin penceresi açabilir — 'İzin Ver' de."
             )
         ).send()
 
