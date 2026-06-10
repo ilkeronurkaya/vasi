@@ -7,7 +7,7 @@ import { apiFetch } from '@/lib/api';
 
 export const runtime = 'edge';
 
-type Message = { id: string; title: string; content_text?: string; content?: string; status: string };
+type Message = { id: string; title: string; content_text?: string; content?: string; status: string; scheduled_at?: string };
 type Recipient = { id: string; full_name: string; email: string };
 
 const inputStyle: React.CSSProperties = {
@@ -86,7 +86,22 @@ const MessageDetail: React.FC = () => {
         }
     };
 
-    const handleDeleteMessage = async () => {
+    
+const handleCancelSchedule = async () => {
+    if (!confirm('Zamanlamayı iptal etmek istediğinize emin misiniz?')) return;
+    try {
+        await apiFetch(`/api/v1/messages/${params.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: 'draft' }),
+        });
+        setMessage(prev => prev ? { ...prev, status: 'draft', scheduled_at: undefined } : null);
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+
+const handleDeleteMessage = async () => {
         if (!confirm('Bu mesajı silmek istediğinize emin misiniz?')) return;
         try {
             await apiFetch(`/api/v1/messages/${params.id}`, { method: 'DELETE' });
@@ -129,7 +144,35 @@ const MessageDetail: React.FC = () => {
                     </span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    {message.status === 'draft' && (
+                    
+{message.status === 'scheduled' && (
+    <>
+        <button
+            onClick={handleCancelSchedule}
+            style={{
+                background: 'none',
+                border: '1px solid var(--mist)',
+                color: 'var(--mist)',
+                borderRadius: 'var(--radius-input)',
+                padding: '8px 16px',
+                fontSize: '13px',
+                fontWeight: 500,
+                cursor: 'pointer',
+            }}
+        >
+            İptal Et
+        </button>
+        <button
+            onClick={() => router.push(`/messages/${params.id}/schedule`)}
+            className="btn btn-primary"
+        >
+            Yeniden Zamanla
+        </button>
+    </>
+)}
+
+
+{message.status === 'draft' && (
                         <button
                             onClick={() => router.push(`/messages/${params.id}/schedule`)}
                             className="btn btn-primary"
