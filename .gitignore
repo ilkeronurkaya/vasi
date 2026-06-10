@@ -18,6 +18,7 @@ crew/.venv/
 __pycache__/
 *.pyc
 crew/sprint.log
+crew/dev-*.log
 crew/.chainlit/
 crew/.files/
 
