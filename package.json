@@ -9,8 +9,8 @@
     "build:web": "pnpm --filter vasi-web build",
     "build:api": "pnpm --filter vasi-api build",
     "lint": "pnpm -r lint",
-    "db:migrate:local": "wrangler d1 migrations apply vasi-db --local --config vasi-api/wrangler.toml",
-    "db:migrate:prod": "wrangler d1 migrations apply vasi-db --config vasi-api/wrangler.toml"
+    "db:migrate:local": "pnpm --filter vasi-api exec wrangler d1 migrations apply vasi-db --local",
+    "db:migrate:prod": "pnpm --filter vasi-api exec wrangler d1 migrations apply vasi-db"
   },
   "workspaces": [
     "vasi-web",
