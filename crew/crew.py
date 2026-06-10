@@ -385,6 +385,12 @@ def run_task(task: "TaskSpec", sprint_n: int) -> tuple[str, float]:
     model_name = MODEL_STRONG if model is llm_strong else MODEL_FAST
     _log(f"  → Model seçildi: {model_name} ({task.role})")
 
+    if len(task.description) > 4000:
+        _log(
+            f"  ⚠ Görev açıklaması uzun ({len(task.description)} karakter) — "
+            f"context taşması riski. Kısalt, detay için DESIGN.md/dosya referansı ver."
+        )
+
     context = AGENT_CONTEXT.get(task.role, "")
 
     prompt = (
@@ -410,6 +416,14 @@ def run_task(task: "TaskSpec", sprint_n: int) -> tuple[str, float]:
     )
 
     result = str(agent.run(prompt))
+
+    # Adım limiti doldu mu? (Sprint 7'de Task 3 sessizce yarım kalmıştı)
+    steps_used = len(getattr(getattr(agent, "memory", None), "steps", []) or [])
+    if steps_used >= max_steps:
+        _log(
+            f"  ⚠ ADIM LİMİTİ DOLDU ({steps_used}/{max_steps}) — "
+            f"görev yarım kalmış olabilir, çıktıyı manuel kontrol et ({task.role})"
+        )
 
     # ── Build doğrulama döngüsü ───────────────────────────────────────────────
     for attempt in range(1, MAX_FIX_ATTEMPTS + 1):
