@@ -16,10 +16,14 @@ Komutlar:
 """
 
 import asyncio
+import json
 import os
 import re
 import signal
 import subprocess
+import threading
+import time
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -77,7 +81,8 @@ _state: dict = {
 # ── Bildirim (ntfy.sh) ────────────────────────────────────────────────────────
 # Telefonda ntfy uygulamasıyla bu konuya abone ol: vasi-iko-7ca81627
 
-NTFY_TOPIC = "vasi-iko-7ca81627"
+NTFY_TOPIC = "vasi-iko-7ca81627"          # bildirimler (manager → telefon)
+NTFY_CMD_TOPIC = "vasi-iko-cmd-57f994b1"  # komutlar (telefon → manager)
 
 # iMessage hedefi: kendi Apple ID'n veya telefon numaran (örn: "+905xxxxxxxxx")
 IMESSAGE_TO = "ilkeronurkaya@gmail.com"
@@ -453,3 +458,112 @@ async def on_message(message: cl.Message):
                 "Örnekler: `sprint 1`, `durum`, `sprintler`, `log`, `yardım`"
             )
         ).send()
+
+
+# ── Uzaktan komut kanalı (telefon → ntfy → manager) ──────────────────────────
+
+def _remote_reply(text: str) -> None:
+    _notify("Vasi Manager", text[:3500], tags="speech_balloon")
+
+
+def _remote_run_sprint(n: int) -> None:
+    """Telefondan tetiklenen sprint — ayrı thread'de koşar, sonucu bildirir."""
+    try:
+        result = run_sprint(n)
+        _state["status"] = "done"
+        ok = sum(1 for t in result.get("tasks", []) if t["status"] == "OK")
+        total = len(result.get("tasks", []))
+        _notify(f"Sprint {n} tamamlandi",
+                f"✅ {ok}/{total} görev başarılı\n{result.get('summary', '')}",
+                tags="white_check_mark")
+        _notify_imessage(f"Patron Sprint {n} tamamlandı. Bilgine.")
+    except Exception as e:
+        _state["status"] = "error"
+        _state["error"] = str(e)
+        _notify(f"Sprint {n} BASARISIZ", f"❌ {str(e)[:300]}", tags="x")
+        _notify_imessage(f"Patron Sprint {n} başarısız oldu. Bilgine.")
+
+
+def _handle_remote_command(text: str) -> None:
+    intent, params = detect_intent(text)
+
+    if intent == "start_sprint":
+        n = params["number"]
+        if not (Path(__file__).parent / f"sprint{n}.py").exists():
+            _remote_reply(f"❌ sprint{n}.py bulunamadı.")
+        elif _state["status"] == "running":
+            _remote_reply(f"⚠️ Sprint {_state['sprint']} zaten çalışıyor.")
+        else:
+            _state.update(sprint=n, status="running", start_time=datetime.now(), error=None)
+            threading.Thread(target=_remote_run_sprint, args=(n,), daemon=True).start()
+            _remote_reply(f"🚀 Sprint {n} başlatıldı. Bitince haber veririm.")
+
+    elif intent == "status":
+        s = _state["status"]
+        if s == "running":
+            el = datetime.now() - _state["start_time"]
+            _remote_reply(f"⚡ Sprint {_state['sprint']} çalışıyor — {el.seconds // 60}dk {el.seconds % 60}sn oldu.")
+        elif s == "done":
+            _remote_reply(f"✅ Sprint {_state['sprint']} tamamlandı.")
+        elif s == "error":
+            _remote_reply(f"❌ Sprint {_state['sprint']} hata verdi: {str(_state['error'])[:200]}")
+        else:
+            _remote_reply("💤 Çalışan sprint yok.")
+
+    elif intent == "show_log":
+        _remote_reply("Son log:\n" + read_log(10))
+
+    elif intent == "list_sprints":
+        rows = [f"{n}: {d}" for n, d in SPRINTS.items()]
+        _remote_reply("Sprintler:\n" + "\n".join(rows))
+
+    elif intent == "validate":
+        build = check_builds()
+        parts = [f"{'✅' if e is None else '❌'} {p}" for p, e in build.items()]
+        ux = check_ux_rules()
+        parts.append("✅ UX kuralları" if not ux else f"❌ UX: {len(ux)} dosyada ihlal")
+        _remote_reply("Kontrol:\n" + "\n".join(parts))
+
+    elif intent == "migrate":
+        _remote_reply(_run_migrate()[:3000])
+
+    elif intent == "start_dev":
+        _remote_reply(_start_dev())
+
+    elif intent == "stop_dev":
+        _remote_reply(_stop_dev())
+
+    elif intent == "help":
+        _remote_reply("Komutlar: sprint N, durum, log, sprintler, kontrol, migrate, dev, durdur")
+
+    else:
+        _remote_reply(f"🤔 Anlayamadım: '{text[:50]}' — 'yardım' yaz.")
+
+
+def _ntfy_listener() -> None:
+    """ntfy komut konusunu dinler; kopan bağlantıyı 5 sn sonra yeniden kurar."""
+    while True:
+        try:
+            req = urllib.request.Request(f"https://ntfy.sh/{NTFY_CMD_TOPIC}/json")
+            with urllib.request.urlopen(req) as resp:
+                for line in resp:
+                    try:
+                        msg = json.loads(line)
+                    except ValueError:
+                        continue
+                    if msg.get("event") == "message" and msg.get("message"):
+                        _handle_remote_command(msg["message"].strip())
+        except Exception:
+            pass
+        time.sleep(5)
+
+
+_listener_started = False
+
+def _start_ntfy_listener() -> None:
+    global _listener_started
+    if not _listener_started:
+        _listener_started = True
+        threading.Thread(target=_ntfy_listener, daemon=True).start()
+
+_start_ntfy_listener()
