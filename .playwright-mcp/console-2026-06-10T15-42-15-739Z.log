@@ -1,0 +1,20 @@
+[      82ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/../node_modules/.pnpm/next@15.5.19_@babel+core@7.29.7_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:196
+[     410ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ webpack-internal:///(app-pages-browser)/../node_modules/.pnpm/next@15.5.19_@babel+core@7.29.7_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:111
+[     572ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/../node_modules/.pnpm/next@15.5.19_@babel+core@7.29.7_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25630
+[     611ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/me:0
+[     611ms] [ERROR] Error: API 500
+    at apiFetch (webpack-internal:///(app-pages-browser)/./src/lib/api.ts:22:29) @ webpack-internal:///(app-pages-browser)/../node_modules/.pnpm/next@15.5.19_@babel+core@7.29.7_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[     613ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/messages:0
+[     615ms] [ERROR] Error: API 500
+    at apiFetch (webpack-internal:///(app-pages-browser)/./src/lib/api.ts:22:29) @ webpack-internal:///(app-pages-browser)/../node_modules/.pnpm/next@15.5.19_@babel+core@7.29.7_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[     619ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/v1/me:0
+[     789ms] [WARNING] Detected `scroll-behavior: smooth` on the `<html>` element. In a future version, Next.js will no longer automatically disable smooth scrolling during route transitions. To prepare for this change, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior @ webpack-internal:///(app-pages-browser)/../node_modules/.pnpm/next@15.5.19_@babel+core@7.29.7_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/next/dist/shared/lib/utils/warn-once.js:15
+[     815ms] [LOG] [Fast Refresh] done in 1781106136554ms @ webpack-internal:///(app-pages-browser)/../node_modules/.pnpm/next@15.5.19_@babel+core@7.29.7_react-dom@19.2.7_react@19.2.7__react@19.2.7/node_modules/next/dist/client/dev/report-hmr-latency.js:13
+[     888ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/login:0

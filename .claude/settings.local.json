@@ -14,7 +14,12 @@
       "Bash(ssh -o BatchMode=yes -T git@github.com)",
       "Skill(remember:remember)",
       "Skill(remember:remember:*)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(git -C /Users/ilkeronk_m5pro/Projects/vasi status --short)",
+      "Bash(git -C /Users/ilkeronk_m5pro/Projects/vasi diff main...sprint-9 --name-only)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git -C /Users/ilkeronk_m5pro/Projects/vasi add vasi-web/src/app/globals.css 'vasi-web/src/app/\\(dashboard\\)/layout.tsx' 'vasi-web/src/app/\\(dashboard\\)/messages/new/page.tsx' 'vasi-web/src/app/\\(dashboard\\)/messages/page.tsx' 'vasi-web/src/app/\\(dashboard\\)/dashboard/page.tsx' 'vasi-web/src/app/\\(auth\\)/layout.tsx' 'vasi-web/src/app/\\(auth\\)/login/page.tsx' 'vasi-web/src/app/\\(auth\\)/register/page.tsx')"
     ]
   }
 }

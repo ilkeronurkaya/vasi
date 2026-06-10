@@ -9,18 +9,18 @@ export const runtime = 'edge';
 type Message = { id: string; title: string; scheduled_at?: string; status: string };
 
 const inputStyle: React.CSSProperties = {
-    display: 'block',
-    width: '100%',
-    padding: '10px 14px',
-    background: 'var(--obsidian)',
-    border: '1px solid var(--horizon)',
-    borderRadius: '8px',
-    color: 'var(--cream)',
-    fontSize: '14px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-    marginTop: '6px',
-    boxSizing: 'border-box',
+    width: '100%', minHeight: '44px', padding: '10px 14px',
+    background: 'var(--obsidian)', border: '1px solid var(--horizon)',
+    borderRadius: 'var(--radius-input)', color: 'var(--cream)', fontSize: '15px',
+    outline: 'none', boxSizing: 'border-box',
+    transition: `border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)`,
+};
+
+const labelStyle: React.CSSProperties = {
+    display: 'block', fontSize: '13px', fontWeight: 500,
+    color: 'var(--mist)', marginBottom: '6px',
+};
+
 };
 
 const ScheduleMessage: React.FC = () => {
@@ -93,7 +93,7 @@ const ScheduleMessage: React.FC = () => {
                 <div style={{
                     padding: '12px 14px',
                     background: 'var(--obsidian)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-input)',
                     marginBottom: '20px',
                 }}>
                     <p style={{ color: 'var(--mist)', fontSize: '12px', margin: '0 0 4px' }}>Mesaj</p>
@@ -113,7 +113,10 @@ const ScheduleMessage: React.FC = () => {
                         onBlur={() => setFocused(false)}
                         min={new Date().toISOString().slice(0, 16)}
                         required
-                        style={{ ...inputStyle, borderColor: focused ? 'var(--copper)' : 'var(--horizon)' }}
+                        style={{
+        ...inputStyle,
+        ...(focused ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {})
+    }}
                     />
                 </div>
 
