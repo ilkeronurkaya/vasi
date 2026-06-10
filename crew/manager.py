@@ -16,7 +16,10 @@ Komutlar:
 """
 
 import asyncio
+import os
 import re
+import signal
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -49,6 +52,9 @@ HELP_TEXT = """
 | `sprintler` | Tüm sprint listesi |
 | `log` | Son log kayıtları |
 | `kontrol` | TypeScript build + UX/UI kural ihlallerini tara |
+| `dev` | API (:8787) + Web (:3000) sunucularını arka planda başlat |
+| `durdur` | Dev sunucularını kapat |
+| `migrate` | Lokal D1 migration'larını uygula |
 | `yardım` | Bu mesajı göster |
 
 **Notlar:**
@@ -66,6 +72,56 @@ _state: dict = {
     "error":      None,
 }
 
+# ── Dev sunucu yönetimi ───────────────────────────────────────────────────────
+
+_dev_procs: dict = {"api": None, "web": None}
+DEV_LOGS = {"api": Path(__file__).parent / "dev-api.log",
+            "web": Path(__file__).parent / "dev-web.log"}
+
+def _proc_alive(p) -> bool:
+    return p is not None and p.poll() is None
+
+def _start_dev() -> str:
+    lines = []
+    cmds = {"api": "pnpm dev:api", "web": "pnpm dev:web"}
+    ports = {"api": "http://localhost:8787", "web": "http://localhost:3000"}
+    for name, cmd in cmds.items():
+        if _proc_alive(_dev_procs[name]):
+            lines.append(f"- ⚡ {name} zaten çalışıyor — {ports[name]}")
+            continue
+        log_f = open(DEV_LOGS[name], "w")
+        _dev_procs[name] = subprocess.Popen(
+            cmd, shell=True, cwd=str(ROOT),
+            stdout=log_f, stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+        lines.append(f"- 🚀 {name} başlatıldı — {ports[name]} (log: crew/dev-{name}.log)")
+    return "\n".join(lines)
+
+def _stop_dev() -> str:
+    lines = []
+    for name, p in _dev_procs.items():
+        if _proc_alive(p):
+            try:
+                os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+                lines.append(f"- 🛑 {name} durduruldu")
+            except Exception as e:
+                lines.append(f"- ⚠ {name} durdurulamadı: {e}")
+            _dev_procs[name] = None
+        else:
+            lines.append(f"- 💤 {name} zaten kapalı")
+    return "\n".join(lines)
+
+def _run_migrate() -> str:
+    r = subprocess.run(
+        "pnpm db:migrate:local", shell=True, cwd=str(ROOT),
+        capture_output=True, text=True, timeout=180,
+    )
+    out = (r.stdout + r.stderr).strip()
+    tail = "\n".join(out.splitlines()[-15:])
+    icon = "✅" if r.returncode == 0 else "❌"
+    return f"{icon} Migration (exit {r.returncode}):\n```\n{tail}\n```"
+
 # ── Intent Tespiti ────────────────────────────────────────────────────────────
 
 def detect_intent(text: str) -> tuple[str, dict]:
@@ -74,6 +130,15 @@ def detect_intent(text: str) -> tuple[str, dict]:
     m = re.search(r'sprint\s*(\d+)', t)
     if m:
         return "start_sprint", {"number": int(m.group(1))}
+
+    if any(w in t for w in ["durdur", "stop", "kapat"]):
+        return "stop_dev", {}
+
+    if t in ("dev", "test") or any(w in t for w in ["sunucu", "dev başlat", "serve"]):
+        return "start_dev", {}
+
+    if any(w in t for w in ["migrate", "migration", "db kur"]):
+        return "migrate", {}
 
     if any(w in t for w in ["durum", "status", "ne yapıyor", "nerede", "ilerliyor"]):
         return "status", {}
@@ -277,6 +342,25 @@ async def on_message(message: cl.Message):
 
         lines.append(f"\n{'✅ Her şey temiz!' if all_ok else '⚠️ Yukarıdaki sorunları düzeltmek için `sprint` çalıştır veya manuel düzelt.'}")
         await cl.Message(content="\n".join(lines)).send()
+
+    # ── Dev sunucuları ────────────────────────────────────────────────────
+    elif intent == "start_dev":
+        result = await asyncio.to_thread(_start_dev)
+        await cl.Message(
+            content=(
+                "## 🖥️ Dev Sunucuları\n\n" + result +
+                "\n\n**Test:** http://localhost:3000 — `test@vasi.app / Test1234!`\n"
+                "Kapatmak için: `durdur`"
+            )
+        ).send()
+
+    elif intent == "stop_dev":
+        result = await asyncio.to_thread(_stop_dev)
+        await cl.Message(content="## 🖥️ Dev Sunucuları\n\n" + result).send()
+
+    elif intent == "migrate":
+        result = await asyncio.to_thread(_run_migrate)
+        await cl.Message(content=result).send()
 
     # ── Log ───────────────────────────────────────────────────────────────
     elif intent == "show_log":
