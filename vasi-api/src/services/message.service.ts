@@ -13,7 +13,10 @@ export class MessageService {
     if (!message) {
       throw new Error('Message not found');
     }
-    return message;
+    const recipients = await env.DB.prepare(
+      `SELECT id, full_name, email FROM recipients WHERE message_id = ?`
+    ).bind(id).all();
+    return { ...message, recipients: recipients.results ?? [] };
   }
 
   static async createMessage(env: Env, userId: string, data: any) {
