@@ -1,3 +1,17 @@
+
+interface Me {
+    user: {
+        first_name: string;
+        last_name: string;
+        email: string;
+    };
+    plan: string;
+    usage: {
+        messages_used: number;
+        messages_limit: number;
+    };
+}
+
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
