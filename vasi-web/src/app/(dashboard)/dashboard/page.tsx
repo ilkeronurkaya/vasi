@@ -7,7 +7,7 @@ import { apiFetch } from '@/lib/api';
 
 export const runtime = 'edge';
 
-type MessageSummary = { id: string; title: string; status: string; date?: string; recipient: string };
+type MessageSummary = { id: string; title: string; status: string; created_at: string; recipient_count?: number };
 
 const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }> = {
     draft: { label: 'Taslak', bg: 'var(--horizon)', color: 'var(--mist)' },
@@ -17,7 +17,7 @@ const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }
 
 const LANGS = {
     TR: {
-        page_title: 'Merhaba, İlker 👋',
+        page_title: 'Merhaba, %s 👋',
         page_subtitle: 'Bugün ne bırakmak istiyorsun?',
         new_message_button: '+ Yeni Mesaj',
         total_messages: 'Toplam',
@@ -29,7 +29,7 @@ const LANGS = {
         create_first_message_button: 'İlk Mesajını Oluştur',
     },
     EN: {
-        page_title: 'Hello, İlker 👋',
+        page_title: 'Hello, %s 👋',
         page_subtitle: 'What would you like to leave today?',
         new_message_button: '+ New Message',
         total_messages: 'Total',
@@ -43,6 +43,13 @@ const LANGS = {
 };
 
 const Dashboard: React.FC = () => {
+    const [userFirstName, setUserFirstName] = useState("");
+
+    useEffect(() => {
+        apiFetch("/api/v1/me")
+            .then(user => setUserFirstName(user.first_name || ""))
+            .catch(console.error);
+    }, []);
     const [messages, setMessages] = useState<MessageSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -62,7 +69,7 @@ const Dashboard: React.FC = () => {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '36px' }}>
                 <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--cream)', margin: 0 }}>{t.page_title}</h1>
+                    <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--cream)', margin: 0 }}>{t.page_title.replace("%s", userFirstName)}</h1>
                     <p style={{ fontSize: '14px', color: 'var(--mist)' }}>{t.page_subtitle}</p>
                 </div>
                 <button
@@ -150,7 +157,7 @@ const Dashboard: React.FC = () => {
                                     {msg.title}
                                 </p>
                                 <p style={{ color: 'var(--mist)', fontSize: '13px', margin: 0 }}>
-                                    {msg.recipient}
+                                    {(msg.recipient_count ?? 0) + " alıcı · " + new Date(msg.created_at).toLocaleDateString("tr-TR")}
                                 </p>
                             </div>
                             <span style={{
