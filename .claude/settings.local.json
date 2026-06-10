@@ -11,7 +11,10 @@
       "Bash(git config *)",
       "Bash(security find-internet-password *)",
       "Bash(security find-generic-password *)",
-      "Bash(ssh -o BatchMode=yes -T git@github.com)"
+      "Bash(ssh -o BatchMode=yes -T git@github.com)",
+      "Skill(remember:remember)",
+      "Skill(remember:remember:*)",
+      "Bash(npx tsc *)"
     ]
   }
 }
