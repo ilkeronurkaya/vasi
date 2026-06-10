@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -9,46 +10,7 @@ export const runtime = 'edge';
 type Message = { id: string; title: string; content_text?: string; content?: string; status: string };
 type Recipient = { id: string; full_name: string; email: string };
 
-
-
-
-
 const inputStyle: React.CSSProperties = {
-    width: '100%',
-    minHeight: '44px',
-    padding: '10px 14px',
-    background: 'var(--obsidian)',
-    border: '1px solid var(--horizon)',
-    borderRadius: 'var(--radius-input)',
-    color: 'var(--cream)',
-    fontSize: '15px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: `border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)`;
-};
-    width: '100%;
-    minHeight: '44px';
-    padding: '10px 14px';
-    background: 'var(--obsidian);
-    border: '1px solid var(--horizon);
-    borderRadius: 'var(--radius-input);
-    color: 'var(--cream);
-    fontSize: '15px';
-    outline: 'none';
-    boxSizing: 'border-box';
-    transition: `border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)`;
-};
-    width: '100%',
-    minHeight: '44px',
-    padding: '10px 14px',
-    background: 'var(--obsidian)',
-    border: '1px solid var(--horizon)',
-    borderRadius: 'var(--radius-input)',
-    color: 'var(--cream)',
-    fontSize: '15px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: `border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)`,};
     width: '100%',
     minHeight: '44px',
     padding: '10px 14px',
@@ -62,14 +24,6 @@ const inputStyle: React.CSSProperties = {
     transition: `border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)`,
 };
 
-
-
-
-
-
-
-
-
 const labelStyle: React.CSSProperties = {
     display: 'block',
     fontSize: '13px',
@@ -77,27 +31,6 @@ const labelStyle: React.CSSProperties = {
     color: 'var(--mist)',
     marginBottom: '6px',
 };
-    display: 'block';
-    fontSize: '13px';
-    fontWeight: 500;
-    color: 'var(--mist);
-    marginBottom: '6px';
-};
-    display: 'block',
-    fontSize: '13px',
-    fontWeight: 500,
-    color: 'var(--mist)',
-    marginBottom: '6px',};
-    display: 'block',
-    fontSize: '13px',
-    fontWeight: 500,
-    color: 'var(--mist)',
-    marginBottom: '6px',
-};
-
-
-
-
 
 const STATUS_LABELS: Record<string, string> = {
     draft: 'Taslak',
@@ -166,8 +99,7 @@ const MessageDetail: React.FC = () => {
     if (!message) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px' }}>
-                <p style={{ color: 'var(--mist)',
-    marginBottom: '6px', marginBottom: '6px', fontSize: '14px' }}>Yükleniyor...</p>
+                <p style={{ color: 'var(--mist)', marginBottom: '6px', fontSize: '14px' }}>Yükleniyor...</p>
             </div>
         );
     }
@@ -184,8 +116,7 @@ const MessageDetail: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
                 <button
                     onClick={() => router.push('/dashboard')}
-                    style={{ background: 'none', border: 'none', color: 'var(--mist)',
-    marginBottom: '6px', marginBottom: '6px', cursor: 'pointer', fontSize: '22px', letterSpacing: '-0.01em', padding: '0 4px' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--mist)', cursor: 'pointer', fontSize: '22px', letterSpacing: '-0.01em', padding: '0 4px' }}
                 >
                     ←
                 </button>
@@ -232,8 +163,7 @@ const MessageDetail: React.FC = () => {
                 padding: '24px',
                 marginBottom: '20px',
             }}>
-                <p style={{ color: 'var(--mist)',
-    marginBottom: '6px', marginBottom: '6px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
+                <p style={{ color: 'var(--mist)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
                     MESAJ İÇERİĞİ
                 </p>
                 <p style={{ color: 'var(--cream)', fontSize: '15px', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-wrap' }}>
@@ -248,8 +178,7 @@ const MessageDetail: React.FC = () => {
                 borderRadius: '12px',
                 padding: '24px',
             }}>
-                <p style={{ color: 'var(--mist)',
-    marginBottom: '6px', marginBottom: '6px', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
+                <p style={{ color: 'var(--mist)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
                     ALICILAR ({recipients.length})
                 </p>
 
@@ -268,8 +197,7 @@ const MessageDetail: React.FC = () => {
                             }}>
                                 <div>
                                     <span style={{ color: 'var(--cream)', fontSize: '15px', fontWeight: 500 }}>{r.full_name}</span>
-                                    <span style={{ color: 'var(--mist)',
-    marginBottom: '6px', marginBottom: '6px', fontSize: '13px', marginLeft: '8px' }}>{r.email}</span>
+                                    <span style={{ color: 'var(--mist)', fontSize: '13px', marginLeft: '8px' }}>{r.email}</span>
                                 </div>
                                 <button
                                     onClick={() => handleDeleteRecipient(r.id)}

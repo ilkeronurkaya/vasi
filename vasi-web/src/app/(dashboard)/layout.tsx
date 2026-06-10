@@ -22,7 +22,8 @@ interface Me {
 export const runtime = 'edge';
 
 const NAV = [
-    { href: '/dashboard', label: 'Mesajlarım' },
+    { href: '/dashboard', label: 'Ana Sayfa' },
+    { href: '/messages', label: 'Mesajlarım' },
     { href: '/messages/new', label: 'Yeni Mesaj' },
 ];
 

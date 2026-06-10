@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -19,8 +20,6 @@ const inputStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
     display: 'block', fontSize: '13px', fontWeight: 500,
     color: 'var(--mist)', marginBottom: '6px',
-};
-
 };
 
 const ScheduleMessage: React.FC = () => {
@@ -114,9 +113,9 @@ const ScheduleMessage: React.FC = () => {
                         min={new Date().toISOString().slice(0, 16)}
                         required
                         style={{
-        ...inputStyle,
-        ...(focused ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {})
-    }}
+                            ...inputStyle,
+                            ...(focused ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {})
+                        }}
                     />
                 </div>
 
