@@ -77,15 +77,16 @@ const ScheduleMessage: React.FC = () => {
                 >
                     ←
                 </button>
-                <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', margin: 0 }}>
+                <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>
                     Mesajı Zamanla
                 </h1>
             </div>
 
             <div style={{
                 background: 'var(--midnight)',
-                border: '1px solid var(--horizon)',
-                borderRadius: '12px',
+                border: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-card)',
+                boxShadow: 'var(--shadow-card)',
                 padding: '28px',
             }}>
                 {/* Mesaj başlığı özeti */}
@@ -101,7 +102,7 @@ const ScheduleMessage: React.FC = () => {
 
                 {/* Tarih/saat seçici */}
                 <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--mist)' }}>
+                    <label style={labelStyle}>
                         Gönderilecek Tarih ve Saat
                     </label>
                     <input

@@ -158,12 +158,13 @@ const MessageDetail: React.FC = () => {
             {/* İçerik */}
             <div style={{
                 background: 'var(--midnight)',
-                border: '1px solid var(--horizon)',
-                borderRadius: '12px',
+                border: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-card)',
+                boxShadow: 'var(--shadow-card)',
                 padding: '24px',
                 marginBottom: '20px',
             }}>
-                <p style={{ color: 'var(--mist)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
+                <p style={{ color: 'var(--mist)', fontSize: '11px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
                     MESAJ İÇERİĞİ
                 </p>
                 <p style={{ color: 'var(--cream)', fontSize: '15px', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-wrap' }}>
@@ -174,11 +175,12 @@ const MessageDetail: React.FC = () => {
             {/* Alıcılar */}
             <div style={{
                 background: 'var(--midnight)',
-                border: '1px solid var(--horizon)',
-                borderRadius: '12px',
+                border: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-card)',
+                boxShadow: 'var(--shadow-card)',
                 padding: '24px',
             }}>
-                <p style={{ color: 'var(--mist)', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
+                <p style={{ color: 'var(--mist)', fontSize: '11px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
                     ALICILAR ({recipients.length})
                 </p>
 
@@ -223,7 +225,7 @@ const MessageDetail: React.FC = () => {
                                 onFocus={() => setFocusField('name')}
                                 onBlur={() => setFocusField('')}
                                 placeholder="Ali Veli"
-                                style={{ ...inputStyle, borderColor: focusField === 'name' ? 'var(--copper)' : 'var(--horizon)' }}
+                                style={{ ...inputStyle, ...(focusField === 'name' ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {}) }}
                             />
                         </div>
                         <div style={{ flex: 1 }}>
@@ -235,7 +237,7 @@ const MessageDetail: React.FC = () => {
                                 onFocus={() => setFocusField('email')}
                                 onBlur={() => setFocusField('')}
                                 placeholder="ali@example.com"
-                                style={{ ...inputStyle, borderColor: focusField === 'email' ? 'var(--copper)' : 'var(--horizon)' }}
+                                style={{ ...inputStyle, ...(focusField === 'email' ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {}) }}
                             />
                         </div>
                     </div>
