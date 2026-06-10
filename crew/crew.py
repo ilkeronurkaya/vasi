@@ -94,6 +94,19 @@ def bash(command: str) -> str:
     return f"{out}\n---exit:{result.returncode}---" if out else f"---exit:{result.returncode}---"
 
 
+_CODE_EXTS = {".ts", ".tsx", ".js", ".jsx"}
+
+def _sanitize_code(path: str, content: str) -> str:
+    """Ajan bazen TÜM backtick'leri escape ediyor (\\` → TS sözdizimi bozulur).
+    Heuristik: dosyada düz backtick hiç yok ama escape'li varsa, hepsini geri çevir.
+    (Sprint 6 ve 7'de build'i art arda bozan hatanın kalıcı çözümü.)
+    """
+    if Path(path).suffix in _CODE_EXTS and "\\`" in content:
+        if "`" not in content.replace("\\`", ""):
+            return content.replace("\\`", "`")
+    return content
+
+
 @tool
 def write_file(path: str, content: str) -> str:
     """Dosya oluşturur veya üzerine yazar. Klasörler otomatik oluşturulur.
@@ -104,8 +117,10 @@ def write_file(path: str, content: str) -> str:
     """
     full = ROOT / path
     full.parent.mkdir(parents=True, exist_ok=True)
-    full.write_text(content, encoding="utf-8")
-    return f"Yazildi: {path} ({len(content)} karakter)"
+    fixed = _sanitize_code(path, content)
+    note = " [backtick escape düzeltildi]" if fixed != content else ""
+    full.write_text(fixed, encoding="utf-8")
+    return f"Yazildi: {path} ({len(fixed)} karakter){note}"
 
 
 @tool
@@ -383,10 +398,13 @@ def run_task(task: "TaskSpec", sprint_n: int) -> tuple[str, float]:
         f"Başarılı olmadan commit ATMA.\n"
     )
 
+    # UX görevleri uzun açıklamalarla context'i hızlı dolduruyor → daha az adım
+    max_steps = 20 if task.role == "UX/UI Ajani" else 30
+
     agent = CodeAgent(
         tools=[bash, write_file, read_file, list_dir, git_commit, check_css, run_tsc],
         model=model,
-        max_steps=40,
+        max_steps=max_steps,
         verbosity_level=1,
         additional_authorized_imports=["os", "pathlib", "subprocess", "re", "json"],
     )
