@@ -7,41 +7,74 @@ import { apiFetch } from '@/lib/api';
 
 export const runtime = 'edge';
 
-const STATUS_LABELS = 
+type StatusKey = 'draft' | 'scheduled' | 'sent';
+type Message = {
+    id: string;
+    title: string;
+    status: StatusKey;
+    recipient_count: number;
+    created_at: string;
+};
+
+const STATUS_LABELS: Record<StatusKey, { label: string; bg: string; color: string }> = {
     draft: { label: 'Taslak', bg: 'var(--horizon)', color: 'var(--mist)' },
     scheduled: { label: 'Zamanlanmış', bg: 'rgba(212,118,59,0.15)', color: 'var(--copper)' },
     sent: { label: 'Gönderildi', bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
-;
+};
 
-const LANGS = const LANGS = {
+const LANGS = {
     TR: {
-        page_title: 'Merhaba, %s 👋',
-        page_subtitle: 'Bugün ne bırakmak istiyorsun?',
+        page_title: 'Mesajlarım',
         new_message_button: '+ Yeni Mesaj',
-        total_messages: 'Toplam',
-        scheduled_messages: 'Zamanlanmış',
-        sent_messages: 'Gönderildi',
-        view_all_messages: 'Tümünü Gör →',
         no_messages_title: 'Henüz mesaj yok',
         no_messages_subtitle: 'Sevdiklerine geleceğe mesaj bırak',
         create_first_message_button: 'İlk Mesajını Oluştur',
+        loading: 'Yükleniyor...',
     },
     EN: {
-        page_title: 'Hello, %s 👋',
-        page_subtitle: 'What would you like to leave today?',
+        page_title: 'My Messages',
         new_message_button: '+ New Message',
-        total_messages: 'Total',
-        scheduled_messages: 'Scheduled',
-        sent_messages: 'Sent',
-        view_all_messages: 'View All →',
         no_messages_title: 'No messages yet',
         no_messages_subtitle: 'Leave a message for your loved ones in the future',
         create_first_message_button: 'Create First Message',
+        loading: 'Loading...',
     },
-};;
+    DE: { // TODO: translate
+        page_title: 'Meine Nachrichten',
+        new_message_button: '+ Neue Nachricht',
+        no_messages_title: 'Noch keine Nachrichten',
+        no_messages_subtitle: 'Hinterlasse deinen Lieben eine Nachricht für die Zukunft',
+        create_first_message_button: 'Erste Nachricht erstellen',
+        loading: 'Wird geladen...',
+    },
+    FR: { // TODO: translate
+        page_title: 'Mes Messages',
+        new_message_button: '+ Nouveau Message',
+        no_messages_title: 'Aucun message pour l\'instant',
+        no_messages_subtitle: 'Laissez un message à vos proches pour le futur',
+        create_first_message_button: 'Créer le premier message',
+        loading: 'Chargement...',
+    },
+    ES: { // TODO: translate
+        page_title: 'Mis Mensajes',
+        new_message_button: '+ Nuevo Mensaje',
+        no_messages_title: 'Aún no hay mensajes',
+        no_messages_subtitle: 'Deja un mensaje para tus seres queridos en el futuro',
+        create_first_message_button: 'Crear primer mensaje',
+        loading: 'Cargando...',
+    },
+    AR: { // TODO: translate
+        page_title: 'رسائلي',
+        new_message_button: '+ رسالة جديدة',
+        no_messages_title: 'لا توجد رسائل بعد',
+        no_messages_subtitle: 'اترك رسالة لأحبائك في المستقبل',
+        create_first_message_button: 'إنشاء أول رسالة',
+        loading: 'جاري التحميل...',
+    },
+};
 
 const Messages: React.FC = () => {
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const lang = 'TR'; // This should be dynamic based on user preference or browser settings

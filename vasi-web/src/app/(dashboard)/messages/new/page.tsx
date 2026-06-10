@@ -141,7 +141,11 @@ setSubmitError('Mesaj hakkın doldu. Daha fazla mesaj için Pro plana geçebilir
 } else {
 setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
 }
-setLoading(false);
+        setLoading(false);
+        }
+    };
+
+    return (
         <div style={{ maxWidth: '640px', margin: '0 auto', padding: '32px 16px' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
