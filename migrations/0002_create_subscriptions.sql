@@ -26,6 +26,3 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status  ON subscriptions(status);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_expires ON subscriptions(expires_at);
-
--- migrate:down
-DROP TABLE IF EXISTS subscriptions;

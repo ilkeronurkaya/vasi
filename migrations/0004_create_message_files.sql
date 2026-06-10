@@ -17,6 +17,3 @@ CREATE TABLE IF NOT EXISTS message_files (
 );
 
 CREATE INDEX IF NOT EXISTS idx_message_files_message_id ON message_files(message_id);
-
--- migrate:down
-DROP TABLE IF EXISTS message_files;

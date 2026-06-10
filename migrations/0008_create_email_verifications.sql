@@ -14,6 +14,3 @@ CREATE TABLE IF NOT EXISTS email_verifications (
 );
 
 CREATE INDEX IF NOT EXISTS idx_email_verifications_user_id ON email_verifications(user_id);
-
--- migrate:down
-DROP TABLE IF EXISTS email_verifications;

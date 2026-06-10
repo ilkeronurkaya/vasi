@@ -20,6 +20,3 @@ CREATE TABLE IF NOT EXISTS messages (
 
 CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_messages_status  ON messages(status);
-
--- migrate:down
-DROP TABLE IF EXISTS messages;

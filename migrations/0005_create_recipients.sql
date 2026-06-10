@@ -24,6 +24,3 @@ CREATE TABLE IF NOT EXISTS recipients (
 
 CREATE INDEX IF NOT EXISTS idx_recipients_message_id   ON recipients(message_id);
 CREATE INDEX IF NOT EXISTS idx_recipients_access_token ON recipients(access_token);
-
--- migrate:down
-DROP TABLE IF EXISTS recipients;

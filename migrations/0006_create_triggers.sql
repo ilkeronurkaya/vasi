@@ -21,6 +21,3 @@ CREATE TABLE IF NOT EXISTS triggers (
 
 CREATE INDEX IF NOT EXISTS idx_triggers_scheduled_at ON triggers(scheduled_at);
 CREATE INDEX IF NOT EXISTS idx_triggers_status       ON triggers(status);
-
--- migrate:down
-DROP TABLE IF EXISTS triggers;
