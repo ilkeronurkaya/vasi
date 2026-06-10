@@ -40,6 +40,7 @@ SPRINTS = {
     5: "UX/UI — Auth & Dashboard tasarımı",
     6: "UX/UI — Mesaj akışı tasarımı (new, detail, schedule)",
     7: "UX/UI — Dashboard yenileme (wizard, limit, abonelik, ana sayfa)",
+    8: "Gerçek veri entegrasyonu (/me, recipient_count, mock temizliği)",
 }
 
 HELP_TEXT = """
