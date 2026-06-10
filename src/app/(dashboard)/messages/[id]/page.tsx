@@ -1,19 +1,19 @@
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useState, useEffect } from "react",
+import { useRouter } from "next/router",
 
-export default function MessagePage() {
-  const router = useRouter();
-  const [message, setMessage] = useState(null);
+const MessagePage = () => {
+  const router = useRouter(),
+  const [message, setMessage] = useState(null),
 
   useEffect(() => {
     if (router.isReady) {
       fetch(`/api/messages/${router.query.id}`)
         .then(response => response.json())
         .then(data => setMessage(data))
-        .catch(error => console.error('Error fetching message:', error));
+        .catch(error => console.error("Error fetching message:", error)),
     }
-  }, [router.isReady, router.query.id]);
+  }, [router.isReady, router.query.id]),
 
   return (
     <div>
@@ -26,5 +26,7 @@ export default function MessagePage() {
         <p>Loading...</p>
       )}
     </div>
-  );
-}
+  ),
+},
+
+export default MessagePage,
