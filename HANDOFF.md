@@ -32,20 +32,21 @@ chainlit run manager.py
 | 6 | UX/UI — Mesaj akışı | ✅ |
 | 7 | UX/UI — Dashboard yenileme | ✅ |
 | 8 | Gerçek veri (/me, recipient_count, mock temizliği) | ✅ (denetlendi, 3 hata düzeltildi) |
-| 9 | Eksikler (plan limiti, /messages listesi, detay alıcıları) | 📝 Tanımlı — çalıştır + denetle |
-| 10 | Apple tasarım dili (DESIGN.md v2, 5 restyle görevi) | 📝 Tanımlı — 9'dan sonra |
+| 9 | Eksikler (plan limiti, /messages listesi, detay alıcıları) | ✅ (denetlendi, 2 sözdizimi hatası + 1 catch bloğu düzeltildi) |
+| 10 | Apple tasarım dili (DESIGN.md v2, 5 restyle görevi) | ✅ (denetlendi, main'e merge + push) |
+| 11 | Sprint 10 kaçıkları + API şema hatası + NAV düzeni | 📝 Tanımlı — `crew/sprint11.py` hazır, çalıştır + denetle |
 
-### Güncel durum (2026-06-10 öğleden sonra)
-- Sprint 8 koştu; denetimde 3 hata bulundu ve düzeltildi: `/me` rotası index.ts'e kayıtsızdı, `layout.tsx`'ten `'use client'` silinmişti, dashboard `/me` yanıtını yanlış parse ediyordu (`ef8118f`).
-- **Ders**: crew "build temiz" dese bile çıktı denetimi şart — tsc `'use client'` eksiğini ve mount edilmemiş rotayı yakalayamıyor. Adım limiti uyarısı (`ADIM LİMİTİ DOLDU`) log'da görünüyorsa o görevin dosyalarına mutlaka bak.
-- **Git akışı**: crew sprint-N branch'i açar; sprint sonrası denetim → `git checkout main && git merge --ff-only sprint-N` → GitHub'a push (origin: `ilkeronurkaya/vasi`, private). Push yetkisi yoksa GitHub device flow ile al (kullanıcıya kod onaylatılır).
-- **Bildirimler**: manager.py sprint bitince ntfy (`vasi-iko-7ca81627`) + iMessage atar; komutlar telefondan ntfy ile gelir (`vasi-iko-cmd-57f994b1`). Manager komutları: sprint N, durum, log, kontrol, migrate, dev, durdur, bildirim.
+### Güncel durum (2026-06-10)
+- Sprint 9 ve 10 tamamlandı, denetlendi, main'e merge edildi, GitHub'a push edildi.
+- **Sprint 9 ders**: crew dosyaları birden fazla yere yazabiliyor (proje kökü + vasi-web/). Denetimde `git diff main...sprint-N --name-only` ile tam liste al; beklenmedik yollar varsa sil.
+- **Sprint 10 ders**: `messages/[id]/page.tsx` ve `messages/[id]/schedule/page.tsx` restyle'dan kaçtı. Sprint 11'de kapatılıyor.
+- **Git akışı**: SSH ile push çalışıyor (`git remote set-url origin git@github.com:ilkeronurkaya/vasi.git`).
+- **Bildirimler**: manager.py sprint bitince ntfy (`vasi-iko-7ca81627`) + iMessage atar; komutlar telefondan ntfy ile gelir (`vasi-iko-cmd-57f994b1`).
 
 ## Sıradaki İşler
-1. `sprint 9` çalıştır → çıktı denetimi (API şema uyumu + 'use client' + rota kayıtları) → main'e merge + push
-2. `sprint 10` çalıştır (Apple tasarım dili — referans: DESIGN.md "APPLE TASARIM DİLİ v2") → görsel denetim → merge + push
-3. Tarayıcıda uçtan uca test: `dev` komutu → localhost:3000 → test@vasi.app / Test1234!
-4. Sonrası: İyzico sandbox (ayrı sprint), Resend e-posta testi (API key gerek)
+1. `sprint 11` çalıştır → denetim (API şema + 'use client' + rota kayıtları) → main'e merge + push
+2. Tarayıcıda uçtan uca test: `dev` komutu → localhost:3000 → test@vasi.app / Test1234!
+3. Sonrası: İyzico sandbox (ayrı sprint), Resend e-posta testi (API key gerek)
 
 ### Bekleyen Task'lar
 - **Task #9**: crewai 1.x migration (düşük öncelik)
