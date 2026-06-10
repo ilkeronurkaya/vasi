@@ -47,7 +47,7 @@ const Dashboard: React.FC = () => {
 
     useEffect(() => {
         apiFetch("/api/v1/me")
-            .then(user => setUserFirstName(user.first_name || ""))
+            .then(data => setUserFirstName(data?.user?.first_name || ""))
             .catch(console.error);
     }, []);
     const [messages, setMessages] = useState<MessageSummary[]>([]);

@@ -1,3 +1,10 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
+import { VasiLogo } from '@/components/VasiLogo';
+import { apiFetch } from '@/lib/api';
 
 interface Me {
     user: {
@@ -11,12 +18,6 @@ interface Me {
         messages_limit: number;
     };
 }
-
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { VasiLogo } from '@/components/VasiLogo';
-import { apiFetch } from '@/lib/api';
 
 export const runtime = 'edge';
 
