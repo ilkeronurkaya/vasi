@@ -135,13 +135,13 @@ const NewMessage: React.FC = () => {
             }
             router.push(`/messages/${message.id}`);
         } catch (err: unknown) {
-            const e = err as { data?: { error?: string } };
-            setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
-            setLoading(false);
-        }
-    };
-
-    return (
+const e = err as { data?: { error?: string; code?: string } };
+if (e?.data?.code === 'LIMIT_REACHED') {
+setSubmitError('Mesaj hakkın doldu. Daha fazla mesaj için Pro plana geçebilirsin.');
+} else {
+setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
+}
+setLoading(false);
         <div style={{ maxWidth: '640px', margin: '0 auto', padding: '32px 16px' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
