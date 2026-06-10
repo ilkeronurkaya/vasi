@@ -46,6 +46,7 @@ SPRINTS = {
     7: "UX/UI — Dashboard yenileme (wizard, limit, abonelik, ana sayfa)",
     8: "Gerçek veri entegrasyonu (/me, recipient_count, mock temizliği)",
     9: "Eksikleri kapatma (plan limiti, /messages listesi, detay alıcıları)",
+    10: "Apple tasarım dili (tokenler, buzlu cam sidebar, form/kart restyle)",
 }
 
 HELP_TEXT = """

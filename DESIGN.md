@@ -139,3 +139,81 @@ import { VasiLogo } from '@/components/VasiLogo';
 Dosya: `vasi-web/src/components/VasiLogo.tsx`
 ViewBox: `125 315 240 230`
 Renkler: `#EDE9E0` (cream) + `#BF7A57` (copper)
+
+---
+
+# APPLE TASARIM DİLİ v2 (Sprint 10+)
+
+> Bu bölüm yukarıdaki "Input Stili" ve "Navigasyon" kurallarının YERİNE GEÇER.
+> Renk tokenleri AYNEN korunur. İlke: sadelik, cömert boşluk, derinlik.
+
+## Yeni CSS Tokenleri (globals.css'de tanımlı)
+
+| Token | Değer | Kullanım |
+|-------|-------|----------|
+| `var(--radius-card)` | `16px` | Kart, panel |
+| `var(--radius-input)` | `12px` | Input, select, textarea |
+| `var(--border-subtle)` | `1px solid rgba(237,233,224,0.08)` | Kart/panel kenarı |
+| `var(--shadow-card)` | `0 1px 2px rgba(0,0,0,.2), 0 8px 24px rgba(0,0,0,.25)` | Kart gölgesi |
+| `var(--glass-bg)` | `rgba(22,32,51,0.72)` | Buzlu cam yüzey |
+| `var(--focus-ring)` | `0 0 0 3px rgba(212,118,59,0.25)` | Input focus halkası |
+| `var(--dur)` | `200ms` | Standart animasyon süresi |
+| `var(--ease)` | `cubic-bezier(0.25,0.1,0.25,1)` | Standart easing |
+
+## Tipografi (sistem fontu — SF Pro/system-ui, ek yükleme YOK)
+
+| Rol | Boyut/Ağırlık | Ek |
+|-----|---------------|-----|
+| Büyük başlık | 28px / 700 | `letterSpacing: '-0.02em'` |
+| Sayfa başlığı | 22px / 700 | `letterSpacing: '-0.01em'` |
+| Bölüm başlığı | 17px / 600 | — |
+| Gövde | 15px / 400 | `lineHeight: 1.5` |
+| İkincil | 13px / 400 | mist renk |
+| Etiket/caption | 11px / 500 | uppercase, `letterSpacing: '0.06em'` |
+
+## Boşluk Skalası (4px taban)
+`4, 8, 12, 16, 24, 32, 48, 64` — ara değer KULLANMA. Bölümler arası min 32px.
+
+## Form Kuralları (Apple stili)
+
+```tsx
+const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 500,
+  color: 'var(--mist)', marginBottom: '6px' };
+const inputStyle = { width: '100%', minHeight: '44px', padding: '10px 14px',
+  background: 'var(--obsidian)', border: '1px solid var(--horizon)',
+  borderRadius: 'var(--radius-input)', color: 'var(--cream)', fontSize: '15px',
+  outline: 'none', transition: 'border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)',
+  boxSizing: 'border-box' };
+// Focus:  border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)'  (2px border DEĞİL — zıplama yapar)
+// Hata:   border: '1px solid #EF4444' + altta 13px kırmızı metin
+```
+- Label HER ZAMAN input üstünde — placeholder asla tek etiket olamaz.
+- Doğru input type'ları: email, tel, datetime-local. Touch hedefi min 44px.
+- Validasyon blur'da başlar, submit'te tamamlanır.
+
+## Sidebar Kuralları (buzlu cam)
+
+```tsx
+const sidebarStyle = { background: 'var(--glass-bg)',
+  backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+  borderRight: 'var(--border-subtle)' };
+// Aktif nav item: yumuşak pill — background: 'rgba(212,118,59,0.12)', color: 'var(--copper)', borderRadius: '10px'
+// (Eski borderLeft çizgisi KALDIRILDI)
+// Pasif item: color: 'var(--mist)'; hover: background: 'rgba(237,233,224,0.04)', color: 'var(--cream)'
+// Item yüksekliği 36px, metin 13px/500, ikon-metin arası 10px
+```
+
+## Kart Kuralları
+
+```tsx
+const cardStyle = { background: 'var(--midnight)', border: 'var(--border-subtle)',
+  borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: '24px',
+  transition: 'transform var(--dur) var(--ease), border-color var(--dur) var(--ease)' };
+// Tıklanabilir kart hover: transform: 'scale(1.02)', borderColor: 'rgba(212,118,59,0.3)'
+// Dashboard istatistikleri: bento hissi — kartlar arası gap 16px, sayı 32px/700, etiket caption stili
+```
+
+## Hareket Kuralları
+- Sadece `transform`, `opacity`, `border-color`, `box-shadow` anime edilir (layout zıplatma YASAK).
+- Süre 200ms, ease standart token. Pressed durumu: `scale(0.98)`.
+- `transition: 'all ...'` KULLANMA — özellik adlarını yaz.
