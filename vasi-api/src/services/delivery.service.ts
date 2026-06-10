@@ -2,6 +2,7 @@
 import type { Env } from '../types';
 import { findDueMessages, setTrigger, markDelivered, markFailed } from '../db/triggers.db';
 import { findById } from '../db/messages.db';
+import { findByMessage } from '../db/recipients.db';
 
 export class DeliveryService {
   static async scheduleMessage(env: Env, messageId: string, userId: string, scheduledAt: string) {
@@ -19,10 +20,36 @@ export class DeliveryService {
   }
 
   static async deliverDueMessages(env: Env) {
-    const dueMessages = await findDueMessages(env);
-    for (const message of dueMessages.results) {
-      const messageId = message.id as string;
+    const dueMessagesResult = await findDueMessages(env);
+    const dueMessages = dueMessagesResult.results as Array<{ id: string; user_id: string; title: string; content_text?: string }>;
+
+    for (const message of dueMessages) {
+      const messageId = message.id;
+      const userId = message.user_id;
+
       try {
+        const recipientsResult = await findByMessage(env, messageId, userId);
+        const recipients = recipientsResult.results as Array<{ full_name: string; email: string }>;
+
+        if (!recipients || recipients.length === 0) {
+          await markDelivered(env, messageId);
+          continue;
+        }
+
+        for (const recipient of recipients) {
+          await this.sendEmail(
+            env,
+            { name: recipient.full_name, email: recipient.email },
+            message.title as string,
+            `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+              <h2 style="color:#D4763B">Geleceğinizden bir mesaj</h2>
+              <p style="font-size:16px;line-height:1.6;color:#333">${message.content_text ?? ''}</p>
+              <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
+              <p style="font-size:12px;color:#999">Bu mesaj Vasi aracılığıyla gönderilmiştir.</p>
+            </div>`
+          );
+        }
+
         await markDelivered(env, messageId);
       } catch (error) {
         console.error('deliverDueMessages hata:', error);
@@ -32,6 +59,10 @@ export class DeliveryService {
   }
 
   static async sendEmail(env: Env, to: { name: string; email: string }, subject: string, html: string) {
+    if (!env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY tanımlı değil');
+    }
+
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
