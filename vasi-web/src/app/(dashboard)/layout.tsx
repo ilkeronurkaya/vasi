@@ -1,10 +1,8 @@
-
-'use client';
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { VasiLogo } from '@/components/VasiLogo';
+import { apiFetch } from '@/lib/api';
 
 export const runtime = 'edge';
 
@@ -12,7 +10,6 @@ const NAV = [
     { href: '/dashboard', label: 'Mesajlarım' },
     { href: '/messages/new', label: 'Yeni Mesaj' },
 ];
-
 
 const progressBarStyle = {
     padding: '16px',
@@ -101,18 +98,18 @@ const logoutButtonStyle: React.CSSProperties = {
     transition: 'color 0.2s',
 };
 
-
-const usedMessages = 6;
-const maxMessages = 10;
-const plan = 'free';
-
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
+    const [me, setMe] = useState<Me | null>(null);
 
     useEffect(() => {
         const token = localStorage.getItem('authToken');
         if (!token) router.push('/login');
+
+        apiFetch('/api/v1/me')
+            .then(setMe)
+            .catch(() => {});
     }, [router]);
 
     return (
@@ -167,16 +164,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 <div style={progressBarStyle}>
                     <div style={labelStyle}>Mesaj Hakkı</div>
                     <div style={barContainerStyle}>
-                        <div style={fillStyle(usedMessages, maxMessages)}></div>
+                        <div style={fillStyle(me?.usage.messages_used || 0, me?.usage.messages_limit || 1)}></div>
                     </div>
-                    {((usedMessages / maxMessages) * 100 >= 80) && (
+                    {((me?.usage.messages_used || 0) / (me?.usage.messages_limit || 1) * 100 >= 80) && (
                         <div style={warningStyle}>Hakkın dolmak üzere</div>
                     )}
                 </div>
 
                 {/* Subscription Badge */}
-                <div style={badgeStyle(plan)}>
-                    {plan === 'free' ? (
+                <div style={badgeStyle(me?.plan || 'free')}>
+                    {me?.plan === 'free' ? (
                         <>
                             Free
                             <button onClick={() => router.push('/upgrade')} style={buttonStyle} className="btn btn-primary btn-sm">
@@ -190,10 +187,10 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
                 {/* User Profile */}
                 <div style={profileContainerStyle}>
-                    <div style={avatarStyle}>İ</div>
+                    <div style={avatarStyle}>{me?.user.first_name ? me.user.first_name[0] : ''}</div>
                     <div style={userInfoStyle}>
-                        <span>İlker</span>
-                        <span>ilker@vasi.app</span>
+                        <span>{me?.user.first_name} {me?.user.last_name}</span>
+                        <span>{me?.user.email}</span>
                     </div>
                     <button
                         onClick={() => { localStorage.removeItem('authToken'); router.push('/login'); }}
