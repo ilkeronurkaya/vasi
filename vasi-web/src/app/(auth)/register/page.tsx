@@ -7,17 +7,16 @@ import { apiFetch } from '@/lib/api';
 export const runtime = 'edge';
 
 const inputStyle: React.CSSProperties = {
-    display: 'block',
     width: '100%',
+    minHeight: '44px',
     padding: '10px 14px',
     background: 'var(--obsidian)',
     border: '1px solid var(--horizon)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-input)',
     color: 'var(--cream)',
-    fontSize: '14px',
+    fontSize: '15px',
     outline: 'none',
-    transition: 'border-color 0.2s',
-    marginTop: '6px',
+    transition: `border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)`,
     boxSizing: 'border-box',
 };
 
@@ -26,6 +25,7 @@ const labelStyle: React.CSSProperties = {
     fontSize: '13px',
     fontWeight: 500,
     color: 'var(--mist)',
+    marginBottom: '6px',
 };
 
 export default function RegisterPage() {
@@ -58,7 +58,7 @@ export default function RegisterPage() {
 
     return (
         <div>
-            <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', marginBottom: '24px', textAlign: 'center' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', marginBottom: '24px', textAlign: 'center' }}>
                 Hesap Oluştur
             </h2>
 
@@ -75,7 +75,7 @@ export default function RegisterPage() {
                             onBlur={() => setFocusField('')}
                             required
                             placeholder="Ali"
-                            style={{ ...inputStyle, borderColor: focusField === 'first' ? 'var(--copper)' : 'var(--horizon)' }}
+                            style={{ ...inputStyle, ...(focusField === 'first' ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {}) }}
                         />
                     </div>
                     <div style={{ flex: 1 }}>
@@ -88,7 +88,7 @@ export default function RegisterPage() {
                             onBlur={() => setFocusField('')}
                             required
                             placeholder="Veli"
-                            style={{ ...inputStyle, borderColor: focusField === 'last' ? 'var(--copper)' : 'var(--horizon)' }}
+                            style={{ ...inputStyle, ...(focusField === 'last' ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {}) }}
                         />
                     </div>
                 </div>
@@ -103,7 +103,7 @@ export default function RegisterPage() {
                         onBlur={() => setFocusField('')}
                         required
                         placeholder="ali@example.com"
-                        style={{ ...inputStyle, borderColor: focusField === 'email' ? 'var(--copper)' : 'var(--horizon)' }}
+                        style={{ ...inputStyle, ...(focusField === 'email' ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {}) }}
                     />
                 </div>
 
@@ -118,7 +118,7 @@ export default function RegisterPage() {
                         required
                         minLength={8}
                         placeholder="En az 8 karakter"
-                        style={{ ...inputStyle, borderColor: focusField === 'pass' ? 'var(--copper)' : 'var(--horizon)' }}
+                        style={{ ...inputStyle, ...(focusField === 'pass' ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {}) }}
                     />
                 </div>
 

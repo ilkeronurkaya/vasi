@@ -92,7 +92,7 @@ const Messages: React.FC = () => {
         <div style={{ padding: '24px' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '36px' }}>
-                <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--cream)', margin: 0 }}>{t.page_title.replace("%s", "")}</h1>
+                <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>{t.page_title}</h1>
                 <button
                     onClick={() => router.push('/messages/new')}
                     className="btn btn-primary"
@@ -129,17 +129,24 @@ const Messages: React.FC = () => {
                                 onClick={() => router.push(`/messages/${msg.id}`)}
                                 style={{
                                     background: 'var(--midnight)',
-                                    border: '1px solid var(--horizon)',
-                                    borderRadius: '12px',
+                                    border: 'var(--border-subtle)',
+                                    borderRadius: 'var(--radius-card)',
+                                    boxShadow: 'var(--shadow-card)',
                                     padding: '16px 20px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
-                                    transition: 'border-color 0.2s',
+                                    transition: `transform var(--dur) var(--ease), border-color var(--dur) var(--ease)`,
                                 }}
-                                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--copper)')}
-                                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--horizon)')}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.transform = 'scale(1.02)';
+                                    e.currentTarget.style.borderColor = 'rgba(212,118,59,0.3)';
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.transform = 'scale(1)';
+                                    e.currentTarget.style.borderColor = 'rgba(237,233,224,0.08)';
+                                }}
                             >
                                 <div>
                                     <p style={{ color: 'var(--cream)', fontWeight: 600, fontSize: '15px', margin: '0 0 4px' }}>

@@ -11,6 +11,16 @@
   --mist:         #8B9BB4;
   --offwhite:     #F5F3EE;
   --white:        #FFFFFF;
+
+  /* Apple v2 tokens */
+  --radius-card:    16px;
+  --radius-input:   12px;
+  --border-subtle:  1px solid rgba(237,233,224,0.08);
+  --shadow-card:    0 1px 2px rgba(0,0,0,.2), 0 8px 24px rgba(0,0,0,.25);
+  --glass-bg:       rgba(22,32,51,0.72);
+  --focus-ring:     0 0 0 3px rgba(212,118,59,0.25);
+  --dur:            200ms;
+  --ease:           cubic-bezier(0.25,0.1,0.25,1);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

@@ -11,17 +11,16 @@ const BODY_MAX = 5000;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const inputStyle: React.CSSProperties = {
-    display: 'block',
     width: '100%',
+    minHeight: '44px',
     padding: '10px 14px',
     background: 'var(--obsidian)',
     border: '1px solid var(--horizon)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-input)',
     color: 'var(--cream)',
-    fontSize: '14px',
+    fontSize: '15px',
     outline: 'none',
-    transition: 'border-color 0.2s',
-    marginTop: '6px',
+    transition: `border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)`,
     boxSizing: 'border-box',
 };
 
@@ -30,15 +29,25 @@ const labelStyle: React.CSSProperties = {
     fontSize: '13px',
     fontWeight: 500,
     color: 'var(--mist)',
+    marginBottom: '6px',
+};
+
+const cardStyle: React.CSSProperties = {
+    background: 'var(--midnight)',
+    border: 'var(--border-subtle)',
+    borderRadius: 'var(--radius-card)',
+    boxShadow: 'var(--shadow-card)',
+    padding: '24px',
+    transition: `transform var(--dur) var(--ease), border-color var(--dur) var(--ease)`,
 };
 
 const ghostBtnStyle: React.CSSProperties = {
     background: 'none',
     border: '1px solid var(--horizon)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-input)',
     color: 'var(--mist)',
     padding: '10px 18px',
-    fontSize: '14px',
+    fontSize: '15px',
     cursor: 'pointer',
 };
 
@@ -69,9 +78,10 @@ const NewMessage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [focusField, setFocusField] = useState('');
 
-    const focusBorder = (name: string): React.CSSProperties => ({
-        borderColor: focusField === name ? 'var(--copper)' : 'var(--horizon)',
-    });
+    const focusBorder = (name: string): React.CSSProperties =>
+        focusField === name
+            ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' }
+            : {};
 
     const goNext = () => {
         setStepError('');
@@ -156,7 +166,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                 >
                     ←
                 </button>
-                <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', margin: 0 }}>
+                <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>
                     Yeni Mesaj
                 </h1>
             </div>
@@ -201,7 +211,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
             </div>
 
             {/* Step Card */}
-            <div style={{ background: 'var(--midnight)', border: '1px solid var(--horizon)', borderRadius: '12px', padding: '24px' }}>
+            <div style={cardStyle}>
 
                 {/* Adım 1: İçerik */}
                 {step === 1 && (

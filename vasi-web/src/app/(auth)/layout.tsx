@@ -17,8 +17,9 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         }}>
             <div style={{
                 background: 'var(--midnight)',
-                border: '1px solid var(--horizon)',
-                borderRadius: '16px',
+                border: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-card)',
+                boxShadow: 'var(--shadow-card)',
                 padding: '40px',
                 width: '100%',
                 maxWidth: '440px',

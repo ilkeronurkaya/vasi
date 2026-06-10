@@ -69,8 +69,8 @@ const Dashboard: React.FC = () => {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '36px' }}>
                 <div>
-                    <h1 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--cream)', margin: 0 }}>{t.page_title.replace("%s", userFirstName)}</h1>
-                    <p style={{ fontSize: '14px', color: 'var(--mist)' }}>{t.page_subtitle}</p>
+                    <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>{t.page_title.replace("%s", userFirstName)}</h1>
+                    <p style={{ fontSize: '15px', color: 'var(--mist)', lineHeight: 1.5 }}>{t.page_subtitle}</p>
                 </div>
                 <button
                     onClick={() => router.push('/messages/new')}
@@ -89,20 +89,21 @@ const Dashboard: React.FC = () => {
                 ].map((stat, index) => (
                     <div key={index} style={{
                         background: 'var(--midnight)',
-                        border: '1px solid var(--horizon)',
-                        borderRadius: '12px',
-                        padding: '20px',
+                        border: 'var(--border-subtle)',
+                        borderRadius: 'var(--radius-card)',
+                        boxShadow: 'var(--shadow-card)',
+                        padding: '24px',
                         textAlign: 'center',
                     }}>
-                        <p style={{ fontSize: '32px', fontWeight: 700, color: 'var(--cream)' }}>{stat.value}</p>
-                        <p style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--mist)' }}>{stat.label}</p>
+                        <p style={{ fontSize: '32px', fontWeight: 700, color: 'var(--cream)', margin: 0 }}>{stat.value}</p>
+                        <p style={{ fontSize: '11px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--mist)', marginTop: '4px' }}>{stat.label}</p>
                     </div>
                 ))}
             </div>
 
             {/* Message List Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: 500, color: 'var(--cream)' }}>Son Mesajlar</h2>
+                <h2 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)' }}>Son Mesajlar</h2>
                 <button
                     onClick={() => router.push('/messages')}
                     className="btn btn-secondary"
@@ -140,17 +141,24 @@ const Dashboard: React.FC = () => {
                             onClick={() => router.push(`/messages/${msg.id}`)}
                             style={{
                                 background: 'var(--midnight)',
-                                border: '1px solid var(--horizon)',
-                                borderRadius: '12px',
+                                border: 'var(--border-subtle)',
+                                borderRadius: 'var(--radius-card)',
+                                boxShadow: 'var(--shadow-card)',
                                 padding: '16px 20px',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                transition: 'border-color 0.2s',
+                                transition: `transform var(--dur) var(--ease), border-color var(--dur) var(--ease)`,
                             }}
-                            onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--copper)')}
-                            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--horizon)')}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.transform = 'scale(1.02)';
+                                e.currentTarget.style.borderColor = 'rgba(212,118,59,0.3)';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.borderColor = 'rgba(237,233,224,0.08)';
+                            }}
                         >
                             <div>
                                 <p style={{ color: 'var(--cream)', fontWeight: 600, fontSize: '15px', margin: '0 0 4px' }}>
