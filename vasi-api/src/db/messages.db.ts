@@ -7,7 +7,7 @@ export async function findById(env: Env, id: string, userId: string) {
 }
 
 export async function findAllByUser(env: Env, userId: string) {
-  const stmt = env.DB.prepare(`SELECT * FROM messages WHERE user_id = ?`).bind(userId);
+  const stmt = env.DB.prepare(`SELECT m.*, COUNT(r.id) AS recipient_count FROM messages m LEFT JOIN recipients r ON r.message_id = m.id WHERE m.user_id = ? GROUP BY m.id ORDER BY m.created_at DESC`).bind(userId);
   const result = await stmt.all();
   return result.results;
 }
