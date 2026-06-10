@@ -56,6 +56,7 @@ HELP_TEXT = """
 | `dev` | API (:8787) + Web (:3000) sunucularını arka planda başlat |
 | `durdur` | Dev sunucularını kapat |
 | `migrate` | Lokal D1 migration'larını uygula |
+| `bildirim` | Telefona test bildirimi gönder (ntfy) |
 | `yardım` | Bu mesajı göster |
 
 **Notlar:**
@@ -72,6 +73,27 @@ _state: dict = {
     "start_time": None,
     "error":      None,
 }
+
+# ── Bildirim (ntfy.sh) ────────────────────────────────────────────────────────
+# Telefonda ntfy uygulamasıyla bu konuya abone ol: vasi-iko-7ca81627
+
+NTFY_TOPIC = "vasi-iko-7ca81627"
+
+def _notify(title: str, message: str, tags: str = "bell") -> bool:
+    """Sprint bitince telefona push bildirimi atar. Hata olursa sessizce geçer."""
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            f"https://ntfy.sh/{NTFY_TOPIC}",
+            data=message.encode("utf-8"),
+            headers={"Title": title.encode("ascii", "ignore").decode(),
+                     "Tags": tags, "Priority": "high"},
+        )
+        urllib.request.urlopen(req, timeout=10)
+        return True
+    except Exception:
+        return False
+
 
 # ── Dev sunucu yönetimi ───────────────────────────────────────────────────────
 
@@ -140,6 +162,9 @@ def detect_intent(text: str) -> tuple[str, dict]:
 
     if any(w in t for w in ["migrate", "migration", "db kur"]):
         return "migrate", {}
+
+    if any(w in t for w in ["bildirim", "notify", "ntfy"]):
+        return "test_notify", {}
 
     if any(w in t for w in ["durum", "status", "ne yapıyor", "nerede", "ilerliyor"]):
         return "status", {}
@@ -248,6 +273,14 @@ async def on_message(message: cl.Message):
             else:
                 summary = str(result)[:500]
 
+            ok = sum(1 for t in result.get("tasks", []) if t["status"] == "OK") if isinstance(result, dict) else 0
+            total_t = len(result.get("tasks", [])) if isinstance(result, dict) else 0
+            _notify(
+                f"Sprint {n} tamamlandi",
+                f"✅ {ok}/{total_t} görev başarılı — {mins}dk {secs}sn\n{summary}",
+                tags="white_check_mark",
+            )
+
             await cl.Message(
                 content=(
                     f"✅ **Sprint {n} tamamlandı!**\n\n"
@@ -261,6 +294,8 @@ async def on_message(message: cl.Message):
         except Exception as e:
             _state["status"] = "error"
             _state["error"] = str(e)
+
+            _notify(f"Sprint {n} BASARISIZ", f"❌ Hata: {str(e)[:300]}", tags="x")
 
             await cl.Message(
                 content=(
@@ -362,6 +397,17 @@ async def on_message(message: cl.Message):
     elif intent == "migrate":
         result = await asyncio.to_thread(_run_migrate)
         await cl.Message(content=result).send()
+
+    elif intent == "test_notify":
+        ok = await asyncio.to_thread(
+            _notify, "Vasi Manager", "Test bildirimi — kurulum çalışıyor 🎉", "tada"
+        )
+        await cl.Message(
+            content=(
+                f"{'✅ Bildirim gönderildi' if ok else '❌ Gönderilemedi (internet/ntfy kontrol et)'} "
+                f"— konu: `{NTFY_TOPIC}`"
+            )
+        ).send()
 
     # ── Log ───────────────────────────────────────────────────────────────
     elif intent == "show_log":
