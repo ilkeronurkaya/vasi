@@ -1,0 +1,48 @@
+name = "vasi-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Veritabanı
+[[d1_databases]]
+binding = "DB"
+database_name = "vasi-db"
+database_id = "BURAYA_D1_DATABASE_ID_GELECEK"
+migrations_dir = "../migrations"
+
+# R2 Dosya Depolama
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "vasi-files"
+
+# Queues — Mesaj iletim kuyruğu
+[[queues.producers]]
+binding = "QUEUE"
+queue = "vasi-delivery-queue"
+
+[[queues.consumers]]
+queue = "vasi-delivery-queue"
+max_batch_size = 10
+max_batch_timeout = 30
+
+# Cron — Her gün 08:00 UTC'de zamanlanmış mesajları kontrol et
+[triggers]
+crons = ["0 8 * * *"]
+
+# Ortam değişkenleri (secret'lar Dashboard'dan veya `wrangler secret put` ile eklenir)
+# JWT_SECRET
+# ENCRYPTION_KEY
+# RESEND_API_KEY
+# NETGSM_USER
+# NETGSM_PASS
+# IYZICO_API_KEY
+# IYZICO_SECRET_KEY
+
+# Test ortamı
+[env.test]
+name = "vasi-api-test"
+
+[[env.test.d1_databases]]
+binding = "DB"
+database_name = "vasi-db-test"
+database_id = "BURAYA_TEST_D1_DATABASE_ID_GELECEK"

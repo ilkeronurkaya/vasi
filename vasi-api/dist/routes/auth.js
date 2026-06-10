@@ -1,0 +1,43 @@
+// routes/auth.ts
+import { Hono } from 'hono';
+import { AuthService } from '../services/auth.service';
+const authRoutes = new Hono();
+function statusCode(result) {
+    return (result.status || 400);
+}
+authRoutes.post('/register', async (c) => {
+    const body = await c.req.json();
+    const result = await AuthService.register(c.env, body);
+    if (result.error)
+        return c.json(result, statusCode(result));
+    return c.json(result, 201);
+});
+authRoutes.post('/login', async (c) => {
+    const { email, password_hash } = await c.req.json();
+    const result = await AuthService.login(c.env, email, password_hash);
+    if (result.error)
+        return c.json(result, statusCode(result));
+    return c.json(result, 200);
+});
+authRoutes.post('/verify-email', async (c) => {
+    const { email, otp } = await c.req.json();
+    const result = await AuthService.verifyEmail(c.env, email, otp);
+    if (result.error)
+        return c.json(result, statusCode(result));
+    return c.json(result, 200);
+});
+authRoutes.post('/logout', async (c) => {
+    const { refreshToken } = await c.req.json();
+    const result = await AuthService.logout(c.env, refreshToken);
+    if (result.error)
+        return c.json(result, statusCode(result));
+    return c.json(result, 200);
+});
+authRoutes.post('/refresh', async (c) => {
+    const { refreshToken } = await c.req.json();
+    const result = await AuthService.refresh(c.env, refreshToken);
+    if (result.error)
+        return c.json(result, statusCode(result));
+    return c.json(result, 200);
+});
+export { authRoutes };

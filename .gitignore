@@ -1,0 +1,36 @@
+# Wrangler local secret'lar — ASLA commit etme
+vasi-api/.dev.vars
+.dev.vars
+
+# Next.js
+.next/
+vasi-web/.next/
+vasi-web/out/
+
+# Node
+node_modules/
+vasi-api/node_modules/
+vasi-web/node_modules/
+
+# Python (crew)
+crew/.venv/
+.venv/
+__pycache__/
+*.pyc
+crew/sprint.log
+crew/.chainlit/
+crew/.files/
+
+# Wrangler local state
+.wrangler/
+vasi-api/.wrangler/
+
+# Env
+.env
+.env.local
+.env*.local
+vasi-api/all_migrations.sql
+
+# macOS / iCloud
+.DS_Store
+_tmp_*

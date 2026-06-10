@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(git remote *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Read(//Users/ilkeronk_m5pro/**)",
+      "Bash(ssh -T git@github.com)",
+      "Bash(git config *)",
+      "Bash(security find-internet-password *)",
+      "Bash(security find-generic-password *)",
+      "Bash(ssh -o BatchMode=yes -T git@github.com)"
+    ]
+  }
+}
