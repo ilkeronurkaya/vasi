@@ -98,6 +98,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
     const [me, setMe] = useState<Me | null>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('authToken');
@@ -110,8 +111,20 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--obsidian)' }}>
+            {/* Mobil üst bar */}
+            <header className="mobile-topbar">
+                <button
+                    onClick={() => setMenuOpen(v => !v)}
+                    aria-label="Menü"
+                    style={{ background: 'none', border: 'none', color: 'var(--cream)', fontSize: '22px', cursor: 'pointer' }}
+                >
+                    {'☰'}
+                </button>
+                <VasiLogo height={26} />
+            </header>
+
             {/* Sidebar */}
-            <aside style={{
+            <aside className={menuOpen ? 'app-sidebar open' : 'app-sidebar'} style={{
                 width: '240px',
                 minHeight: '100vh',
                 background: 'var(--glass-bg)',
@@ -146,6 +159,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                onClick={() => setMenuOpen(false)}
                                 style={navLinkStyle(active)}
                                 onMouseEnter={e => {
                                     if (!active) {
@@ -213,7 +227,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             </aside>
 
             {/* Main */}
-            <main style={{ flex: 1, padding: '32px', minHeight: '100vh' }}>
+            <main className="app-main" style={{ flex: 1, padding: '32px', minHeight: '100vh' }}>
                 {children}
             </main>
         </div>

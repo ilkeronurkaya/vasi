@@ -153,10 +153,6 @@ body {
 }
 .btn-secondary:hover { background: rgba(212,118,59,.2); }
 
-  background: transparent; color: var(--copper);
-  border: 1.5px solid var(--copper);
-.btn-secondary:hover { background: rgba(212,118,59,.08); }
-
 .btn-ghost { background: transparent; color: var(--cream); }
 .btn-ghost:hover { background: rgba(237,233,224,.08); }
 
@@ -463,4 +459,25 @@ select:focus-visible, textarea:focus-visible {
     transition-duration: 0.01ms !important;
   }
   html { scroll-behavior: auto; }
+}
+
+/* Mobil sidebar (Sprint 15 Task 5) */
+.mobile-topbar { display: none; }
+@media (max-width: 768px) {
+  .mobile-topbar {
+    display: flex; align-items: center; gap: 14px;
+    position: fixed; top: 0; left: 0; right: 0; height: 56px;
+    padding: 0 16px; z-index: 90;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: var(--border-subtle);
+  }
+  .app-sidebar {
+    position: fixed; top: 56px; left: 0; bottom: 0; z-index: 80;
+    transform: translateX(-100%);
+    transition: transform var(--dur) var(--ease);
+  }
+  .app-sidebar.open { transform: translateX(0); }
+  .app-main { padding-top: 72px !important; }
 }

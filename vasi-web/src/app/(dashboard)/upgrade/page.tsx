@@ -69,14 +69,14 @@ export default function UpgradePage() {
                 <li key={index} style={{ fontSize: '14px', color: 'var(--mist)', lineHeight: '2' }}>{feature}</li>
               ))}
             </ul>
-            <button className="btn btn-primary" style={{ width: '100%', marginTop: '16px', opacity: currentPlan === plan.key ? 0.5 : 1, cursor: currentPlan === plan.key ? 'not-allowed' : 'pointer' }} disabled={currentPlan === plan.key} onClick={() => { /* TODO: Implement upgrade logic */ }}>
+            <button className="btn btn-primary btn-md" style={{ width: '100%', marginTop: '16px', opacity: currentPlan === plan.key ? 0.5 : 1, cursor: currentPlan === plan.key ? 'not-allowed' : 'pointer' }} disabled={currentPlan === plan.key} onClick={() => { /* TODO: Implement upgrade logic */ }}>
               {currentPlan === plan.key ? 'Kullanımda' : 'Yakında'}
             </button>
             {plan.key !== currentPlan && <p style={{ fontSize: '12px', color: 'var(--mist)', marginTop: '8px' }}>Ödeme entegrasyonu yakında</p>}
           </div>
         ))}
       </div>
-      <button className="btn btn-secondary" style={{ marginTop: '32px' }} onClick={() => router.back()}>Geri</button>
+      <button className="btn btn-secondary btn-sm" style={{ marginTop: '32px' }} onClick={() => router.back()}>Geri</button>
     </div>
   )
 }

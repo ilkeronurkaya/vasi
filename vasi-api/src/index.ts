@@ -7,6 +7,7 @@ import { messageRoutes } from './routes/messages'
 import { deliveryRoutes } from './routes/delivery'
 import { meRoutes } from './routes/me'
 import { adminRoutes } from './routes/admin'
+import { publicRoutes } from './routes/public'
 
 import { DeliveryService } from './services/delivery.service'
 
@@ -19,6 +20,7 @@ app.route('/api/v1/messages', messageRoutes)
 app.route('/api/v1/messages', deliveryRoutes)
 app.route('/api/v1/me', meRoutes)
 app.route('/api/v1/admin', adminRoutes)
+app.route('/api/v1/public', publicRoutes)
 
 
 export default {

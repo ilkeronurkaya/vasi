@@ -260,7 +260,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                                 <button
                                     type="button"
                                     onClick={addRecipient}
-                                    className="btn btn-primary"
+                                    className="btn btn-primary btn-md"
                                     style={{ marginTop: '6px', whiteSpace: 'nowrap' }}
                                 >
                                     Ekle

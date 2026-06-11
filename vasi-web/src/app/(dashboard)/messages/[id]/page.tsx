@@ -147,24 +147,12 @@ const handleDeleteMessage = async () => {
                     
 {message.status === 'scheduled' && (
     <>
-        <button
-            onClick={handleCancelSchedule}
-            style={{
-                background: 'none',
-                border: '1px solid var(--mist)',
-                color: 'var(--mist)',
-                borderRadius: 'var(--radius-input)',
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: 500,
-                cursor: 'pointer',
-            }}
-        >
+        <button onClick={handleCancelSchedule} className="btn btn-ghost btn-sm">
             İptal Et
         </button>
         <button
             onClick={() => router.push(`/messages/${params.id}/schedule`)}
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
         >
             Yeniden Zamanla
         </button>
@@ -175,23 +163,15 @@ const handleDeleteMessage = async () => {
 {message.status === 'draft' && (
                         <button
                             onClick={() => router.push(`/messages/${params.id}/schedule`)}
-                            className="btn btn-primary"
+                            className="btn btn-primary btn-sm"
                         >
                             Zamanla
                         </button>
                     )}
                     <button
                         onClick={handleDeleteMessage}
-                        style={{
-                            background: 'none',
-                            border: '1px solid #EF4444',
-                            color: '#EF4444',
-                            borderRadius: 'var(--radius-input)',
-                            padding: '8px 16px',
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                        }}
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: '#EF4444' }}
                     >
                         Sil
                     </button>
@@ -258,7 +238,8 @@ const handleDeleteMessage = async () => {
                                 </div>
                                 <button
                                     onClick={() => handleDeleteRecipient(r.id)}
-                                    style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: '13px' }}
+                                    className="btn btn-ghost btn-sm"
+                                    style={{ color: '#EF4444' }}
                                 >
                                     Kaldır
                                 </button>
@@ -301,7 +282,7 @@ const handleDeleteMessage = async () => {
                         type="button"
                         onClick={handleAddRecipient}
                         disabled={addLoading || !newName || !newEmail}
-                        className="btn btn-primary"
+                        className="btn btn-primary btn-md"
                         style={{ opacity: addLoading ? 0.7 : 1 }}
                     >
                         {addLoading ? 'Ekleniyor...' : '+ Alıcı Ekle'}

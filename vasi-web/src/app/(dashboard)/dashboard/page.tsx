@@ -78,7 +78,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <button
                     onClick={() => router.push('/messages/new')}
-                    className="btn btn-primary"
+                    className="btn btn-primary btn-md"
                 >
                     {t.new_message_button}
                 </button>
@@ -110,7 +110,7 @@ const Dashboard: React.FC = () => {
                 <h2 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)' }}>Son Mesajlar</h2>
                 <button
                     onClick={() => router.push('/messages')}
-                    className="btn btn-secondary"
+                    className="btn btn-secondary btn-sm"
                     
                 >
                     {t.view_all_messages}
@@ -129,9 +129,9 @@ const Dashboard: React.FC = () => {
                     textAlign: 'center',
                 }}>
                     <span role="img" aria-label="letter">💌</span>
-                    <p style={{ fontSize: '16px', color: 'var(--mist)', margin: '12px 0' }}>{t.no_messages_title}</p>
+                    <p style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)', margin: '12px 0 4px' }}>{t.no_messages_title}</p>
                     <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '24px' }}>{t.no_messages_subtitle}</p>
-                    <button onClick={() => router.push('/messages/new')} className="btn btn-primary">
+                    <button onClick={() => router.push('/messages/new')} className="btn btn-primary btn-md">
                         {t.create_first_message_button}
                     </button>
                 </div>

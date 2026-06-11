@@ -97,7 +97,8 @@ def static_checks() -> None:
         stripped = line.strip()
         if depth == 0 and stripped and not stripped.startswith("@") \
                 and "{" not in stripped and "}" not in stripped \
-                and re.match(r"^[\w-]+\s*:", stripped):
+                and stripped.endswith(";") \
+                and re.match(r"^[\w-]+\s*:(?!:|hover|focus|active|visited|disabled)", stripped):
             problems.append(f"L{lineno}: seçicisiz declaration: {stripped[:60]}")
         depth += line.count("{") - line.count("}")
         if depth < 0:
