@@ -14,11 +14,13 @@ export async function findAllByUser(env: Env, userId: string) {
 
 export async function create(env: Env, userId: string, data: any) {
   const { title, message_type, content_text } = data;
-  const stmt = env.DB.prepare(`
+  const id = crypto.randomUUID();
+  await env.DB.prepare(`
     INSERT INTO messages (id, user_id, title, message_type, content_text, status)
     VALUES (?, ?, ?, ?, ?, 'draft')
-  `).bind(crypto.randomUUID(), userId, title, message_type, content_text);
-  return await stmt.run();
+  `).bind(id, userId, title, message_type, content_text).run();
+  // Oluşan satırı döndür — frontend response.id bekliyor
+  return await findById(env, id, userId);
 }
 
 export async function update(env: Env, id: string, userId: string, data: any) {
