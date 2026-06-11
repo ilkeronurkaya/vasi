@@ -49,6 +49,7 @@ SPRINTS = {
     10: "Apple tasarım dili (tokenler, buzlu cam sidebar, form/kart restyle)",
     14: "Admin Panel UI (login, layout, genel bakış, kullanıcılar, raporlar, ayarlar)",
     15: "Buton sistemi v2 + UI cilası (upgrade, boş durumlar, mobil sidebar)",
+    16: "E-posta teslimatı uçtan uca (EMAIL_FROM, tarih engeli, manuel tetikleyici)",
 }
 
 HELP_TEXT = """

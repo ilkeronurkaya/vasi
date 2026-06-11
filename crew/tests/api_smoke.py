@@ -152,6 +152,12 @@ def api_tests() -> None:
         record("Mesaj zamanlama", "delivery", "Backend Ajani",
                status in (200, 201), f"status={status} body={sch}")
 
+        # Geçmiş tarihe zamanlama reddedilmeli (Sprint 16 Task 2)
+        status, past = req("POST", f"/api/v1/messages/{msg_id}/schedule",
+                           {"scheduled_at": "2020-01-01T09:00:00.000Z"}, token)
+        record("Geçmiş tarihe zamanlama 400 dönüyor", "delivery", "Backend Ajani",
+               status == 400, f"status={status} body={past}")
+
     # /me
     status, me = req("GET", "/api/v1/me", None, token)
     usage = (me or {}).get("usage", {})
@@ -200,6 +206,11 @@ def api_tests() -> None:
            status == 200 and (pub2 or {}).get("pricing", {}).get("price_personal_monthly") == "59",
            f"status={status} body={pub2}")
     req("PUT", "/api/v1/admin/settings", {"key": "price_personal_monthly", "value": "49"}, admin_token)
+
+    # Manuel teslimat tetikleyici (Sprint 16 Task 3) — sayaçlar dönmeli
+    status, dr = req("POST", "/api/v1/admin/delivery/run-due", {}, admin_token)
+    record("Admin manuel teslimat tetikleyici", "delivery", "Backend Ajani",
+           status == 200 and "delivered" in (dr or {}), f"status={status} body={dr}")
 
 
 # ── Ana akış ──────────────────────────────────────────────────────────────────
