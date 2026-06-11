@@ -180,3 +180,6 @@ run_tsc() temizse commit at.
 """,
     ),
 ]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

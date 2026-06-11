@@ -156,3 +156,6 @@ git_commit("feat(sprint-6): UX/UI - mesaj akisi tasarimi")
 """,
     ),
 ]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

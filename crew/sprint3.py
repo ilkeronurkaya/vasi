@@ -134,3 +134,6 @@ Root dizin: {ROOT}
 
 # ── Görev Listesi ─────────────────────────────────────────────────────────────
 tasks = [task_backend_scheduling, task_web_scheduling]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

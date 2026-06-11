@@ -127,3 +127,6 @@ run_tsc() + check_css() temizse commit at.
 """,
     ),
 ]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

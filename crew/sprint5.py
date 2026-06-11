@@ -199,3 +199,6 @@ git_commit("feat(sprint-5): UX/UI ajani - auth ve dashboard tasarimi")
 """,
     ),
 ]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

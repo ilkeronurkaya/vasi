@@ -659,3 +659,6 @@ Commit mesajı: `feat(admin): settings endpoints + messages plan limit DB'den ok
 """,
     ),
 ]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

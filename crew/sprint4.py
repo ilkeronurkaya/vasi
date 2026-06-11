@@ -147,3 +147,6 @@ Root dizin: {ROOT}
 
 # ── Görev Listesi ─────────────────────────────────────────────────────────────
 tasks = [task_backend_auth_fix, task_web_navigation_fix]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

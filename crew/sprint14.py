@@ -206,3 +206,6 @@ Commit: `feat(admin-ui): ayarlar sayfası`
 """,
     ),
 ]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

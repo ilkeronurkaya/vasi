@@ -120,3 +120,6 @@ Root dizin: {ROOT}
 
 # ── Görev Listesi (sıra önemli) ──────────────────────────────────────────────
 tasks = [task_db_seed, task_backend_auth, task_web_auth]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

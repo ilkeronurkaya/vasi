@@ -327,3 +327,6 @@ Commit mesajı: `feat(dashboard): delivered/failed statüs etiketleri eklendi`
 """,
     ),
 ]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz

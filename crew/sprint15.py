@@ -269,3 +269,6 @@ Commit: `feat(sprint-15): landing fiyatları admin ayarlarıyla senkron`
 """,
     ),
 ]
+
+
+CLOSED = True  # sprint kapandı — tekrar koşturulamaz
