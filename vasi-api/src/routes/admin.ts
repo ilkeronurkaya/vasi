@@ -186,3 +186,185 @@ admin.patch('/users/:id/plan', async (c) => {
 
   return c.json({ success: true, plan_type })
 })
+
+// ── İstatistikler ─────────────────────────────────────────────────────────────
+admin.use('/stats*', adminMiddleware)
+
+// GET /admin/stats/overview — Genel bakış
+admin.get('/stats/overview', async (c) => {
+  const row = await c.env.DB.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM users WHERE status != 'deleted') AS total_users,
+      (SELECT COUNT(*) FROM users WHERE status = 'active') AS active_users,
+      (SELECT COUNT(*) FROM subscriptions WHERE status = 'active' AND plan_type != 'free') AS paid_subs,
+      (SELECT COUNT(*) FROM messages WHERE status = 'delivered') AS total_delivered,
+      (SELECT COUNT(*) FROM messages WHERE status = 'error') AS total_failed,
+      (SELECT COUNT(*) FROM messages WHERE date(created_at) = date('now')) AS messages_today,
+      ROUND(
+        (SELECT COUNT(*) FROM messages WHERE status = 'delivered') * 100.0 /
+        NULLIF((SELECT COUNT(*) FROM messages WHERE status NOT IN ('draft','cancelled')), 0),
+      2) AS delivery_rate_pct
+  `).first()
+  return c.json(row)
+})
+
+// GET /admin/stats/messages — Günlük/aylık mesaj istatistiği (?period=daily|monthly)
+admin.get('/stats/messages', async (c) => {
+  const period = c.req.query('period') ?? 'daily'
+  const groupBy = period === 'monthly' ? `strftime('%Y-%m', created_at)` : `date(created_at)`
+
+  const result = await c.env.DB.prepare(`
+    SELECT
+      ${groupBy} AS period,
+      COUNT(*) AS total,
+      SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) AS delivered,
+      SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) AS failed,
+      SUM(CASE WHEN status = 'scheduled' THEN 1 ELSE 0 END) AS scheduled,
+      SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) AS draft
+    FROM messages
+    WHERE created_at >= datetime('now', '${period === 'monthly' ? '-12 months' : '-30 days'}')
+    GROUP BY ${groupBy}
+    ORDER BY period DESC
+  `).all()
+
+  return c.json({ period, data: result.results })
+})
+
+// GET /admin/stats/plans — Plan dağılımı
+admin.get('/stats/plans', async (c) => {
+  const result = await c.env.DB.prepare(`
+    SELECT
+      COALESCE(s.plan_type, 'free') AS plan_type,
+      COUNT(DISTINCT u.id) AS user_count
+    FROM users u
+    LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status = 'active'
+    WHERE u.status != 'deleted'
+    GROUP BY COALESCE(s.plan_type, 'free')
+    ORDER BY user_count DESC
+  `).all()
+  return c.json({ plans: result.results })
+})
+
+// ── Raporlar ──────────────────────────────────────────────────────────────────
+admin.use('/reports*', adminMiddleware)
+
+// GET /admin/reports/users — Kullanıcı başına mesaj/alıcı raporu (?page=1&limit=50)
+admin.get('/reports/users', async (c) => {
+  const page = parseInt(c.req.query('page') ?? '1')
+  const limit = parseInt(c.req.query('limit') ?? '50')
+  const offset = (page - 1) * limit
+
+  const result = await c.env.DB.prepare(`
+    SELECT
+      u.id, u.email, u.first_name, u.last_name, u.status,
+      COALESCE(s.plan_type, 'free') AS plan_type,
+      COUNT(DISTINCT m.id) AS message_count,
+      SUM(CASE WHEN m.status = 'delivered' THEN 1 ELSE 0 END) AS delivered_count,
+      SUM(CASE WHEN m.status = 'error' THEN 1 ELSE 0 END) AS failed_count,
+      COUNT(DISTINCT r.id) AS recipient_count,
+      MAX(m.created_at) AS last_message_at
+    FROM users u
+    LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status = 'active'
+    LEFT JOIN messages m ON m.user_id = u.id AND m.status != 'cancelled'
+    LEFT JOIN recipients r ON r.message_id = m.id
+    WHERE u.status != 'deleted'
+    GROUP BY u.id
+    ORDER BY message_count DESC
+    LIMIT ? OFFSET ?
+  `).bind(limit, offset).all()
+
+  return c.json({ data: result.results, page, limit })
+})
+
+// GET /admin/reports/revenue — Plan bazlı tahmini gelir
+admin.get('/reports/revenue', async (c) => {
+  const pricePersonal = await c.env.DB.prepare(
+    `SELECT value FROM admin_settings WHERE key = 'price_personal_monthly'`
+  ).first()
+  const priceFamily = await c.env.DB.prepare(
+    `SELECT value FROM admin_settings WHERE key = 'price_family_monthly'`
+  ).first()
+
+  const personalPrice = parseFloat((pricePersonal?.value as string) ?? '49')
+  const familyPrice = parseFloat((priceFamily?.value as string) ?? '99')
+
+  const result = await c.env.DB.prepare(`
+    SELECT
+      plan_type,
+      COUNT(*) AS subscriber_count
+    FROM subscriptions
+    WHERE status = 'active' AND plan_type != 'free'
+    GROUP BY plan_type
+  `).all()
+
+  const rows = result.results as Array<{ plan_type: string; subscriber_count: number }>
+  const breakdown = rows.map(r => ({
+    plan_type: r.plan_type,
+    subscriber_count: r.subscriber_count,
+    unit_price: r.plan_type === 'personal' ? personalPrice : familyPrice,
+    monthly_revenue: r.subscriber_count * (r.plan_type === 'personal' ? personalPrice : familyPrice),
+  }))
+
+  const total_monthly = breakdown.reduce((sum, r) => sum + r.monthly_revenue, 0)
+  return c.json({ breakdown, total_monthly_revenue: total_monthly })
+})
+
+// GET /admin/reports/failed-deliveries — Başarısız teslimatlar (?page=1&limit=30)
+admin.get('/reports/failed-deliveries', async (c) => {
+  const page = parseInt(c.req.query('page') ?? '1')
+  const limit = parseInt(c.req.query('limit') ?? '30')
+  const offset = (page - 1) * limit
+
+  const result = await c.env.DB.prepare(`
+    SELECT
+      m.id AS message_id, m.title, m.status, m.created_at, m.updated_at,
+      u.id AS user_id, u.email AS user_email, u.first_name, u.last_name,
+      COUNT(r.id) AS recipient_count
+    FROM messages m
+    JOIN users u ON u.id = m.user_id
+    LEFT JOIN recipients r ON r.message_id = m.id
+    WHERE m.status = 'error'
+    GROUP BY m.id
+    ORDER BY m.updated_at DESC
+    LIMIT ? OFFSET ?
+  `).bind(limit, offset).all()
+
+  const totalRow = await c.env.DB.prepare(
+    `SELECT COUNT(*) AS total FROM messages WHERE status = 'error'`
+  ).first()
+
+  return c.json({ data: result.results, total: totalRow?.total ?? 0, page, limit })
+})
+
+// ── Ayarlar ───────────────────────────────────────────────────────────────────
+admin.use('/settings*', adminMiddleware)
+
+// GET /admin/settings — Tüm ayarlar
+admin.get('/settings', async (c) => {
+  const result = await c.env.DB.prepare(
+    `SELECT key, value, updated_at FROM admin_settings ORDER BY key`
+  ).all()
+  const settings: Record<string, string> = {}
+  for (const row of result.results as Array<{ key: string; value: string }>) {
+    settings[row.key] = row.value
+  }
+  return c.json({ settings })
+})
+
+// PUT /admin/settings — Tek ayar güncelle
+admin.put('/settings', async (c) => {
+  const { key, value } = await c.req.json()
+  if (!key || value === undefined) {
+    return c.json({ error: 'key ve value zorunlu', code: 'VALIDATION_ERROR' }, 400)
+  }
+  const existing = await c.env.DB.prepare(
+    `SELECT key FROM admin_settings WHERE key = ?`
+  ).bind(key).first()
+  if (!existing) {
+    return c.json({ error: 'Bilinmeyen ayar anahtarı', code: 'NOT_FOUND' }, 404)
+  }
+  await c.env.DB.prepare(
+    `UPDATE admin_settings SET value = ?, updated_at = datetime('now') WHERE key = ?`
+  ).bind(String(value), key).run()
+  return c.json({ success: true, key, value: String(value) })
+})
