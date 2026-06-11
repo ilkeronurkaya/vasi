@@ -9,6 +9,7 @@ export interface Env {
   ENCRYPTION_KEY: string
   RESEND_API_KEY: string
   EMAIL_FROM?: string
+  APP_URL?: string
   NETGSM_USER: string
   NETGSM_PASS: string
   IYZICO_API_KEY: string

@@ -4,6 +4,77 @@ import { findDueMessages, setTrigger, markDelivered, markFailed } from '../db/tr
 import { findById } from '../db/messages.db';
 import { findByMessage } from '../db/recipients.db';
 
+/**
+ * Teslimat e-postası şablonu — e-posta istemcisi uyumlu (tablo tabanlı, inline stil).
+ * Bilinçli olarak AÇIK tema: koyu tema e-postalarda istemci desteği zayıf.
+ * Marka: offwhite zemin, bakır vurgu, sistem fontu. Mesaj içeriği e-postaya
+ * GÖMÜLMEZ — gizlilik gereği görüntüleme bağlantısı taşır.
+ */
+function buildDeliveryEmail(opts: {
+  recipientName: string;
+  senderName: string;
+  title: string;
+  viewUrl: string;
+}): string {
+  const { recipientName, senderName, title, viewUrl } = opts;
+  return `<!DOCTYPE html>
+<html lang="tr">
+<body style="margin:0;padding:0;background-color:#F5F3EE;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F3EE;padding:40px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+        style="max-width:560px;background-color:#FFFFFF;border-radius:16px;border:1px solid #E8E4DA;overflow:hidden;">
+        <!-- Bakır şerit -->
+        <tr><td style="height:4px;background-color:#D4763B;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="padding:40px 40px 32px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+          <!-- Marka -->
+          <p style="margin:0 0 28px;font-size:15px;font-weight:700;letter-spacing:0.04em;color:#0C1525;">
+            VASİ
+          </p>
+          <!-- Eyebrow -->
+          <p style="margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#D4763B;">
+            Geleceğinden bir mesaj
+          </p>
+          <!-- Başlık -->
+          <h1 style="margin:0 0 20px;font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-0.01em;color:#0C1525;">
+            ${title}
+          </h1>
+          <!-- Gövde -->
+          <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#3D4452;">
+            Sevgili ${recipientName},
+          </p>
+          <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:#3D4452;">
+            <strong>${senderName}</strong> sana, doğru anda ulaşması için
+            özenle sakladığımız bir mesaj bıraktı. Bugün o gün.
+          </p>
+          <!-- CTA -->
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr><td style="border-radius:12px;background-color:#D4763B;">
+              <a href="${viewUrl}"
+                style="display:inline-block;padding:13px 32px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:12px;">
+                Mesajını Görüntüle
+              </a>
+            </td></tr>
+          </table>
+          <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#9AA1AE;">
+            Düğme çalışmazsa bu bağlantıyı tarayıcına yapıştır:<br/>
+            <a href="${viewUrl}" style="color:#D4763B;word-break:break-all;">${viewUrl}</a>
+          </p>
+        </td></tr>
+        <!-- Alt bilgi -->
+        <tr><td style="padding:20px 40px;border-top:1px solid #F0EDE5;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+          <p style="margin:0;font-size:12px;line-height:1.5;color:#9AA1AE;">
+            Bu mesaj <a href="https://vasi.app" style="color:#D4763B;text-decoration:none;">Vasi</a> aracılığıyla iletildi —
+            geleceğe mesaj bırakmanın güvenilir yolu.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export class DeliveryService {
   static async scheduleMessage(env: Env, messageId: string, userId: string, scheduledAt: string) {
     const message = await findById(env, messageId, userId);
@@ -25,7 +96,7 @@ export class DeliveryService {
 
   static async deliverDueMessages(env: Env): Promise<{ delivered: number; failed: number }> {
     const dueMessagesResult = await findDueMessages(env);
-    const dueMessages = dueMessagesResult.results as Array<{ id: string; user_id: string; title: string; content_text?: string }>;
+    const dueMessages = dueMessagesResult.results as Array<{ id: string; user_id: string; title: string; content_text?: string; sender_name?: string }>;
     let delivered = 0;
     let failed = 0;
 
@@ -34,7 +105,7 @@ export class DeliveryService {
 
       try {
         const recipientsResult = await findByMessage(env, messageId);
-        const recipients = recipientsResult.results as Array<{ full_name: string; email: string }>;
+        const recipients = recipientsResult.results as Array<{ id: string; full_name: string; email: string }>;
 
         if (!recipients || recipients.length === 0) {
           await markDelivered(env, messageId);
@@ -43,16 +114,23 @@ export class DeliveryService {
         }
 
         for (const recipient of recipients) {
+          // Alıcıya özel erişim token'ı — mesaj içeriği e-postaya gömülmez
+          const token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+          await env.DB.prepare(
+            "UPDATE recipients SET access_token = ?, delivered_at = datetime('now') WHERE id = ?"
+          ).bind(token, recipient.id).run();
+          const viewUrl = `${env.APP_URL ?? 'http://localhost:3000'}/m/${token}`;
+
           await this.sendEmail(
             env,
             { name: recipient.full_name, email: recipient.email },
-            message.title as string,
-            `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-              <h2 style="color:#D4763B">Geleceğinizden bir mesaj</h2>
-              <p style="font-size:16px;line-height:1.6;color:#333">${message.content_text ?? ''}</p>
-              <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
-              <p style="font-size:12px;color:#999">Bu mesaj Vasi aracılığıyla gönderilmiştir.</p>
-            </div>`
+            `Geleceğinden bir mesaj: ${message.title}`,
+            buildDeliveryEmail({
+              recipientName: recipient.full_name,
+              senderName: message.sender_name ?? 'Bir yakının',
+              title: message.title as string,
+              viewUrl,
+            })
           );
         }
 

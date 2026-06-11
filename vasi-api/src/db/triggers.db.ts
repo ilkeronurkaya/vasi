@@ -4,8 +4,11 @@ import type { Env } from '../types';
 export async function findDueMessages(env: Env) {
   // datetime() sarmalaması: ISO ('T'li) ve SQLite (boşluklu) formatları
   // string karşılaştırmasında uyuşmaz — normalize ederek karşılaştır.
+  // Gönderen adı e-posta şablonu için join'lenir.
   const stmt = env.DB.prepare(
-    "SELECT * FROM messages WHERE status = ? AND datetime(scheduled_at) <= datetime('now')"
+    `SELECT m.*, u.first_name AS sender_name
+     FROM messages m JOIN users u ON u.id = m.user_id
+     WHERE m.status = ? AND datetime(m.scheduled_at) <= datetime('now')`
   ).bind('scheduled');
   return await stmt.all();
 }

@@ -11,7 +11,12 @@ Claude görevleri (denetimde — crew'a verilmez):
   - E-posta HTML şablonu tasarımı (marka diline uygun)
   - /m/[token] public görüntüleme sayfası (vasi-web)
   - Smoke testler (özellikle birlikte eklenir)
+
+⚠️ BU SPRINT KAPANDI — crew koşusu corruption'la sonuçlandı (find()==-1 bug'ı),
+tüm görevler 2026-06-11 akşamı Claude tarafından uygulandı.
 """
+
+CLOSED = True  # manager bu sprint'i koşturmayı reddeder
 
 tasks = [
 

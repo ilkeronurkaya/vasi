@@ -222,6 +222,26 @@ def api_tests() -> None:
     record("Vadesi gelen mesaj run-due ile işleniyor (datetime normalize)", "delivery", "Backend Ajani",
            status == 200 and processed >= 1, f"status={status} body={dr2}")
 
+    # Sprint 17: teslimat alıcıya access_token üretmeli (e-posta başarısız olsa bile token yazılır)
+    tok = wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--json",
+                        "--command", "SELECT access_token FROM recipients WHERE access_token IS NOT NULL LIMIT 1"])
+    token_val = ""
+    m2 = re.search(r'"access_token":\s*"([a-f0-9]{32,})"', tok.stdout)
+    if m2:
+        token_val = m2.group(1)
+    record("Teslimatta erişim token'ı üretiliyor", "delivery", "Backend Ajani",
+           bool(token_val), tok.stdout[-200:] if not token_val else "")
+
+    # Sprint 17: public görüntüleme endpoint'i
+    if token_val:
+        status, view = req("GET", f"/api/v1/public/view/{token_val}")
+        record("Public görüntüleme endpoint'i mesajı dönüyor", "public", "Backend Ajani",
+               status == 200 and "content_text" in (view or {}) and "sender_name" in (view or {}),
+               f"status={status} body={view}")
+    status, bad = req("GET", "/api/v1/public/view/gecersiztokendeneme1234567890abcdef")
+    record("Geçersiz token 404 dönüyor", "public", "Backend Ajani",
+           status == 404, f"status={status}")
+
 
 # ── Ana akış ──────────────────────────────────────────────────────────────────
 
