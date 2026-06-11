@@ -48,6 +48,7 @@ SPRINTS = {
     9: "Eksikleri kapatma (plan limiti, /messages listesi, detay alıcıları)",
     10: "Apple tasarım dili (tokenler, buzlu cam sidebar, form/kart restyle)",
     14: "Admin Panel UI (login, layout, genel bakış, kullanıcılar, raporlar, ayarlar)",
+    15: "Buton sistemi v2 + UI cilası (upgrade, boş durumlar, mobil sidebar)",
 }
 
 HELP_TEXT = """

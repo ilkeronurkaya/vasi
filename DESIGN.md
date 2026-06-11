@@ -217,3 +217,21 @@ const cardStyle = { background: 'var(--midnight)', border: 'var(--border-subtle)
 - Sadece `transform`, `opacity`, `border-color`, `box-shadow` anime edilir (layout zıplatma YASAK).
 - Süre 200ms, ease standart token. Pressed durumu: `scale(0.98)`.
 - `transition: 'all ...'` KULLANMA — özellik adlarını yaz.
+
+## Buton Sistemi v2 (Sprint 15+) — hap formu KALDIRILDI
+
+Apple yumuşak dikdörtgen. globals.css'teki .btn sınıfları şöyledir:
+
+| Class | Görünüm | Kullanım |
+|-------|---------|----------|
+| `btn-primary` | Dolu bakır zemin, obsidian metin | Sayfada EN FAZLA 1 ana aksiyon |
+| `btn-secondary` | Bakır tonlu saydam zemin (rgba(212,118,59,.12)), bakır metin, border YOK | İkincil aksiyonlar |
+| `btn-ghost` | Düz metin (mist), hover'da hafif zemin | Üçüncül/iptal |
+| `btn-sm` | 32px yükseklik, 13px metin, radius 10px | Tablo içi, satır aksiyonları |
+| `btn-md` | 40px yükseklik, 14px metin, radius 12px | Varsayılan |
+| `btn-lg` | 48px yükseklik, 16px metin, radius 12px | Hero/form ana CTA |
+
+**KURAL:** Uygulama içinde (login sonrası tüm sayfalar + admin) her tıklanabilir
+aksiyon `.btn .btn-{seviye} .btn-{boyut}` üçlüsünü kullanır. Inline buton stili
+(style ile padding/background/borderRadius verilmiş <button>) YASAKTIR —
+istisna: ikon butonlar (geri oku, × kaldır) btn-ghost veya sade kalabilir.
