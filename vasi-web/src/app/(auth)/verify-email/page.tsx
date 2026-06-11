@@ -12,7 +12,7 @@ const inputStyle: React.CSSProperties = {
     padding: '12px 14px',
     background: 'var(--obsidian)',
     border: '1px solid var(--horizon)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-input)',
     color: 'var(--cream)',
     fontSize: '20px',
     fontWeight: 700,
@@ -113,7 +113,7 @@ export default function VerifyEmailPage() {
 
             <div style={{ marginTop: '20px' }}>
                 {resent ? (
-                    <p style={{ color: '#4ade80', fontSize: '13px' }}>Kod tekrar gönderildi.</p>
+                    <p style={{ color: '#22C55E', fontSize: '13px' }}>Kod tekrar gönderildi.</p>
                 ) : (
                     <button
                         onClick={handleResend}

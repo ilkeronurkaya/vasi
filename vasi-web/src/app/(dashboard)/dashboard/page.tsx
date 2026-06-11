@@ -14,8 +14,8 @@ const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }
     draft: { label: 'Taslak', bg: 'var(--horizon)', color: 'var(--mist)' },
     scheduled: { label: 'Zamanlanmış', bg: 'rgba(212,118,59,0.15)', color: 'var(--copper)' },
     sent: { label: 'Gönderildi', bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
-    delivered: { label: 'Teslim Edildi', bg: 'rgba(34,197,94,0.15)', color: '#4ade80' },
-    failed: { label: 'Başarısız', bg: 'rgba(239,68,68,0.15)', color: '#ef4444' },
+    delivered: { label: 'Teslim Edildi', bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
+    failed: { label: 'Başarısız', bg: 'rgba(239,68,68,0.15)', color: '#EF4444' },
 };
 
 

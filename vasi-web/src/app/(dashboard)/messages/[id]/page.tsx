@@ -120,7 +120,7 @@ const handleDeleteMessage = async () => {
     }
 
     const statusColor = message.status === 'sent'
-        ? '#4ade80'
+        ? '#22C55E'
         : message.status === 'scheduled'
             ? 'var(--copper)'
             : 'var(--mist)';
@@ -184,8 +184,8 @@ const handleDeleteMessage = async () => {
                         onClick={handleDeleteMessage}
                         style={{
                             background: 'none',
-                            border: '1px solid #ef4444',
-                            color: '#ef4444',
+                            border: '1px solid #EF4444',
+                            color: '#EF4444',
                             borderRadius: 'var(--radius-input)',
                             padding: '8px 16px',
                             fontSize: '13px',
@@ -258,7 +258,7 @@ const handleDeleteMessage = async () => {
                                 </div>
                                 <button
                                     onClick={() => handleDeleteRecipient(r.id)}
-                                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '13px' }}
+                                    style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: '13px' }}
                                 >
                                     Kaldır
                                 </button>
