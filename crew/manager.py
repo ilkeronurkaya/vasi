@@ -50,6 +50,7 @@ SPRINTS = {
     14: "Admin Panel UI (login, layout, genel bakış, kullanıcılar, raporlar, ayarlar)",
     15: "Buton sistemi v2 + UI cilası (upgrade, boş durumlar, mobil sidebar)",
     16: "E-posta teslimatı uçtan uca (EMAIL_FROM, tarih engeli, manuel tetikleyici)",
+    17: "Teslimat deneyimi (erişim token'ı, görüntüleme endpoint'i + Claude: e-posta tasarımı, /m sayfası)",
 }
 
 HELP_TEXT = """
