@@ -74,12 +74,16 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
 
+    const isLogin = pathname === '/admin/login';
+
     useEffect(() => {
-        const isLogin = pathname === '/admin/login';
         if (!isLogin && !localStorage.getItem('adminToken')) {
             router.push('/admin/login');
         }
-    }, [pathname, router]);
+    }, [isLogin, router]);
+
+    // Login sayfası sidebar'sız, çıplak render edilir
+    if (isLogin) return <>{children}</>;
 
     return (
         <div style={{ display: 'flex' as const, minHeight: '100vh', background: 'var(--obsidian)' }}>

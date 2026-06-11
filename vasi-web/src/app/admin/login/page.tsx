@@ -2,6 +2,8 @@
 'use client'
 import { useRouter } from 'next/navigation';
 import { useState, FormEvent } from 'react';
+
+export const runtime = 'edge';
 import { adminFetch } from '@/lib/api';
 import { VasiLogo } from '@/components/VasiLogo';
 
