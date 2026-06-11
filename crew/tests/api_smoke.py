@@ -87,6 +87,27 @@ def static_checks() -> None:
     record("Tüm route dosyaları index.ts'e bağlı", "api-static", "Backend Ajani",
            not unmounted, "Bağlı değil: " + ", ".join(unmounted))
 
+    # 3. globals.css sözdizimi: seçicisiz (başıboş) declaration ve süslü parantez dengesi
+    #    (tsc CSS'e bakmaz; ajanlar satır-bazlı düzenlemede artık bırakabiliyor)
+    css_path = WEB_SRC / "app" / "globals.css"
+    css = re.sub(r"/\*.*?\*/", "", css_path.read_text(encoding="utf-8"), flags=re.DOTALL)
+    problems = []
+    depth = 0
+    for lineno, line in enumerate(css.splitlines(), 1):
+        stripped = line.strip()
+        if depth == 0 and stripped and not stripped.startswith("@") \
+                and "{" not in stripped and "}" not in stripped \
+                and re.match(r"^[\w-]+\s*:", stripped):
+            problems.append(f"L{lineno}: seçicisiz declaration: {stripped[:60]}")
+        depth += line.count("{") - line.count("}")
+        if depth < 0:
+            problems.append(f"L{lineno}: fazla kapanan parantez")
+            depth = 0
+    if depth != 0:
+        problems.append(f"dosya sonunda {depth} kapanmamış parantez")
+    record("globals.css sözdizimi temiz", "web-static", "UX/UI Ajani",
+           not problems, "; ".join(problems[:4]))
+
 
 # ── API testleri ─────────────────────────────────────────────────────────────
 

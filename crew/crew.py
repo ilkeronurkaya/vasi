@@ -367,6 +367,7 @@ def run_test_cycle(sprint_n: int = 0) -> str:
                 additional_authorized_imports=["os", "pathlib", "subprocess", "re", "json"],
             )
             fix_agent.run(fix_prompt)
+            _dump_agent_log(fix_agent, f"tester-{label}-{owner.split()[0].lower()}-deneme{attempt}")
 
         data = run_smoke_tests()
         if data["failed"] == 0:
@@ -460,11 +461,41 @@ def check_ux_rules() -> list[dict]:
     return violations
 
 
+# ── Ajan adım logları (denetim için) ─────────────────────────────────────────
+
+LOGS_DIR = Path(__file__).parent / "logs"
+
+
+def _dump_agent_log(agent, label: str) -> None:
+    """Ajanın tüm adımlarını (kod blokları, gözlemler, hatalar) dosyaya yazar.
+    Sprint sonrası denetimde 'ajan gerçekte ne yaptı?' sorusunun cevabı: crew/logs/
+    """
+    try:
+        LOGS_DIR.mkdir(exist_ok=True)
+        steps = getattr(getattr(agent, "memory", None), "steps", []) or []
+        lines = [f"# {label} — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — {len(steps)} adım\n"]
+        for i, step in enumerate(steps, 1):
+            dur = getattr(step, "duration", None)
+            lines.append(f"\n{'=' * 70}\n## Adım {i}" + (f" ({dur:.0f}s)" if dur else ""))
+            out = getattr(step, "model_output", None)
+            if out:
+                lines.append(f"--- Model çıktısı ---\n{str(out)[:4000]}")
+            obs = getattr(step, "observations", None)
+            if obs:
+                lines.append(f"--- Gözlem ---\n{str(obs)[:2500]}")
+            err = getattr(step, "error", None)
+            if err:
+                lines.append(f"!!! HATA !!!\n{str(err)[:1500]}")
+        (LOGS_DIR / f"{label}.log").write_text("\n".join(lines), encoding="utf-8")
+    except Exception as e:
+        _log(f"  ⚠ Ajan logu yazılamadı ({label}): {e}")
+
+
 # ── Agent çalıştırıcı ─────────────────────────────────────────────────────────
 
 MAX_FIX_ATTEMPTS = 3
 
-def run_task(task: "TaskSpec", sprint_n: int) -> tuple[str, float]:
+def run_task(task: "TaskSpec", sprint_n: int, task_idx: int = 0) -> tuple[str, float]:
     """Görevi çalıştırır, build + UX/UI kurallarını otomatik düzeltir.
     Returns: (result_summary, elapsed_seconds)
     """
@@ -485,6 +516,21 @@ def run_task(task: "TaskSpec", sprint_n: int) -> tuple[str, float]:
         f"Sen {task.role} olarak çalışıyorsun. Sprint {sprint_n} görevindesin.\n\n"
         f"## Rol ve Bağlam\n{context}\n\n"
         f"## Görev\n{task.description}\n\n"
+        f"## KOD BLOĞU KURALI (KRİTİK)\n"
+        f"Yazdığın her kod bloğu GEÇERLİ PYTHON olmalı — araç çağrıları için kullanılır.\n"
+        f"TSX/JS/CSS içeriğini ASLA doğrudan blok olarak yazma; her zaman Python string\n"
+        f"olarak write_file'a ver:\n"
+        f'```python\n'
+        f'content = """\\\n'
+        f"'use client'\\n... (dosyanın tam içeriği) ...\n"
+        f'"""\n'
+        f'write_file(path="vasi-web/src/app/.../page.tsx", content=content)\n'
+        f'```\n'
+        f"- re/os/json kullanacaksan bloğun BAŞINDA import et (import re).\n"
+        f"- Dosya düzenlerken regex KULLANMA — kırılgan. Yöntem: read_file ile oku,\n"
+        f"  Python .replace() ile birebir eşleşen alt-string değiştir ya da dosyanın\n"
+        f"  TAMAMINI yeniden yazıp write_file ile kaydet. Değişiklik sonrası dosyayı\n"
+        f"  tekrar read_file ile okuyup değişikliğin gerçekten uygulandığını DOĞRULA.\n\n"
         f"## ZORUNLU SON ADIMLAR\n"
         f"Tüm dosyaları yazdıktan ve build/doğrulama başarılı olduktan sonra:\n"
         f'git_commit("feat(sprint-{sprint_n}): {task.role.lower()} done")\n\n'
@@ -504,6 +550,7 @@ def run_task(task: "TaskSpec", sprint_n: int) -> tuple[str, float]:
     )
 
     result = str(agent.run(prompt))
+    _dump_agent_log(agent, f"sprint{sprint_n}-task{task_idx}-ana")
 
     # Adım limiti doldu mu? (Sprint 7'de Task 3 sessizce yarım kalmıştı)
     steps_used = len(getattr(getattr(agent, "memory", None), "steps", []) or [])
@@ -548,6 +595,7 @@ def run_task(task: "TaskSpec", sprint_n: int) -> tuple[str, float]:
             additional_authorized_imports=["os", "pathlib", "subprocess", "re", "json"],
         )
         fix_agent.run(fix_prompt)
+        _dump_agent_log(fix_agent, f"sprint{sprint_n}-task{task_idx}-buildfix{attempt}")
     else:
         _log(f"  ⚠ Build {MAX_FIX_ATTEMPTS} denemede düzeltilemedi — manuel kontrol gerekli")
 
@@ -609,6 +657,7 @@ SADECE bu ihlalleri düzelt, başka değişiklik yapma.
                 additional_authorized_imports=["os", "pathlib", "subprocess", "re", "json"],
             )
             ux_fix_agent.run(ux_fix_prompt)
+            _dump_agent_log(ux_fix_agent, f"sprint{sprint_n}-task{task_idx}-uxfix{attempt}")
         else:
             _log(f"  ⚠ UX kural ihlalleri {MAX_FIX_ATTEMPTS} denemede düzeltilemedi — manuel kontrol gerekli")
 
@@ -698,7 +747,7 @@ def run_sprint(sprint_number: int) -> dict:
             i, task = group[0]
             _log(f"Task {i}/{len(tasks)} başlıyor: {task.role}")
             try:
-                result, elapsed = run_task(task, sprint_number)
+                result, elapsed = run_task(task, sprint_number, task_idx=i)
                 _log(f"Task {i} ({task.role}) tamamlandı — {elapsed:.0f}s")
                 task_results.append({"role": task.role, "status": "OK", "elapsed": elapsed})
             except Exception as e:
@@ -709,7 +758,7 @@ def run_sprint(sprint_number: int) -> dict:
             _log(f"Paralel grup {g_key}: {[t.role for _, t in group]} — aynı anda başlıyor")
             with ThreadPoolExecutor(max_workers=len(group)) as executor:
                 futures = {
-                    executor.submit(run_task, task, sprint_number): (i, task)
+                    executor.submit(run_task, task, sprint_number, i): (i, task)
                     for i, task in group
                 }
                 for future in as_completed(futures):

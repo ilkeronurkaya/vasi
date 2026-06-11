@@ -21,6 +21,7 @@ crew/sprint.log
 crew/dev-*.log
 crew/tests/.state/
 crew/tests/wrangler.log
+crew/logs/
 crew/.chainlit/
 crew/.files/
 
