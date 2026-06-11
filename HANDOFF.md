@@ -1,22 +1,23 @@
 # Vasi App BD — Oturum El Geçirme Notu
-_Tarih: 2026-06-11 (güncellendi)_
+_Tarih: 2026-06-11 öğleden sonra (güncellendi)_
 
-> ⚠️ **DİKKAT:** Proje 2026-06-10'da iCloud'dan taşındı. Güncel konum: `~/Projects/vasi`
-> iCloud'daki eski "Vasi App BD" klasörleri (Claude ve Claude 2 altında) kullanılmamalı.
+> Proje konumu: `~/Projects/vasi` (2026-06-10'da iCloud'dan taşındı).
+> GitHub: `git@github.com:ilkeronurkaya/vasi.git` (private) — push kullanıcı terminalinden SSH ile.
 
 ---
 
 ## Projeye Genel Bakış
 
 Vasi, insanların geleceğe mesaj bırakmasını sağlayan bir platform.
-Monorepo yapısı: `vasi-web` (Next.js 15), `vasi-api` (Cloudflare Workers/Hono), `crew/` (smolagents AI geliştirme ekibi).
+Monorepo: `vasi-web` (Next.js 15), `vasi-api` (Cloudflare Workers/Hono), `crew/` (smolagents AI geliştirme ekibi).
 
 **Çalıştırma:**
 ```bash
-cd crew
-chainlit run manager.py
-# → "sprint N" yaz
+cd crew && chainlit run manager.py
 ```
+
+**Manager komutları** (Chainlit'te veya telefondan ntfy ile):
+`sprint N` · `test` · `durum` · `log` · `kontrol` · `migrate` · `dev` · `durdur` · `bildirim` · `sprintler`
 
 ---
 
@@ -24,104 +25,85 @@ chainlit run manager.py
 
 | Sprint | Kapsam | Durum |
 |--------|--------|-------|
-| 1 | Auth sistemi | ✅ |
-| 2 | Mesaj CRUD + Alıcı | ✅ |
-| 3 | Zamanlama + E-posta | ✅ |
-| 4 | İyzico ödeme | ✅ |
-| 5 | UX/UI — Auth & Dashboard | ✅ |
-| 6 | UX/UI — Mesaj akışı | ✅ |
-| 7 | UX/UI — Dashboard yenileme | ✅ |
-| 8 | Gerçek veri (/me, recipient_count, mock temizliği) | ✅ (denetlendi, 3 hata düzeltildi) |
-| 9 | Eksikler (plan limiti, /messages listesi, detay alıcıları) | ✅ (denetlendi, 2 sözdizimi hatası + 1 catch bloğu düzeltildi) |
-| 10 | Apple tasarım dili (DESIGN.md v2, 5 restyle görevi) | ✅ (denetlendi, main'e merge + push) |
-| 11 | Sprint 10 kaçıkları + API şema hatası + NAV düzeni | ✅ (denetlendi, main'e merge + push `693b205`) |
-| 12 | E-posta teslimi (kritik bug) + /upgrade + iptal/yeniden zamanlama + scheduled_at + statüs etiketleri | ✅ (denetlendi, main'e merge + push `751e5e0`) |
+| 1-7 | Auth, CRUD, zamanlama, UX temelleri | ✅ |
+| 8 | Gerçek veri (/me, recipient_count) | ✅ denetlendi |
+| 9 | Plan limiti, /messages listesi, detay alıcıları | ✅ denetlendi |
+| 10 | Apple tasarım dili (DESIGN.md v2) | ✅ denetlendi |
+| 11 | Sprint 10 kaçakları + NAV düzeni | ✅ denetlendi |
+| 12 | E-posta teslim bug'ı + /upgrade + iptal/yeniden zamanlama | ✅ denetlendi |
+| 13 | Admin backend (login, users, stats, reports, settings) | ✅ denetlendi — migration'lar + 6 endpoint Claude tamamladı |
+| 14 | Admin Panel UI | ✅ denetlendi — users/settings sayfaları + guard fix Claude tamamladı |
+| — | Tester Ajani + smoke testler + canlı log | ✅ kuruldu (sprint dışı) |
+| — | Tasarım rafinesi (ui-ux-pro-max skill ile) | ✅ landing + tutarlılık + a11y |
+| 15 | Buton v2 + UI cilası + admin↔landing fiyat senkronu | 📝 Tanımlı (7 görev) — ÇALIŞTIRILACAK |
 
-### Güncel durum (2026-06-11)
-- Sprint 9–12 tamamlandı, denetlendi, main'e merge edildi, GitHub'a push edildi.
-- **Sprint 12 kritik fix**: `deliverDueMessages` artık gerçekten e-posta gönderiyor (`sendEmail` çağrısı + `RESEND_API_KEY` kontrolü eklendi).
-- **Sprint 12 yeni**: `/upgrade` sayfası, zamanlanmış mesaj iptal/yeniden zamanlama, `scheduled_at` görüntüleme, `delivered`/`failed` statüs etiketleri.
-- **Crew davranış deseni**: ADIM LİMİTİ dolunca görev yarım kalabiliyor — denetimde JSX/logic eksiklerini elle kontrol et.
-- **Git akışı**: SSH ile push çalışıyor (`git@github.com:ilkeronurkaya/vasi.git`).
-- **Bildirimler**: manager.py sprint bitince ntfy (`vasi-iko-7ca81627`) + iMessage atar; komutlar telefondan ntfy ile gelir (`vasi-iko-cmd-57f994b1`).
+### Güncel durum (2026-06-11 öğleden sonra)
+- **Tester Ajani devrede**: `crew/tests/api_smoke.py` deterministik smoke paketi (izole DB, port 8788, ~16 test). Her sprint sonunda otomatik koşar; hata bulursa sahibine (Backend/UX ajanı) düzelttirir (2 deneme), olmazsa log'a "manuel kontrol" düşer. Bağımsız: `test` komutu.
+- **Tester'ın ilk avı**: alıcı ekleme + zamanlama akışı Sprint 2-3'ten beri şema uyumsuzluğuyla bozukmuş — düzeltildi (recipients user_id kaldırıldı, migration 0013 teslimat kolonları, markFailed→'error').
+- **Canlı log**: `sprint N` ve `test` çalışırken Chainlit mesajında sprint.log son satırları 3 sn'de bir akar.
+- **Mesaj oluşturma bug'ı düzeltildi**: POST /messages artık id'li satır döndürüyor (wizard "Message not found" hatasıydı).
+- Admin: `test@vasi.app` is_admin=1 (lokal). Admin giriş PBKDF2 düzeltmesiyle çalışıyor.
 
 ## Sıradaki İşler
-1. Resend e-posta testi: `RESEND_API_KEY` worker secret olarak set edilmeli → `wrangler secret put RESEND_API_KEY`
-2. Uçtan uca test: `cd vasi-web && pnpm dev` → localhost:3000 → test@vasi.app / Test1234!
-3. Sonrası: İyzico sandbox entegrasyonu (ayrı sprint — `/upgrade` CTA şu an dummy)
+1. `git push origin main` (yerelde commit'li, push bekliyor olabilir — `git status` bak)
+2. `pnpm db:migrate:local` (0013 uygulanmamışsa)
+3. **Sprint 15'i çalıştır** → Claude denetimi (özellikle Task 2 inline buton temizliği, Task 5 mobil sidebar, Task 7 landing fiyat senkronu) → main'e ff-merge → push
+4. Tarayıcı testi: localhost:3000 (test@vasi.app / Test1234!) + /admin
+5. Sonrası: Resend e-posta gerçek test (`wrangler secret put RESEND_API_KEY` veya .dev.vars), İyzico sandbox (ayrı sprint — /upgrade CTA "Yakında")
 
-### Bekleyen Task'lar
-- **Task #9**: crewai 1.x migration (düşük öncelik)
-- `/upgrade` sayfasında İyzico ödeme akışı bağlanacak (sprint 13)
-
----
-
-## Bilinen Teknik Sorunlar
-
-### crew.py'de
-1. **max_steps çok yüksek** — karmaşık görevlerde context overflow (1.2M token). Öneri: UX=20, diğer=30.
-2. **Görev açıklamaları çok uzun** — kısalt, DESIGN.md'ye referans ver.
-3. **tsc path quoting** — agent'ın doğrudan `bash()` ile tsc çağrıları bozulabilir.
-
-### Ortam
-- iCloud klasöründe sandbox'tan `.git` silme işlemleri "Operation not permitted" verebiliyor; `index.lock` oluşursa Mac terminalinden sil:
-  `rm "$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/Claude 2/Projects/Vasi App BD/.git/index.lock"`
+### Bekleyen
+- crewai 1.x migration (düşük öncelik)
+- check_css'e "inline buton stili" kuralı eklenebilir (DESIGN.md Buton v2 kuralını otomatik denetler)
 
 ---
 
-## Önemli Dosya Yolları
+## Süreç Kuralları (önemli — denenmiş dersler)
 
-```
-Vasi App BD/
-├── crew/
-│   ├── crew.py          ← AI agent motoru (v2)
-│   ├── manager.py       ← Chainlit UI
-│   ├── sprint7.py       ← Sprint 7 görevleri
-│   └── sprint.log       ← Çalışma logları
-├── vasi-web/            ← Next.js 15 uygulaması
-│   └── src/app/
-│       ├── (dashboard)/
-│       │   ├── layout.tsx        ← Sidebar ✅
-│       │   ├── dashboard/page.tsx
-│       │   └── messages/
-│       │       ├── new/page.tsx  ← 5 adımlı wizard ✅
-│       │       └── [id]/
-│       └── (auth)/
-├── vasi-api/            ← Cloudflare Workers API
-├── DESIGN.md            ← Tasarım token referansı
-├── Vasi_PRD_v2.md
-└── Vasi_Technical_Architecture.md
-```
+1. **Sprint sonrası denetim ZORUNLU**: tsc temiz olsa bile bak: `'use client'` ilk satır mı, rotalar index.ts'e mount edilmiş mi, API yanıt şeması frontend beklentisiyle uyuşuyor mu, tsconfig'lere dokunulmuş mu, kök dizine stray `src/` yazılmış mı. (Hepsi yaşandı.)
+2. **ADIM LİMİTİ DOLDU** uyarısı = o görevin dosyaları büyük ihtimalle eksik/yarım.
+3. **Crew'a şema değişikliği yaptırma kuralı** fix prompt'ta: .wrangler DB'lerine elle ALTER yasak; değişiklik = yeni migration. (Yerel model dev DB'yi elle değiştirip kilitlenmişti.)
+4. **Görev yazımı**: ≤4000 karakter, kod örneği gömülü, "önce şu dosyayı oku" + "şuna DOKUNMA" sınırları açık. Sprint başına ideal görev sayısı ≤5 (15'te 7 var — denetimde dikkat).
+5. **Git akışı**: crew sprint-N branch açar → denetim → `git checkout main && git merge --ff-only sprint-N` → kullanıcı push eder.
+6. Commit kimliği sandbox'tan: `git -c user.name="İlker Onur Kaya" -c user.email="ilkeronurkaya@gmail.com" commit ...`
 
 ---
 
-## API Sözleşmesi (vasi-api, sık kullanılan)
+## API Sözleşmesi (sık kullanılan)
 
-- `POST /api/v1/messages` → `{ title, message_type, content_text }`
+- `POST /api/v1/messages` → `{ title, message_type, content_text }` → mesaj satırı (id dahil); limit dolunca 403 `LIMIT_REACHED`
 - `POST /api/v1/messages/:id/recipients` → `{ full_name, email }`
 - `POST /api/v1/messages/:id/schedule` → `{ scheduled_at }` (ISO)
-- Auth: `Authorization: Bearer <token>` — frontend'de `apiFetch` (`src/lib/api.ts`) kullan.
+- `GET /api/v1/me` → `{ user, plan, usage: { messages_used, messages_limit } }`
+- `GET /api/v1/messages` → liste (recipient_count dahil); `GET /:id` → detay (recipients dahil)
+- Admin (`/api/v1/admin/*`, Bearer admin token): `auth/login` → `{ accessToken }`, `users`, `users/:id/status|plan`, `stats/overview|messages|plans`, `reports/users|revenue|failed-deliveries`, `settings` GET/PUT
+- `GET /api/v1/public/pricing` → auth'suz, admin_settings fiyat/limitleri (Sprint 15 Task 6)
+- Frontend: kullanıcı istekleri `apiFetch` (authToken), admin istekleri `adminFetch` (adminToken) — `src/lib/api.ts`
 
 ---
 
-## Tasarım Sistemi Özeti
+## Tasarım Sistemi
 
-```
-var(--obsidian)    #0C1525  sayfa arka planı
-var(--midnight)    #162033  kart arka planı
-var(--horizon)     #1F2D45  border, hover
-var(--copper)      #D4763B  CTA, vurgu
-var(--cream)       #EDE9E0  birincil metin
-var(--mist)        #8B9BB4  ikincil metin
-```
+Kaynak: `DESIGN.md` — renk tokenleri + **"APPLE TASARIM DİLİ v2"** (tipografi, boşluk, kart/form/sidebar kuralları, hareket) + **"Buton Sistemi v2"** (yumuşak dikdörtgen, 3 seviye; inline buton stili yasak).
+Kısa yasaklar: Tailwind custom renk class'ı yok (`bg-Copper` ❌), `transition: all` yok, 2px focus border yerine focus-ring token.
 
-**YASAK**: `bg-Copper`, `text-Cream` gibi Tailwind custom class'lar.
-**DOĞRU**: `style={{ color: 'var(--cream)' }}`
+---
+
+## Test Altyapısı
+
+- `crew/tests/api_smoke.py` — deterministik; izole wrangler dev (:8788, geçici DB, migrations baştan). Statik kontroller ('use client', rota mount) + API akışları (auth→mesaj→alıcı→zamanlama→me→admin→limit→public pricing).
+- Çıktı: `RESULTS_JSON:` satırı; Tester Ajani bunu parse edip hataları owner'a göre dağıtır.
+- Test dosyası ajanlara karşı korumalı: "test doğru, kod hatalı" + DB ALTER yasağı prompt'ta.
+
+---
+
+## Bildirim / Uzaktan Kumanda
+
+- Sprint/test bitince: ntfy push (`vasi-iko-7ca81627`) + iMessage ("Patron Sprint X tamamlandı. Bilgine.")
+- Telefondan komut: ntfy `vasi-iko-cmd-57f994b1` konusuna yaz (`sprint 15`, `test`, `durum`...). Yer imi linkleri: `https://ntfy.sh/vasi-iko-cmd-57f994b1/publish?message=durum`
 
 ---
 
 ## Model Bilgisi
 
-- **Güçlü**: `qwen2.5-coder:32b` (19 GB) — karmaşık görevler
-- **Hızlı**: `qwen2.5-coder:7b` (4.7 GB) — basit fix'ler
-- Ollama: `http://localhost:11434`
+- **Güçlü**: `qwen2.5-coder:32b` — karmaşık görevler. **Hızlı**: `qwen2.5-coder:7b` — basit fix'ler. Ollama: `localhost:11434`
+- Bilinen zaaf: uzun düzeltme oturumlarında context şişince kilitlenme (`###</code>` döngüsü) — adım limitleri bunun sigortası.
