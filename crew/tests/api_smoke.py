@@ -212,6 +212,16 @@ def api_tests() -> None:
     record("Admin manuel teslimat tetikleyici", "delivery", "Backend Ajani",
            status == 200 and "delivered" in (dr or {}), f"status={status} body={dr}")
 
+    # Vade sorgusu regresyonu: zamanlanmış mesajın vadesini geçmişe çek →
+    # run-due onu İŞLEMELİ (eski string karşılaştırma bug'ında 0/0 dönüyordu).
+    # E-posta başarısı önemli değil (test alıcısı sahte) — delivered+failed >= 1 yeterli.
+    wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--command",
+                  "UPDATE messages SET scheduled_at='2020-01-01T00:00:00.000Z' WHERE status='scheduled'"])
+    status, dr2 = req("POST", "/api/v1/admin/delivery/run-due", {}, admin_token)
+    processed = ((dr2 or {}).get("delivered", 0) or 0) + ((dr2 or {}).get("failed", 0) or 0)
+    record("Vadesi gelen mesaj run-due ile işleniyor (datetime normalize)", "delivery", "Backend Ajani",
+           status == 200 and processed >= 1, f"status={status} body={dr2}")
+
 
 # ── Ana akış ──────────────────────────────────────────────────────────────────
 
