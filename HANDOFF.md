@@ -35,7 +35,8 @@ cd crew && chainlit run manager.py
 | 14 | Admin Panel UI | ✅ denetlendi — users/settings sayfaları + guard fix Claude tamamladı |
 | — | Tester Ajani + smoke testler + canlı log | ✅ kuruldu (sprint dışı) |
 | — | Tasarım rafinesi (ui-ux-pro-max skill ile) | ✅ landing + tutarlılık + a11y |
-| 15 | Buton v2 + UI cilası + admin↔landing fiyat senkronu | 📝 Tanımlı (7 görev) — ÇALIŞTIRILACAK |
+| 15 | Buton v2 + UI cilası + admin↔landing fiyat senkronu | ✅ hibrit (crew 2 görev + Claude 5 görev) |
+| 16 | E-posta teslimatı (EMAIL_FROM, tarih engeli, manuel tetikleyici) | ✅ Claude uyguladı — testler 19/19 |
 
 ### Güncel durum (2026-06-11 öğleden sonra)
 - **Tester Ajani devrede**: `crew/tests/api_smoke.py` deterministik smoke paketi (izole DB, port 8788, ~16 test). Her sprint sonunda otomatik koşar; hata bulursa sahibine (Backend/UX ajanı) düzelttirir (2 deneme), olmazsa log'a "manuel kontrol" düşer. Bağımsız: `test` komutu.
