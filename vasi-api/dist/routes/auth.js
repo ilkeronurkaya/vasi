@@ -13,8 +13,8 @@ authRoutes.post('/register', async (c) => {
     return c.json(result, 201);
 });
 authRoutes.post('/login', async (c) => {
-    const { email, password_hash } = await c.req.json();
-    const result = await AuthService.login(c.env, email, password_hash);
+    const { email, password } = await c.req.json();
+    const result = await AuthService.login(c.env, email, password);
     if (result.error)
         return c.json(result, statusCode(result));
     return c.json(result, 200);

@@ -1,13 +1,15 @@
 import { generateAccessToken, generateRefreshToken, verifyToken } from '../lib/jwt';
 import { generateOTP, hashOTP } from '../lib/otp';
+import { hashPassword, verifyPassword } from '../lib/password';
 import * as UsersDB from '../db/users.db';
 import * as RefreshTokensDB from '../db/refresh-tokens.db';
 import * as EmailVerificationsDB from '../db/email-verifications.db';
 export async function register(env, userData) {
-    const { email, password_hash, first_name, last_name, phone } = userData;
+    const { email, password, first_name, last_name, phone } = userData;
     const existingUser = await UsersDB.findByEmail(env, email);
     if (existingUser)
         return { error: 'E-posta zaten kayıtlı', code: 'EMAIL_ALREADY_REGISTERED', status: 409 };
+    const password_hash = await hashPassword(password);
     const userId = await UsersDB.create(env, { email, password_hash, first_name, last_name, phone, status: 'active' });
     const otp = generateOTP();
     const otpHash = await hashOTP(otp);
@@ -15,9 +17,10 @@ export async function register(env, userData) {
     console.log(`E-posta doğrulama OTP'si: ${otp}`); // TODO: Resend ile gerçek e-posta gönderimi
     return { message: 'Kayıt başarılı. Lütfen e-postanızı kontrol edin ve doğrulayın.' };
 }
-export async function login(env, email, password_hash) {
+export async function login(env, email, password) {
     const user = await UsersDB.findByEmail(env, email);
-    if (!user || user.password_hash !== password_hash)
+    const valid = user ? await verifyPassword(password, user.password_hash) : false;
+    if (!user || !valid)
         return { error: 'Geçersiz e-posta veya şifre', code: 'INVALID_CREDENTIALS', status: 401 };
     if (user.email_verified === 0)
         return { error: 'E-postanız doğrulanmamış', code: 'EMAIL_NOT_VERIFIED', status: 403 };

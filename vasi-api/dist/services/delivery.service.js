@@ -1,5 +1,6 @@
 import { findDueMessages, setTrigger, markDelivered, markFailed } from '../db/triggers.db';
 import { findById } from '../db/messages.db';
+import { findByMessage } from '../db/recipients.db';
 export class DeliveryService {
     static async scheduleMessage(env, messageId, userId, scheduledAt) {
         const message = await findById(env, messageId, userId);
@@ -16,24 +17,38 @@ export class DeliveryService {
         }
     }
     static async deliverDueMessages(env) {
-        const dueMessages = await findDueMessages(env);
-        for (const message of dueMessages.results) {
+        const dueMessagesResult = await findDueMessages(env);
+        const dueMessages = dueMessagesResult.results;
+        for (const message of dueMessages) {
+            const messageId = message.id;
+            const userId = message.user_id;
             try {
-                // Alıcıları çek
-                // Bu kısım için recipients.db.ts'den bir fonksiyon kullanılabilir
-                // Örneğin: const recipients = await RecipientsDB.findByMessageId(env, message.id);
-                // E-posta gönderme işlemi (Resend API)
-                // Örneğin: await this.sendEmail(env, recipient.email, message.subject, message.content_text);
-                // Mesajı teslim edildi olarak işaretle
-                await markDelivered(env, message.id);
+                const recipientsResult = await findByMessage(env, messageId, userId);
+                const recipients = recipientsResult.results;
+                if (!recipients || recipients.length === 0) {
+                    await markDelivered(env, messageId);
+                    continue;
+                }
+                for (const recipient of recipients) {
+                    await this.sendEmail(env, { name: recipient.full_name, email: recipient.email }, message.title, `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+              <h2 style="color:#D4763B">Geleceğinizden bir mesaj</h2>
+              <p style="font-size:16px;line-height:1.6;color:#333">${message.content_text ?? ''}</p>
+              <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
+              <p style="font-size:12px;color:#999">Bu mesaj Vasi aracılığıyla gönderilmiştir.</p>
+            </div>`);
+                }
+                await markDelivered(env, messageId);
             }
             catch (error) {
                 console.error('deliverDueMessages hata:', error);
-                await markFailed(env, message.id, String(error));
+                await markFailed(env, messageId, String(error));
             }
         }
     }
     static async sendEmail(env, to, subject, html) {
+        if (!env.RESEND_API_KEY) {
+            throw new Error('RESEND_API_KEY tanımlı değil');
+        }
         const response = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {

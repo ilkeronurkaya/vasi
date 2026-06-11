@@ -1,5 +1,5 @@
 export async function findDueMessages(env) {
-    const stmt = env.DB.prepare('SELECT * FROM messages WHERE status = ? AND scheduled_at <= datetime(', now, ')').bind('scheduled');
+    const stmt = env.DB.prepare("SELECT * FROM messages WHERE status = ? AND scheduled_at <= datetime('now')").bind('scheduled');
     return await stmt.all();
 }
 export async function setTrigger(env, messageId, scheduledAt) {
@@ -8,7 +8,7 @@ export async function setTrigger(env, messageId, scheduledAt) {
     return await stmt.run();
 }
 export async function markDelivered(env, messageId) {
-    const stmt = env.DB.prepare('UPDATE messages SET status = ?, delivered_at = datetime(', now, ') WHERE id = ?')
+    const stmt = env.DB.prepare("UPDATE messages SET status = ?, delivered_at = datetime('now') WHERE id = ?")
         .bind('delivered', messageId);
     return await stmt.run();
 }

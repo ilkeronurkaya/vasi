@@ -17,7 +17,7 @@ export async function decrypt(cipherB64, keyHex) {
 }
 async function importKey(keyHex) {
     const keyBytes = hexToBytes(keyHex);
-    return crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['encrypt', 'decrypt']);
+    return crypto.subtle.importKey('raw', keyBytes.buffer, 'AES-GCM', false, ['encrypt', 'decrypt']);
 }
 function hexToBytes(hex) {
     const bytes = new Uint8Array(hex.length / 2);

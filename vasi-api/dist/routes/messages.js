@@ -20,6 +20,13 @@ messages.post('/', async (c) => {
         // Validation
         if (!body.title || !body.message_type || !body.content_text)
             return c.json({ error: 'title, message_type, and content_text are required', code: 'VALIDATION_ERROR' }, 400);
+        const planRow = await c.env.DB.prepare(`SELECT plan_type FROM subscriptions WHERE user_id = ? AND status = 'active'`).bind(userId).first();
+        const plan = planRow?.plan_type ?? 'free';
+        const limit = plan === 'free' ? 10 : plan === 'personal' ? 100 : 1000;
+        const countRow = await c.env.DB.prepare(`SELECT COUNT(*) AS n FROM messages WHERE user_id = ? AND status != 'cancelled'`).bind(userId).first();
+        if ((countRow?.n ?? 0) >= limit) {
+            return c.json({ error: 'Mesaj limitine ulaştın', code: 'LIMIT_REACHED', limit }, 403);
+        }
         const message = await MessageService.createMessage(c.env, userId, body);
         return c.json(message, 201);
     }

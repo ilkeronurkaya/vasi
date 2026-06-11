@@ -1,5 +1,5 @@
 import { verifyToken } from '../lib/jwt';
-export async function authMiddleware(c, next) {
+export async function adminMiddleware(c, next) {
     const authHeader = c.req.header('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return c.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401);
@@ -9,7 +9,10 @@ export async function authMiddleware(c, next) {
     if (!payload) {
         return c.json({ error: 'Invalid token', code: 'INVALID_TOKEN' }, 401);
     }
+    if (payload.role !== 'admin') {
+        return c.json({ error: 'Forbidden', code: 'FORBIDDEN' }, 403);
+    }
     c.set('userId', payload.userId);
-    c.set('role', payload.role);
+    c.set('role', 'admin');
     await next();
 }
