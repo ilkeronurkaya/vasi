@@ -41,15 +41,7 @@ const cardStyle: React.CSSProperties = {
     transition: `transform var(--dur) var(--ease), border-color var(--dur) var(--ease)`,
 };
 
-const ghostBtnStyle: React.CSSProperties = {
-    background: 'none',
-    border: '1px solid var(--horizon)',
-    borderRadius: 'var(--radius-input)',
-    color: 'var(--mist)',
-    padding: '10px 18px',
-    fontSize: '15px',
-    cursor: 'pointer',
-};
+
 
 function minScheduleDate(): string {
     const d = new Date();
@@ -162,7 +154,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                 <button
                     onClick={() => router.back()}
                     aria-label="Geri"
-                    style={{ background: 'none', border: 'none', color: 'var(--mist)', cursor: 'pointer', fontSize: '20px', padding: '0 4px', lineHeight: 1 }}
+                    className="btn btn-ghost btn-md"
                 >
                     ←
                 </button>
@@ -331,7 +323,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                                         key={y}
                                         type="button"
                                         onClick={() => setForm(f => ({ ...f, scheduledAt: yearsFromNow(y) }))}
-                                        style={ghostBtnStyle}
+                                        className="btn btn-ghost btn-md"
                                     >
                                         {y} Yıl Sonra
                                     </button>
@@ -371,7 +363,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                         ) : submitError ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
                                 <p style={{ color: '#EF4444', fontSize: '14px', margin: 0 }}>{submitError}</p>
-                                <button type="button" onClick={handleSubmit} className="btn btn-primary">
+                                <button type="button" onClick={handleSubmit} className="btn btn-primary btn-md">
                                     Tekrar Dene
                                 </button>
                             </div>
@@ -388,17 +380,17 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                 {step < 5 && (
                     <div style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', marginTop: '24px' }}>
                         {step > 1 && (
-                            <button type="button" onClick={goBack} style={ghostBtnStyle}>
+                            <button type="button" onClick={goBack} className="btn btn-ghost btn-md">
                                 ← Geri
                             </button>
                         )}
                         {step < 4 && (
-                            <button type="button" onClick={goNext} className="btn btn-primary">
+                            <button type="button" onClick={goNext} className="btn btn-primary btn-md">
                                 İleri →
                             </button>
                         )}
                         {step === 4 && (
-                            <button type="button" onClick={handleSubmit} className="btn btn-primary">
+                            <button type="button" onClick={handleSubmit} className="btn btn-primary btn-md">
                                 Gönder ✓
                             </button>
                         )}

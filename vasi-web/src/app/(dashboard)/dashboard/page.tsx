@@ -111,7 +111,7 @@ const Dashboard: React.FC = () => {
                 <button
                     onClick={() => router.push('/messages')}
                     className="btn btn-secondary"
-                    style={{ padding: '6px 12px' }}
+                    
                 >
                     {t.view_all_messages}
                 </button>
