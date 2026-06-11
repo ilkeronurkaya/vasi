@@ -2,6 +2,13 @@
 import React from 'react';
 import { adminFetch } from '@/lib/api';
 
+interface RevenueItem {
+  plan_type: string;
+  subscriber_count: number;
+  unit_price: number;
+  monthly_revenue: number;
+}
+
 const ReportsPage = async () => {
   const revenueData = await adminFetch('/api/v1/admin/reports/revenue');
   const failedDeliveriesData = await adminFetch('/api/v1/admin/reports/failed-deliveries?page=1&limit=30');
@@ -15,7 +22,7 @@ const ReportsPage = async () => {
   );
 };
 
-const RevenueBreakdown = ({ breakdown, total_monthly_revenue }) => (
+const RevenueBreakdown = ({ breakdown, total_monthly_revenue }: { breakdown: RevenueItem[], total_monthly_revenue: number }) => (
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
     <h2>Aylık Gelir (Tahmini)</h2>
     <p style={{ fontSize: '32px', fontWeight: 700, color: 'var(--copper)' }}>{total_monthly_revenue} ₺</p>
@@ -30,7 +37,7 @@ const RevenueBreakdown = ({ breakdown, total_monthly_revenue }) => (
   </div>
 );
 
-const FailedDeliveriesTable = ({ data, total }) => (
+const FailedDeliveriesTable = ({ data, total }: { data: any[], total: number }) => (
   <div style={{ display: 'flex', flexDirection: 'column' }}>
     <h2>Başarısız Teslimatlar</h2>
     {total === 0 ? (
