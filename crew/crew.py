@@ -12,9 +12,11 @@ Gereksinim:
 """
 
 import argparse
+import json
 import os
 import re as _re
 import subprocess
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -288,6 +290,86 @@ Web geliştirme kuralları:
 {WEB_RULES[:2000]}
 """,
 }
+
+
+# ── Tester Ajani: deterministik smoke testler + sahibine düzelttirme ─────────
+# Testlerin kendisi LLM DEĞİL — crew/tests/api_smoke.py deterministik koşar.
+# Tester Ajani rolü: sonuçları okur, hataları sahibi olan ajana düzelttirir.
+
+TEST_SCRIPT = Path(__file__).parent / "tests" / "api_smoke.py"
+
+
+def run_smoke_tests() -> dict:
+    """Smoke test paketini koşar. Returns: {passed, failed, failures:[...], raw}"""
+    try:
+        r = subprocess.run(
+            [sys.executable, str(TEST_SCRIPT)],
+            capture_output=True, text=True, timeout=420,
+        )
+        out = r.stdout + r.stderr
+    except subprocess.TimeoutExpired:
+        out = "TIMEOUT: test paketi 420 saniyede bitmedi"
+    m = _re.search(r"RESULTS_JSON: (\{.*\})", out)
+    if m:
+        data = json.loads(m.group(1))
+    else:
+        data = {"passed": 0, "failed": -1, "failures": [
+            {"name": "test paketi çöktü", "area": "infra", "owner": "Backend Ajani",
+             "ok": False, "detail": out[-400:]}]}
+    data["raw"] = out
+    return data
+
+
+def run_test_cycle(sprint_n: int = 0) -> str:
+    """Tester Ajani döngüsü: test → hata varsa sahibine düzelttir → tekrar test.
+    Returns: insan-okur özet satırı."""
+    label = f"sprint-{sprint_n}" if sprint_n else "manuel"
+    _log(f"  [Tester Ajani] Smoke testler koşuluyor ({label})...")
+    data = run_smoke_tests()
+
+    if data["failed"] == 0:
+        _log(f"  [Tester Ajani] ✓ {data['passed']}/{data['passed']} test geçti")
+        return f"✅ Testler: {data['passed']}/{data['passed']} geçti"
+
+    for attempt in (1, 2):
+        failures = data["failures"]
+        _log(f"  [Tester Ajani] ✗ {len(failures)} test başarısız (deneme {attempt}/2) — sahiplerine iletiliyor")
+
+        by_owner: dict[str, list[dict]] = {}
+        for f in failures:
+            by_owner.setdefault(f.get("owner", "Backend Ajani"), []).append(f)
+
+        for owner, fails in by_owner.items():
+            detail = "\n\n".join(
+                f"### {f['name']} [{f['area']}]\n{f['detail']}" for f in fails
+            )
+            _log(f"  [Tester Ajani] → {owner}: {len(fails)} bulgu")
+            fix_prompt = (
+                f"Sen {owner} olarak çalışıyorsun. Tester Ajani şu testlerin "
+                f"BAŞARISIZ olduğunu raporladı. İlgili kaynak dosyaları oku, kök nedeni "
+                f"düzelt. Test dosyasına ({TEST_SCRIPT.name}) DOKUNMA — testler doğru, kod hatalı.\n\n"
+                f"## Başarısız Testler\n{detail}\n\n"
+                f"## Bağlam\n{AGENT_CONTEXT.get(owner, '')[:1500]}\n\n"
+                f"Düzeltince run_tsc() ile build kontrolü yap. Temizse:\n"
+                f'git_commit("fix({label}): tester bulgusu düzeltildi — {fails[0]["area"]}")\n'
+            )
+            fix_agent = CodeAgent(
+                tools=[bash, write_file, read_file, list_dir, git_commit, run_tsc],
+                model=llm_strong,
+                max_steps=15,
+                verbosity_level=1,
+                additional_authorized_imports=["os", "pathlib", "subprocess", "re", "json"],
+            )
+            fix_agent.run(fix_prompt)
+
+        data = run_smoke_tests()
+        if data["failed"] == 0:
+            _log(f"  [Tester Ajani] ✓ Düzeltme sonrası tüm testler geçti ({data['passed']})")
+            return f"✅ Testler: {data['passed']} geçti (Tester {attempt}. denemede düzelttirdi)"
+
+    names = ", ".join(f["name"] for f in data["failures"][:3])
+    _log(f"  [Tester Ajani] ⚠ {data['failed']} test hâlâ kırık — manuel kontrol gerekli: {names}")
+    return f"❌ Testler: {data['failed']} başarısız ({names}) — manuel kontrol gerekli"
 
 
 # ── TaskSpec ─────────────────────────────────────────────────────────────────
@@ -634,6 +716,13 @@ def run_sprint(sprint_number: int) -> dict:
                         _log(f"Task {i} ({task.role}) hata: {e}")
                         task_results.append({"role": task.role, "status": f"HATA: {e}", "elapsed": 0.0})
 
+    # ── Tester Ajani: sprint sonrası smoke testler + otomatik düzelttirme ──
+    try:
+        test_summary = run_test_cycle(sprint_number)
+    except Exception as e:
+        test_summary = f"⚠ Tester çalıştırılamadı: {e}"
+        _log(f"  [Tester Ajani] HATA: {e}")
+
     _log(f"Sprint {sprint_number} tamamlandı")
     _log("=" * 60)
 
@@ -641,10 +730,12 @@ def run_sprint(sprint_number: int) -> dict:
         f"{'OK' if r['status'] == 'OK' else '✗'} {r['role']} — {r['elapsed']:.0f}s"
         for r in task_results
     ]
+    summary_lines.append(test_summary)
 
     return {
         "summary": "\n".join(summary_lines),
         "tasks": task_results,
+        "tests": test_summary,
     }
 
 

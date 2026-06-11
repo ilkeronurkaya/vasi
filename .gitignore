@@ -19,6 +19,8 @@ __pycache__/
 *.pyc
 crew/sprint.log
 crew/dev-*.log
+crew/tests/.state/
+crew/tests/wrangler.log
 crew/.chainlit/
 crew/.files/
 

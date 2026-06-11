@@ -32,7 +32,7 @@ import chainlit as cl
 # crew modülünü import et (aynı dizinde)
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from crew import run_sprint, ROOT, MODEL, MODEL_STRONG, MODEL_FAST, LOG_FILE, check_builds, check_ux_rules
+from crew import run_sprint, run_test_cycle, ROOT, MODEL, MODEL_STRONG, MODEL_FAST, LOG_FILE, check_builds, check_ux_rules
 
 # ── Sabitler ─────────────────────────────────────────────────────────────────
 
@@ -60,6 +60,7 @@ HELP_TEXT = """
 | `sprintler` | Tüm sprint listesi |
 | `log` | Son log kayıtları |
 | `kontrol` | TypeScript build + UX/UI kural ihlallerini tara |
+| `test` | Smoke testleri koş; hata varsa Tester Ajani sahibine düzelttirir |
 | `dev` | API (:8787) + Web (:3000) sunucularını arka planda başlat |
 | `durdur` | Dev sunucularını kapat |
 | `migrate` | Lokal D1 migration'larını uygula |
@@ -186,7 +187,10 @@ def detect_intent(text: str) -> tuple[str, dict]:
     if any(w in t for w in ["durdur", "stop", "kapat"]):
         return "stop_dev", {}
 
-    if t in ("dev", "test") or any(w in t for w in ["sunucu", "dev başlat", "serve"]):
+    if t in ("test", "testler", "smoke") or "smoke" in t or "testleri" in t:
+        return "run_tests", {}
+
+    if t == "dev" or any(w in t for w in ["sunucu", "dev başlat", "serve"]):
         return "start_dev", {}
 
     if any(w in t for w in ["migrate", "migration", "db kur"]):
@@ -429,6 +433,14 @@ async def on_message(message: cl.Message):
         result = await asyncio.to_thread(_run_migrate)
         await cl.Message(content=result).send()
 
+    elif intent == "run_tests":
+        if _state["status"] == "running":
+            await cl.Message(content="⚠️ Sprint çalışırken test koşulamaz.").send()
+            return
+        msg = await cl.Message(content="🧪 **Tester Ajani** smoke testleri koşuyor... (izole DB, ~1-2 dk; hata bulursa sahibine düzelttirir, daha uzun sürer)").send()
+        result = await asyncio.to_thread(run_test_cycle, 0)
+        await cl.Message(content=f"## 🧪 Test Sonucu\n\n{result}\n\nDetay: `log` yaz veya `crew/tests/wrangler.log`").send()
+
     elif intent == "test_notify":
         ok_ntfy = await asyncio.to_thread(
             _notify, "Vasi Manager", "Test bildirimi — kurulum çalışıyor 🎉", "tada"
@@ -527,6 +539,13 @@ def _handle_remote_command(text: str) -> None:
         parts.append("✅ UX kuralları" if not ux else f"❌ UX: {len(ux)} dosyada ihlal")
         _remote_reply("Kontrol:\n" + "\n".join(parts))
 
+    elif intent == "run_tests":
+        if _state["status"] == "running":
+            _remote_reply("⚠️ Sprint çalışırken test koşulamaz.")
+        else:
+            _remote_reply("🧪 Testler koşuluyor — sonuç birazdan...")
+            _remote_reply(run_test_cycle(0))
+
     elif intent == "migrate":
         _remote_reply(_run_migrate()[:3000])
 
@@ -537,7 +556,7 @@ def _handle_remote_command(text: str) -> None:
         _remote_reply(_stop_dev())
 
     elif intent == "help":
-        _remote_reply("Komutlar: sprint N, durum, log, sprintler, kontrol, migrate, dev, durdur")
+        _remote_reply("Komutlar: sprint N, test, durum, log, sprintler, kontrol, migrate, dev, durdur")
 
     else:
         _remote_reply(f"🤔 Anlayamadım: '{text[:50]}' — 'yardım' yaz.")
