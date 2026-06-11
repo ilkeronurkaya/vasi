@@ -349,7 +349,11 @@ def run_test_cycle(sprint_n: int = 0) -> str:
             fix_prompt = (
                 f"Sen {owner} olarak çalışıyorsun. Tester Ajani şu testlerin "
                 f"BAŞARISIZ olduğunu raporladı. İlgili kaynak dosyaları oku, kök nedeni "
-                f"düzelt. Test dosyasına ({TEST_SCRIPT.name}) DOKUNMA — testler doğru, kod hatalı.\n\n"
+                f"düzelt. Test dosyasına ({TEST_SCRIPT.name}) DOKUNMA — testler doğru, kod hatalı.\n"
+                f"YASAK: sqlite3 ile .wrangler altındaki veritabanlarına doğrudan ALTER/UPDATE yapma — "
+                f"testler her koşuda migrations/ klasöründen temiz DB kurar, elle değişiklik İŞE YARAMAZ. "
+                f"Şema değişikliği gerekiyorsa migrations/ altına YENİ numaralı .sql dosyası ekle; "
+                f"ya da kodu şemaya uydur.\n\n"
                 f"## Başarısız Testler\n{detail}\n\n"
                 f"## Bağlam\n{AGENT_CONTEXT.get(owner, '')[:1500]}\n\n"
                 f"Düzeltince run_tsc() ile build kontrolü yap. Temizse:\n"

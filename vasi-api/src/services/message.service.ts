@@ -44,7 +44,7 @@ export class MessageService {
     if (!message) {
       throw new Error('Message not found');
     }
-    return await RecipientsDB.create(env, messageId, userId, data);
+    return await RecipientsDB.create(env, messageId, data);
   }
 
   static async removeRecipient(env: Env, recipientId: string, messageId: string, userId: string) {
@@ -52,6 +52,6 @@ export class MessageService {
     if (!message) {
       throw new Error('Message not found');
     }
-    return await RecipientsDB.remove(env, recipientId, messageId, userId);
+    return await RecipientsDB.remove(env, recipientId, messageId);
   }
 }

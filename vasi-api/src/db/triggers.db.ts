@@ -19,7 +19,9 @@ export async function markDelivered(env: Env, messageId: string) {
 }
 
 export async function markFailed(env: Env, messageId: string, reason: string) {
+  // Şemadaki CHECK kısıtı 'failed' değil 'error' kabul eder (0003_create_messages.sql);
+  // admin istatistikleri de status='error' sayar.
   const stmt = env.DB.prepare('UPDATE messages SET status = ?, failed_reason = ? WHERE id = ?')
-    .bind('failed', reason, messageId);
+    .bind('error', reason, messageId);
   return await stmt.run();
 }

@@ -25,10 +25,9 @@ export class DeliveryService {
 
     for (const message of dueMessages) {
       const messageId = message.id;
-      const userId = message.user_id;
 
       try {
-        const recipientsResult = await findByMessage(env, messageId, userId);
+        const recipientsResult = await findByMessage(env, messageId);
         const recipients = recipientsResult.results as Array<{ full_name: string; email: string }>;
 
         if (!recipients || recipients.length === 0) {
