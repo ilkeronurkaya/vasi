@@ -2,13 +2,19 @@
 import type { Env } from '../types';
 
 export async function findDueMessages(env: Env) {
-  const stmt = env.DB.prepare("SELECT * FROM messages WHERE status = ? AND scheduled_at <= datetime('now')").bind('scheduled');
+  // datetime() sarmalaması: ISO ('T'li) ve SQLite (boşluklu) formatları
+  // string karşılaştırmasında uyuşmaz — normalize ederek karşılaştır.
+  const stmt = env.DB.prepare(
+    "SELECT * FROM messages WHERE status = ? AND datetime(scheduled_at) <= datetime('now')"
+  ).bind('scheduled');
   return await stmt.all();
 }
 
 export async function setTrigger(env: Env, messageId: string, scheduledAt: string) {
+  // Her zaman UTC ISO olarak normalize et — kaynak ne gönderirse göndersin
+  const normalized = new Date(scheduledAt).toISOString();
   const stmt = env.DB.prepare('UPDATE messages SET status = ?, scheduled_at = ? WHERE id = ?')
-    .bind('scheduled', scheduledAt, messageId);
+    .bind('scheduled', normalized, messageId);
   return await stmt.run();
 }
 

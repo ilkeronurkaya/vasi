@@ -49,7 +49,8 @@ const ScheduleMessage: React.FC = () => {
         try {
             await apiFetch(`/api/v1/messages/${params.id}/schedule`, {
                 method: 'POST',
-                body: JSON.stringify({ scheduled_at: scheduleTime }),
+                // datetime-local yerel saattir — UTC ISO'ya çevir (saat dilimi kayması olmasın)
+                body: JSON.stringify({ scheduled_at: new Date(scheduleTime).toISOString() }),
             });
             router.push(`/messages/${params.id}`);
         } catch (err: any) {
