@@ -1,5 +1,5 @@
 # Vasi App BD — Oturum El Geçirme Notu
-_Tarih: 2026-06-10 (güncellendi)_
+_Tarih: 2026-06-11 (güncellendi)_
 
 > ⚠️ **DİKKAT:** Proje 2026-06-10'da iCloud'dan taşındı. Güncel konum: `~/Projects/vasi`
 > iCloud'daki eski "Vasi App BD" klasörleri (Claude ve Claude 2 altında) kullanılmamalı.
@@ -34,23 +34,25 @@ chainlit run manager.py
 | 8 | Gerçek veri (/me, recipient_count, mock temizliği) | ✅ (denetlendi, 3 hata düzeltildi) |
 | 9 | Eksikler (plan limiti, /messages listesi, detay alıcıları) | ✅ (denetlendi, 2 sözdizimi hatası + 1 catch bloğu düzeltildi) |
 | 10 | Apple tasarım dili (DESIGN.md v2, 5 restyle görevi) | ✅ (denetlendi, main'e merge + push) |
-| 11 | Sprint 10 kaçıkları + API şema hatası + NAV düzeni | 📝 Tanımlı — `crew/sprint11.py` hazır, çalıştır + denetle |
+| 11 | Sprint 10 kaçıkları + API şema hatası + NAV düzeni | ✅ (denetlendi, main'e merge + push `693b205`) |
+| 12 | E-posta teslimi (kritik bug) + /upgrade + iptal/yeniden zamanlama + scheduled_at + statüs etiketleri | ✅ (denetlendi, main'e merge + push `751e5e0`) |
 
-### Güncel durum (2026-06-10)
-- Sprint 9 ve 10 tamamlandı, denetlendi, main'e merge edildi, GitHub'a push edildi.
-- **Sprint 9 ders**: crew dosyaları birden fazla yere yazabiliyor (proje kökü + vasi-web/). Denetimde `git diff main...sprint-N --name-only` ile tam liste al; beklenmedik yollar varsa sil.
-- **Sprint 10 ders**: `messages/[id]/page.tsx` ve `messages/[id]/schedule/page.tsx` restyle'dan kaçtı. Sprint 11'de kapatılıyor.
-- **Git akışı**: SSH ile push çalışıyor (`git remote set-url origin git@github.com:ilkeronurkaya/vasi.git`).
+### Güncel durum (2026-06-11)
+- Sprint 9–12 tamamlandı, denetlendi, main'e merge edildi, GitHub'a push edildi.
+- **Sprint 12 kritik fix**: `deliverDueMessages` artık gerçekten e-posta gönderiyor (`sendEmail` çağrısı + `RESEND_API_KEY` kontrolü eklendi).
+- **Sprint 12 yeni**: `/upgrade` sayfası, zamanlanmış mesaj iptal/yeniden zamanlama, `scheduled_at` görüntüleme, `delivered`/`failed` statüs etiketleri.
+- **Crew davranış deseni**: ADIM LİMİTİ dolunca görev yarım kalabiliyor — denetimde JSX/logic eksiklerini elle kontrol et.
+- **Git akışı**: SSH ile push çalışıyor (`git@github.com:ilkeronurkaya/vasi.git`).
 - **Bildirimler**: manager.py sprint bitince ntfy (`vasi-iko-7ca81627`) + iMessage atar; komutlar telefondan ntfy ile gelir (`vasi-iko-cmd-57f994b1`).
 
 ## Sıradaki İşler
-1. `sprint 11` çalıştır → denetim (API şema + 'use client' + rota kayıtları) → main'e merge + push
-2. Tarayıcıda uçtan uca test: `dev` komutu → localhost:3000 → test@vasi.app / Test1234!
-3. Sonrası: İyzico sandbox (ayrı sprint), Resend e-posta testi (API key gerek)
+1. Resend e-posta testi: `RESEND_API_KEY` worker secret olarak set edilmeli → `wrangler secret put RESEND_API_KEY`
+2. Uçtan uca test: `cd vasi-web && pnpm dev` → localhost:3000 → test@vasi.app / Test1234!
+3. Sonrası: İyzico sandbox entegrasyonu (ayrı sprint — `/upgrade` CTA şu an dummy)
 
 ### Bekleyen Task'lar
 - **Task #9**: crewai 1.x migration (düşük öncelik)
-- Repo kökündeki yanlış yere yazılmış `src/app/(dashboard)/layout.tsx` kalıntısı temizlendi mi kontrol et
+- `/upgrade` sayfasında İyzico ödeme akışı bağlanacak (sprint 13)
 
 ---
 
