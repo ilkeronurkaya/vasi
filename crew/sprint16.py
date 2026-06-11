@@ -1,6 +1,11 @@
 """
 Sprint 16 — E-posta Teslimatı Uçtan Uca (Resend)
 =================================================
+⚠️ BU SPRINT KAPANDI — görevler 2026-06-11'de Claude tarafından uygulandı.
+(Regresyon testleri özellikten önce eklenince Tester'ın düzelttirme döngüsü
+karıştı; ders: smoke'a test, özellikle AYNI commit'te eklenir.)
+Bu dosyayı crew'a KOŞTURMA — kayıt amaçlı duruyor.
+
 Tamamı Backend Ajani — Sprint 15 dersi: tam dosya yazan UX görevleri crew'a verilmez.
 Ön koşul (kullanıcı): Resend hesabı + API key → vasi-api/.dev.vars içine:
   RESEND_API_KEY=re_xxx

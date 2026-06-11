@@ -8,6 +8,7 @@ export interface Env {
   JWT_SECRET: string
   ENCRYPTION_KEY: string
   RESEND_API_KEY: string
+  EMAIL_FROM?: string
   NETGSM_USER: string
   NETGSM_PASS: string
   IYZICO_API_KEY: string

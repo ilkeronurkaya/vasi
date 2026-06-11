@@ -10,6 +10,10 @@ export class DeliveryService {
     if (!message) {
       return { error: 'Mesaj bulunamadı', code: 'NOT_FOUND', status: 404 };
     }
+    const ts = new Date(scheduledAt).getTime();
+    if (Number.isNaN(ts) || ts <= Date.now()) {
+      return { error: 'Gönderim tarihi gelecekte olmalı', code: 'VALIDATION_ERROR', status: 400 };
+    }
     try {
       await setTrigger(env, messageId, scheduledAt);
       return { message: 'Mesaj zamanlandı' };
@@ -19,9 +23,11 @@ export class DeliveryService {
     }
   }
 
-  static async deliverDueMessages(env: Env) {
+  static async deliverDueMessages(env: Env): Promise<{ delivered: number; failed: number }> {
     const dueMessagesResult = await findDueMessages(env);
     const dueMessages = dueMessagesResult.results as Array<{ id: string; user_id: string; title: string; content_text?: string }>;
+    let delivered = 0;
+    let failed = 0;
 
     for (const message of dueMessages) {
       const messageId = message.id;
@@ -32,6 +38,7 @@ export class DeliveryService {
 
         if (!recipients || recipients.length === 0) {
           await markDelivered(env, messageId);
+          delivered++;
           continue;
         }
 
@@ -50,11 +57,15 @@ export class DeliveryService {
         }
 
         await markDelivered(env, messageId);
+        delivered++;
       } catch (error) {
         console.error('deliverDueMessages hata:', error);
         await markFailed(env, messageId, String(error));
+        failed++;
       }
     }
+
+    return { delivered, failed };
   }
 
   static async sendEmail(env: Env, to: { name: string; email: string }, subject: string, html: string) {
@@ -69,7 +80,7 @@ export class DeliveryService {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'Vasi <noreply@vasi.app>',
+        from: env.EMAIL_FROM ?? 'Vasi <onboarding@resend.dev>',
         to: `${to.email}`,
         subject: subject,
         html: html

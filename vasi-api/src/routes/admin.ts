@@ -6,6 +6,7 @@ import { adminMiddleware } from '../middleware/adminAuth'
 import { findByEmail } from '../db/users.db'
 import { generateAccessToken } from '../lib/jwt'
 import { verifyPassword } from '../lib/password'
+import { DeliveryService } from '../services/delivery.service'
 import type { Env } from '../types'
 
 const admin = new Hono<{ Bindings: Env; Variables: { userId: string; role: string } }>()
@@ -363,4 +364,13 @@ admin.put('/settings', async (c) => {
     `UPDATE admin_settings SET value = ?, updated_at = datetime('now') WHERE key = ?`
   ).bind(String(value), key).run()
   return c.json({ success: true, key, value: String(value) })
+})
+
+// ── Teslimat ──────────────────────────────────────────────────────────────────
+admin.use('/delivery*', adminMiddleware)
+
+// POST /admin/delivery/run-due — vadesi gelen mesajları hemen teslim et (test/manuel)
+admin.post('/delivery/run-due', async (c) => {
+  const result = await DeliveryService.deliverDueMessages(c.env)
+  return c.json({ success: true, ...result })
 })
