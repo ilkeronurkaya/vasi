@@ -226,6 +226,33 @@ def read_log(last_n: int = 20) -> str:
     return "\n".join(lines[-last_n:]) if lines else "Log boş."
 
 
+# ── Canlı log akışlı çalıştırıcı ──────────────────────────────────────────────
+
+async def _run_with_live_log(fn, *args, header: str):
+    """Bloklayan fn'i thread'de koşarken sprint.log'un yeni satırlarını
+    Chainlit mesajında canlı gösterir. fn'in sonucunu döner."""
+    start_pos = LOG_FILE.stat().st_size if LOG_FILE.exists() else 0
+    live = cl.Message(content=header + "\n_(loglar burada canlı akacak...)_")
+    await live.send()
+
+    task = asyncio.create_task(asyncio.to_thread(fn, *args))
+    last_tail = ""
+    while not task.done():
+        await asyncio.sleep(3)
+        try:
+            with open(LOG_FILE, encoding="utf-8") as f:
+                f.seek(start_pos)
+                new = f.read()
+            tail = "\n".join(new.splitlines()[-14:])
+            if tail and tail != last_tail:
+                last_tail = tail
+                live.content = header + "\n```\n" + tail + "\n```"
+                await live.update()
+        except Exception:
+            pass
+    return task.result()
+
+
 # ── Chainlit Handlers ─────────────────────────────────────────────────────────
 
 @cl.on_chat_start
@@ -288,7 +315,10 @@ async def on_message(message: cl.Message):
         ).send()
 
         try:
-            result = await asyncio.to_thread(run_sprint, n)
+            result = await _run_with_live_log(
+                run_sprint, n,
+                header=f"⚙️ **Sprint {n}** çalışıyor — canlı log:",
+            )
             elapsed = datetime.now() - _state["start_time"]
             mins, secs = elapsed.seconds // 60, elapsed.seconds % 60
             _state["status"] = "done"
@@ -437,9 +467,11 @@ async def on_message(message: cl.Message):
         if _state["status"] == "running":
             await cl.Message(content="⚠️ Sprint çalışırken test koşulamaz.").send()
             return
-        msg = await cl.Message(content="🧪 **Tester Ajani** smoke testleri koşuyor... (izole DB, ~1-2 dk; hata bulursa sahibine düzelttirir, daha uzun sürer)").send()
-        result = await asyncio.to_thread(run_test_cycle, 0)
-        await cl.Message(content=f"## 🧪 Test Sonucu\n\n{result}\n\nDetay: `log` yaz veya `crew/tests/wrangler.log`").send()
+        result = await _run_with_live_log(
+            run_test_cycle, 0,
+            header="🧪 **Tester Ajani** smoke testleri koşuyor (izole DB, ~1-2 dk; hata bulursa sahibine düzelttirir)",
+        )
+        await cl.Message(content=f"## 🧪 Test Sonucu\n\n{result}\n\nDetay: `crew/tests/wrangler.log`").send()
 
     elif intent == "test_notify":
         ok_ntfy = await asyncio.to_thread(

@@ -334,6 +334,8 @@ def run_test_cycle(sprint_n: int = 0) -> str:
     for attempt in (1, 2):
         failures = data["failures"]
         _log(f"  [Tester Ajani] ✗ {len(failures)} test başarısız (deneme {attempt}/2) — sahiplerine iletiliyor")
+        for f in failures:
+            _log(f"    ✗ [{f.get('area', '?')}] {f.get('name', '?')}")
 
         by_owner: dict[str, list[dict]] = {}
         for f in failures:
