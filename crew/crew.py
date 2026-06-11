@@ -693,6 +693,11 @@ def load_sprint(sprint_number: int) -> list:
 
     namespace = {"TaskSpec": TaskSpec, "ROOT": ROOT}
     exec(sprint_file.read_text(encoding="utf-8"), namespace)
+    if namespace.get("CLOSED"):
+        raise ValueError(
+            f"Sprint {sprint_number} KAPALI (CLOSED=True) — görevleri zaten uygulanmış. "
+            f"Tekrar koşturmak kod tekrarı/bozulma yaratır."
+        )
     tasks = namespace.get("tasks", [])
     if not tasks:
         raise ValueError(f"sprint{sprint_number}.py içinde 'tasks' listesi tanımlı değil.")

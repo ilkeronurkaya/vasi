@@ -16,6 +16,8 @@ Task 2: Geçmiş tarihe zamanlama engeli (400)
 Task 3: Admin manuel teslimat tetikleyici + sonuç sayaçları
 """
 
+CLOSED = True  # manager bu sprint'i koşturmayı reddeder
+
 tasks = [
 
     # ─────────────────────────────────────────────────────────────────────────
