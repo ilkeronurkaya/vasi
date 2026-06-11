@@ -7,6 +7,8 @@ Task 2: Uygulama içi butonları .btn ailesine geçir
 Task 3: Upgrade sayfası — gerçek plan vurgusu + v2 kartlar
 Task 4: Boş durum / yükleme kalıbı tutarlılığı
 Task 5: Mobil sidebar davranışı
+Task 6: Public fiyat endpoint'i (admin ayarları → herkese açık)
+Task 7: Landing fiyat kartlarını endpoint'e bağla (admin değişince landing değişir)
 
 Her görevde: 'use client' direktiflerine DOKUNMA, veri mantığını KORU.
 """
@@ -175,6 +177,95 @@ Commit: `style(sprint-15): boş durum ve yükleme kalıbı birleştirildi`
 ### Doğrulama
 run_tsc() + check_css() temizse commit at.
 Commit: `feat(sprint-15): mobil sidebar — üst bar + açılır menü`
+""",
+    ),
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Task 6: Public fiyat endpoint'i
+    # ─────────────────────────────────────────────────────────────────────────
+    TaskSpec(
+        role="Backend Ajani",
+        description="""
+## Görev: Herkese açık fiyat endpoint'i — GET /api/v1/public/pricing
+
+### Yeni dosya: `vasi-api/src/routes/public.ts`
+Önce `vasi-api/src/routes/me.ts`'i oku, aynı kalıbı kullan ama
+authMiddleware KULLANMA — bu endpoint herkese açık (landing page çağıracak).
+
+```ts
+import { Hono } from 'hono'
+import type { Env } from '../types'
+
+const pub = new Hono<{ Bindings: Env }>()
+
+pub.get('/pricing', async (c) => {
+  const result = await c.env.DB.prepare(
+    `SELECT key, value FROM admin_settings WHERE key IN
+     ('plan_limit_free','plan_limit_personal','recipient_limit_free',
+      'recipient_limit_personal','price_personal_monthly','price_family_monthly')`
+  ).all()
+  const pricing: Record<string, string> = {}
+  for (const row of (result.results ?? []) as Array<{ key: string; value: string }>) {
+    pricing[row.key] = row.value
+  }
+  c.header('Cache-Control', 'public, max-age=300')
+  return c.json({ pricing })
+})
+
+export { pub as publicRoutes }
+```
+
+### Kayıt: `vasi-api/src/index.ts` (önce oku!)
+Import ekle ve auth OLMADAN mount et:
+```ts
+app.route('/api/v1/public', publicRoutes)
+```
+
+### Doğrulama
+run_tsc() temizse commit at.
+Commit: `feat(sprint-15): public pricing endpoint`
+""",
+    ),
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Task 7: Landing ↔ admin fiyat senkronu
+    # ─────────────────────────────────────────────────────────────────────────
+    TaskSpec(
+        role="UX/UI Ajani",
+        description="""
+## Görev: Landing fiyat kartlarını /api/v1/public/pricing'e bağla
+
+### Dosya: `vasi-web/src/app/page.tsx` (önce SADECE fiyatlandırma bölümünü ve
+LANGS'taki plan_* anahtarlarını oku — dosya büyük, tamamını okumaya çalışma!)
+
+1. Component'e state + fetch ekle:
+```ts
+const [pricing, setPricing] = useState<Record<string, string>>({})
+useEffect(() => {
+  fetch('/api/v1/public/pricing')
+    .then(r => r.json())
+    .then(d => setPricing(d.pricing ?? {}))
+    .catch(() => {})
+}, [])
+```
+2. Plan kartlarındaki RAKAMLARI pricing'den göster (yoksa mevcut sabit değer fallback):
+   - Personal kart fiyatı: `pricing.price_personal_monthly ?? '49'`
+   - Family kart fiyatı: `pricing.price_family_monthly ?? '99'`
+   - Free/Premium fiyatları sabit kalır.
+3. Mesaj limiti metinleri: plan_free_f1 ve plan_personal_f1 string'lerinin
+   BAŞINDAKİ sayıyı dinamik değiştir:
+```ts
+const withLimit = (text: string, limit?: string) =>
+  limit ? text.replace(/^[\\d.,]+/, limit) : text
+// kullanım: withLimit(t.plan_free_f1, pricing.plan_limit_free)
+```
+4. plan_per değerini TÜM dillerde aylığa çevir (admin fiyatları aylık):
+   tr '/ay', en '/mo', de '/Monat', fr '/mois', ar '/شهريًا'.
+5. Başka HİÇBİR metni/bölümü değiştirme.
+
+### Doğrulama
+run_tsc() + check_css() temizse commit at.
+Commit: `feat(sprint-15): landing fiyatları admin ayarlarıyla senkron`
 """,
     ),
 ]

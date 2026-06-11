@@ -166,6 +166,19 @@ def api_tests() -> None:
     record("Admin gelir raporu", "admin", "Backend Ajani",
            status == 200 and "total_monthly_revenue" in (rev or {}), f"status={status}")
 
+    # Public pricing — auth'suz çalışmalı ve admin değişikliğini yansıtmalı
+    status, pub = req("GET", "/api/v1/public/pricing")
+    record("Public pricing endpoint (auth'suz)", "public", "Backend Ajani",
+           status == 200 and "price_personal_monthly" in (pub or {}).get("pricing", {}),
+           f"status={status} body={pub}")
+
+    req("PUT", "/api/v1/admin/settings", {"key": "price_personal_monthly", "value": "59"}, admin_token)
+    status, pub2 = req("GET", "/api/v1/public/pricing")
+    record("Admin fiyat değişikliği public'e yansıyor", "public", "Backend Ajani",
+           status == 200 and (pub2 or {}).get("pricing", {}).get("price_personal_monthly") == "59",
+           f"status={status} body={pub2}")
+    req("PUT", "/api/v1/admin/settings", {"key": "price_personal_monthly", "value": "49"}, admin_token)
+
 
 # ── Ana akış ──────────────────────────────────────────────────────────────────
 
