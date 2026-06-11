@@ -35,3 +35,10 @@ vasi-api/all_migrations.sql
 # macOS / iCloud
 .DS_Store
 _tmp_*
+
+# Playwright MCP artifacts
+.playwright-mcp/
+sprint10-*.png
+
+# Build artifacts
+build_output.txt

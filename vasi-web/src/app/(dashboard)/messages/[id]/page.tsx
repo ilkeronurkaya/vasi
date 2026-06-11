@@ -213,6 +213,18 @@ const handleDeleteMessage = async () => {
                 <p style={{ color: 'var(--cream)', fontSize: '15px', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-wrap' }}>
                     {message.content_text ?? message.content ?? '—'}
                 </p>
+                {message.status === 'scheduled' && message.scheduled_at && (
+                    <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--copper)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>⏰</span>
+                        <span>
+                            Gönderilecek:{' '}
+                            {new Date(message.scheduled_at).toLocaleString('tr-TR', {
+                                day: '2-digit', month: 'long', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit',
+                            })}
+                        </span>
+                    </p>
+                )}
             </div>
 
             {/* Alıcılar */}
