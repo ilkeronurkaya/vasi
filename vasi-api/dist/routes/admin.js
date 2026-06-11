@@ -1,7 +1,11 @@
-import { Hono } from 'hono';
-import { findByEmail } from '../db/users.db';
-import { generateAccessToken } from '../lib/jwt';
-const admin = new Hono();
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.adminRoutes = void 0;
+const hono_1 = require("hono");
+const users_db_1 = require("../db/users.db");
+const jwt_1 = require("../lib/jwt");
+const admin = new hono_1.Hono();
+exports.adminRoutes = admin;
 // ── Admin Login (public) ──────────────────────────────────────────────────
 admin.post('/auth/login', async (c) => {
     const { email, password } = await c.req.json();
@@ -9,7 +13,7 @@ admin.post('/auth/login', async (c) => {
         return c.json({ error: 'email ve password zorunlu', code: 'VALIDATION_ERROR' }, 400);
     }
     // Kullanıcıyı bul
-    const user = await findByEmail(c.env, email);
+    const user = await (0, users_db_1.findByEmail)(c.env, email);
     if (!user) {
         return c.json({ error: 'Geçersiz kimlik bilgileri', code: 'INVALID_CREDENTIALS' }, 401);
     }
@@ -27,7 +31,6 @@ admin.post('/auth/login', async (c) => {
         return c.json({ error: 'Geçersiz kimlik bilgileri', code: 'INVALID_CREDENTIALS' }, 401);
     }
     // role: 'admin' ile token üret
-    const accessToken = await generateAccessToken({ userId: user.id, role: 'admin', exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8 }, c.env.JWT_SECRET);
+    const accessToken = await (0, jwt_1.generateAccessToken)({ userId: user.id, role: 'admin', exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8 }, c.env.JWT_SECRET);
     return c.json({ accessToken, role: 'admin' }, 200);
 });
-export { admin as adminRoutes };

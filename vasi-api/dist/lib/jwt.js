@@ -1,3 +1,8 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.generateAccessToken = generateAccessToken;
+exports.generateRefreshToken = generateRefreshToken;
+exports.verifyToken = verifyToken;
 // lib/jwt.ts
 const encoder = new TextEncoder();
 async function importHmacKey(secretHex) {
@@ -6,18 +11,18 @@ async function importHmacKey(secretHex) {
         bytes[i / 2] = parseInt(secretHex.substr(i, 2), 16);
     return crypto.subtle.importKey('raw', bytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
 }
-export async function generateAccessToken(payload, secretHex) {
+async function generateAccessToken(payload, secretHex) {
     const header = { alg: 'HS256', typ: 'JWT' };
     const encodedHeader = btoa(String.fromCharCode(...encoder.encode(JSON.stringify(header))));
     const encodedPayload = btoa(String.fromCharCode(...encoder.encode(JSON.stringify(payload))));
     const signature = await sign(`${encodedHeader}.${encodedPayload}`, secretHex);
     return `${encodedHeader}.${encodedPayload}.${signature}`;
 }
-export async function generateRefreshToken(payload, secretHex) {
+async function generateRefreshToken(payload, secretHex) {
     payload.exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7; // 7 days
     return await generateAccessToken(payload, secretHex);
 }
-export async function verifyToken(token, secretHex) {
+async function verifyToken(token, secretHex) {
     const parts = token.split('.');
     if (parts.length !== 3)
         return null;

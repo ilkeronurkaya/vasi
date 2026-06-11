@@ -1,13 +1,17 @@
-import { Hono } from 'hono';
-import { authMiddleware } from '../middleware/auth';
-import { findById } from '../db/users.db';
-const me = new Hono();
-me.use('*', authMiddleware);
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.meRoutes = void 0;
+const hono_1 = require("hono");
+const auth_1 = require("../middleware/auth");
+const users_db_1 = require("../db/users.db");
+const me = new hono_1.Hono();
+exports.meRoutes = me;
+me.use('*', auth_1.authMiddleware);
 me.get('/', async (c) => {
     const userId = c.get('userId');
     try {
         // Fetch user details
-        const user = await findById(c.env, userId);
+        const user = await (0, users_db_1.findById)(c.env, userId);
         if (!user)
             return c.json({ error: 'User not found' }, 404);
         // Fetch subscription plan type
@@ -40,4 +44,3 @@ me.get('/', async (c) => {
         return c.json({ error: error.message }, 400);
     }
 });
-export { me as meRoutes };

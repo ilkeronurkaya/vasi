@@ -1,14 +1,17 @@
-import { findDueMessages, setTrigger, markDelivered, markFailed } from '../db/triggers.db';
-import { findById } from '../db/messages.db';
-import { findByMessage } from '../db/recipients.db';
-export class DeliveryService {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DeliveryService = void 0;
+const triggers_db_1 = require("../db/triggers.db");
+const messages_db_1 = require("../db/messages.db");
+const recipients_db_1 = require("../db/recipients.db");
+class DeliveryService {
     static async scheduleMessage(env, messageId, userId, scheduledAt) {
-        const message = await findById(env, messageId, userId);
+        const message = await (0, messages_db_1.findById)(env, messageId, userId);
         if (!message) {
             return { error: 'Mesaj bulunamadı', code: 'NOT_FOUND', status: 404 };
         }
         try {
-            await setTrigger(env, messageId, scheduledAt);
+            await (0, triggers_db_1.setTrigger)(env, messageId, scheduledAt);
             return { message: 'Mesaj zamanlandı' };
         }
         catch (error) {
@@ -17,16 +20,16 @@ export class DeliveryService {
         }
     }
     static async deliverDueMessages(env) {
-        const dueMessagesResult = await findDueMessages(env);
+        const dueMessagesResult = await (0, triggers_db_1.findDueMessages)(env);
         const dueMessages = dueMessagesResult.results;
         for (const message of dueMessages) {
             const messageId = message.id;
             const userId = message.user_id;
             try {
-                const recipientsResult = await findByMessage(env, messageId, userId);
+                const recipientsResult = await (0, recipients_db_1.findByMessage)(env, messageId, userId);
                 const recipients = recipientsResult.results;
                 if (!recipients || recipients.length === 0) {
-                    await markDelivered(env, messageId);
+                    await (0, triggers_db_1.markDelivered)(env, messageId);
                     continue;
                 }
                 for (const recipient of recipients) {
@@ -37,11 +40,11 @@ export class DeliveryService {
               <p style="font-size:12px;color:#999">Bu mesaj Vasi aracılığıyla gönderilmiştir.</p>
             </div>`);
                 }
-                await markDelivered(env, messageId);
+                await (0, triggers_db_1.markDelivered)(env, messageId);
             }
             catch (error) {
                 console.error('deliverDueMessages hata:', error);
-                await markFailed(env, messageId, String(error));
+                await (0, triggers_db_1.markFailed)(env, messageId, String(error));
             }
         }
     }
@@ -70,3 +73,4 @@ export class DeliveryService {
         return await response.json();
     }
 }
+exports.DeliveryService = DeliveryService;

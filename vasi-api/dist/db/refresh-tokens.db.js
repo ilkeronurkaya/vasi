@@ -1,4 +1,10 @@
-export async function create(env, userId, tokenHash) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.create = create;
+exports.findByHash = findByHash;
+exports.revoke = revoke;
+exports.revokeAllForUser = revokeAllForUser;
+async function create(env, userId, tokenHash) {
     const id = crypto.randomUUID();
     // expires_at: 30 gün
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -7,18 +13,18 @@ export async function create(env, userId, tokenHash) {
         .run();
     return id;
 }
-export async function findByHash(env, hash) {
+async function findByHash(env, hash) {
     const token = await env.DB.prepare('SELECT * FROM refresh_tokens WHERE token_hash = ?')
         .bind(hash)
         .first();
     return token || null;
 }
-export async function revoke(env, tokenId) {
+async function revoke(env, tokenId) {
     await env.DB.prepare('DELETE FROM refresh_tokens WHERE id = ?')
         .bind(tokenId)
         .run();
 }
-export async function revokeAllForUser(env, userId) {
+async function revokeAllForUser(env, userId) {
     await env.DB.prepare('DELETE FROM refresh_tokens WHERE user_id = ?')
         .bind(userId)
         .run();

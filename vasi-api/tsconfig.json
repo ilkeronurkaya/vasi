@@ -1,16 +1,15 @@
+
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ESNext", "DOM"],
-    "types": ["@cloudflare/workers-types"],
+    "module": "commonjs",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "jsx": "react",
+    "types": ["@cloudflare/workers-types"]
   },
   "include": ["src"]
 }

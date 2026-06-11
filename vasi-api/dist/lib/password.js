@@ -1,6 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.hashPassword = hashPassword;
+exports.verifyPassword = verifyPassword;
 // Web Crypto API — global, import gerekmez
 const encoder = new TextEncoder();
-export async function hashPassword(password) {
+async function hashPassword(password) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
     const derivedBits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, keyMaterial, 256);
@@ -9,7 +13,7 @@ export async function hashPassword(password) {
     const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
     return `pbkdf2:sha256:100000:${saltHex}:${hashHex}`;
 }
-export async function verifyPassword(password, storedHash) {
+async function verifyPassword(password, storedHash) {
     const [algorithm, hashFunction, iterationsStr, saltHex, hashHex] = storedHash.split(':');
     if (algorithm !== 'pbkdf2' || hashFunction !== 'sha256')
         throw new Error('Invalid hash format');

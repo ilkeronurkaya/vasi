@@ -1,5 +1,9 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.encrypt = encrypt;
+exports.decrypt = decrypt;
 // lib/crypto.ts
-export async function encrypt(text, keyHex) {
+async function encrypt(text, keyHex) {
     const key = await importKey(keyHex);
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const encoded = new TextEncoder().encode(text);
@@ -7,7 +11,7 @@ export async function encrypt(text, keyHex) {
     const combined = new Uint8Array([...iv, ...new Uint8Array(cipher)]);
     return btoa(String.fromCharCode(...combined));
 }
-export async function decrypt(cipherB64, keyHex) {
+async function decrypt(cipherB64, keyHex) {
     const key = await importKey(keyHex);
     const combined = Uint8Array.from(atob(cipherB64), c => c.charCodeAt(0));
     const iv = combined.slice(0, 12);
