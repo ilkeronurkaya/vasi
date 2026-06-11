@@ -5,6 +5,7 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { adminMiddleware } from '../middleware/adminAuth'
 import { findByEmail } from '../db/users.db'
 import { generateAccessToken } from '../lib/jwt'
+import { verifyPassword } from '../lib/password'
 import type { Env } from '../types'
 
 const admin = new Hono<{ Bindings: Env; Variables: { userId: string; role: string } }>()
@@ -27,14 +28,9 @@ admin.post('/auth/login', async (c) => {
     return c.json({ error: 'Yetkisiz erişim', code: 'FORBIDDEN' }, 403)
   }
 
-  // Şifre doğrulama — Web Crypto API (mevcut auth.service.ts'deki pattern):
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-
-  if (passwordHash !== user.password_hash) {
+  // Şifre doğrulama — auth ile aynı PBKDF2 yolu (lib/password.ts)
+  const valid = await verifyPassword(password, user.password_hash as string)
+  if (!valid) {
     return c.json({ error: 'Geçersiz kimlik bilgileri', code: 'INVALID_CREDENTIALS' }, 401)
   }
 
