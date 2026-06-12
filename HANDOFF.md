@@ -1,110 +1,70 @@
 # Vasi App BD — Oturum El Geçirme Notu
-_Tarih: 2026-06-11 öğleden sonra (güncellendi)_
+_Tarih: 2026-06-11 gece (güncellendi)_
 
-> Proje konumu: `~/Projects/vasi` (2026-06-10'da iCloud'dan taşındı).
-> GitHub: `git@github.com:ilkeronurkaya/vasi.git` (private) — push kullanıcı terminalinden SSH ile.
-
----
-
-## Projeye Genel Bakış
-
-Vasi, insanların geleceğe mesaj bırakmasını sağlayan bir platform.
-Monorepo: `vasi-web` (Next.js 15), `vasi-api` (Cloudflare Workers/Hono), `crew/` (smolagents AI geliştirme ekibi).
-
-**Çalıştırma:**
-```bash
-cd crew && chainlit run manager.py
-```
-
-**Manager komutları** (Chainlit'te veya telefondan ntfy ile):
-`sprint N` · `test` · `durum` · `log` · `kontrol` · `migrate` · `dev` · `durdur` · `bildirim` · `sprintler`
+> Proje: `~/Projects/vasi` · GitHub: `git@github.com:ilkeronurkaya/vasi.git` (private, push kullanıcı terminalinden)
+> Ürün durumu: **UÇTAN UCA ÇALIŞIYOR** — kayıt → mesaj → zamanlama → tasarımlı e-posta → /m/[token] görüntüleme.
+> İlk gerçek e-posta 2026-06-11'de teslim edildi (Resend).
 
 ---
 
-## Sprint Durumu
+## Mimari Özet
 
-| Sprint | Kapsam | Durum |
-|--------|--------|-------|
-| 1-7 | Auth, CRUD, zamanlama, UX temelleri | ✅ |
-| 8 | Gerçek veri (/me, recipient_count) | ✅ denetlendi |
-| 9 | Plan limiti, /messages listesi, detay alıcıları | ✅ denetlendi |
-| 10 | Apple tasarım dili (DESIGN.md v2) | ✅ denetlendi |
-| 11 | Sprint 10 kaçakları + NAV düzeni | ✅ denetlendi |
-| 12 | E-posta teslim bug'ı + /upgrade + iptal/yeniden zamanlama | ✅ denetlendi |
-| 13 | Admin backend (login, users, stats, reports, settings) | ✅ denetlendi — migration'lar + 6 endpoint Claude tamamladı |
-| 14 | Admin Panel UI | ✅ denetlendi — users/settings sayfaları + guard fix Claude tamamladı |
-| — | Tester Ajani + smoke testler + canlı log | ✅ kuruldu (sprint dışı) |
-| — | Tasarım rafinesi (ui-ux-pro-max skill ile) | ✅ landing + tutarlılık + a11y |
-| 15 | Buton v2 + UI cilası + admin↔landing fiyat senkronu | ✅ hibrit (crew 2 görev + Claude 5 görev) |
-| 16 | E-posta teslimatı (EMAIL_FROM, tarih engeli, manuel tetikleyici) | ✅ Claude uyguladı — testler 19/19 |
+Monorepo: `vasi-web` (Next.js 15, edge, koyu Apple-dili tasarım), `vasi-api` (CF Workers/Hono, D1),
+`crew/` (yerel LLM ajan altyapısı — **fiilen emekli**, aşağıya bak), `migrations/` (13 dosya),
+`DESIGN.md` (tasarım anayasası: APPLE TASARIM DİLİ v2 + Buton Sistemi v2).
 
-### Güncel durum (2026-06-11 öğleden sonra)
-- **Tester Ajani devrede**: `crew/tests/api_smoke.py` deterministik smoke paketi (izole DB, port 8788, ~16 test). Her sprint sonunda otomatik koşar; hata bulursa sahibine (Backend/UX ajanı) düzelttirir (2 deneme), olmazsa log'a "manuel kontrol" düşer. Bağımsız: `test` komutu.
-- **Tester'ın ilk avı**: alıcı ekleme + zamanlama akışı Sprint 2-3'ten beri şema uyumsuzluğuyla bozukmuş — düzeltildi (recipients user_id kaldırıldı, migration 0013 teslimat kolonları, markFailed→'error').
-- **Canlı log**: `sprint N` ve `test` çalışırken Chainlit mesajında sprint.log son satırları 3 sn'de bir akar.
-- **Mesaj oluşturma bug'ı düzeltildi**: POST /messages artık id'li satır döndürüyor (wizard "Message not found" hatasıydı).
-- Admin: `test@vasi.app` is_admin=1 (lokal). Admin giriş PBKDF2 düzeltmesiyle çalışıyor.
+## Sprint Durumu — 17/17 KAPALI
+
+1-7 temel, 8 gerçek veri, 9 eksikler, 10-11 Apple tasarım, 12 e-posta bug+upgrade,
+13 admin backend, 14 admin UI, 15 buton v2+fiyat senkronu (hibrit), 16 e-posta uçtan uca (Claude),
+17 teslimat deneyimi: tasarımlı e-posta şablonu + alıcı erişim token'ı + `/m/[token]` sayfası (Claude).
+Tüm sprint dosyaları `CLOSED = True` ile kilitli — manager koşturmayı reddeder.
+
+## ⚠️ CREW KARARI (açık konu)
+
+Crew (qwen2.5-coder, yerel) son 3 sprintte üst üste başarısız: TSX'i Python bloğu olarak yazma,
+find()==-1 ile dosya bozma, aynı kodu 15 kez tekrarlama, `###</code>` felci. Prompt kuralları
+(KOD BLOĞU KURALI, regex yasağı, doğrulama şartı) eklendi ama model uymuyor.
+**Öneri sunuldu: sprint işlerini Claude yapar, crew emekli.** Kullanıcı süreç iyileştirme
+konuşması yapacak — karar bu konuşmada netleşecek. Manager/Tester/bildirim altyapısı her
+durumda kalıyor (değerli ve deterministik).
+
+## Çalışan Süreç Altyapısı
+
+- **Manager** (chainlit run manager.py): sprint N · test · durum · log · kontrol · migrate · dev · durdur · bildirim. Canlı log akışı var.
+- **Tester**: `crew/tests/api_smoke.py` — 23 deterministik test (izole DB :8788). Statik: 'use client', rota mount, CSS sözdizimi. Komut: `test`.
+- **Bildirim**: ntfy `vasi-iko-7ca81627` (çıktı) / `vasi-iko-cmd-57f994b1` (telefondan komut) + iMessage ("Patron ... Bilgine.").
+- **Ajan adım logları**: `crew/logs/` (denetim için; sohbete log yapıştırmak yerine buradan okunur).
+- **Kurallar**: test, özellikle AYNI commit'te eklenir (önce eklenirse Tester onu bug sanır — yaşandı). Şema değişikliği = yeni migration, elle DB ALTER yasak. Her commit öncesi `git branch --show-current` (branch kayması 2 kez yaşandı).
+
+## Ortam / Sırlar
+
+`vasi-api/.dev.vars` (gitignore'lu): JWT_SECRET, RESEND_API_KEY (gerçek, test modu — yalnızca
+hesap sahibinin adresine gönderir), EMAIL_FROM=`Vasi <onboarding@resend.dev>` (domain doğrulanana
+dek zorunlu), APP_URL=http://localhost:3000. Lokal admin: test@vasi.app / Test1234! (is_admin=1).
+Not: Resend key sohbete yapıştırıldı — canlıya çıkmadan rotate edilecek.
 
 ## Sıradaki İşler
-1. `git push origin main` (yerelde commit'li, push bekliyor olabilir — `git status` bak)
-2. `pnpm db:migrate:local` (0013 uygulanmamışsa)
-3. **Sprint 15'i çalıştır** → Claude denetimi (özellikle Task 2 inline buton temizliği, Task 5 mobil sidebar, Task 7 landing fiyat senkronu) → main'e ff-merge → push
-4. Tarayıcı testi: localhost:3000 (test@vasi.app / Test1234!) + /admin
-5. Sonrası: Resend e-posta gerçek test (`wrangler secret put RESEND_API_KEY` veya .dev.vars), İyzico sandbox (ayrı sprint — /upgrade CTA "Yakında")
 
-### Bekleyen
-- crewai 1.x migration (düşük öncelik)
-- check_css'e "inline buton stili" kuralı eklenebilir (DESIGN.md Buton v2 kuralını otomatik denetler)
-
----
-
-## Süreç Kuralları (önemli — denenmiş dersler)
-
-1. **Sprint sonrası denetim ZORUNLU**: tsc temiz olsa bile bak: `'use client'` ilk satır mı, rotalar index.ts'e mount edilmiş mi, API yanıt şeması frontend beklentisiyle uyuşuyor mu, tsconfig'lere dokunulmuş mu, kök dizine stray `src/` yazılmış mı. (Hepsi yaşandı.)
-2. **ADIM LİMİTİ DOLDU** uyarısı = o görevin dosyaları büyük ihtimalle eksik/yarım.
-3. **Crew'a şema değişikliği yaptırma kuralı** fix prompt'ta: .wrangler DB'lerine elle ALTER yasak; değişiklik = yeni migration. (Yerel model dev DB'yi elle değiştirip kilitlenmişti.)
-4. **Görev yazımı**: ≤4000 karakter, kod örneği gömülü, "önce şu dosyayı oku" + "şuna DOKUNMA" sınırları açık. Sprint başına ideal görev sayısı ≤5 (15'te 7 var — denetimde dikkat).
-5. **Git akışı**: crew sprint-N branch açar → denetim → `git checkout main && git merge --ff-only sprint-N` → kullanıcı push eder.
-6. Commit kimliği sandbox'tan: `git -c user.name="İlker Onur Kaya" -c user.email="ilkeronurkaya@gmail.com" commit ...`
-
----
+1. Sprint 17 canlı testi: API restart → kendine mesaj zamanla → `run-due` → yeni tasarım e-posta → butondan `/m/[token]` aç
+2. **Süreç iyileştirme konuşması** (crew kararı + yeni iş akışı) — kullanıcı başlatacak
+3. Sprint 18 adayı: **İyzico sandbox** (kullanıcının merchant hesabı açması gerek) — /upgrade CTA'sı "Yakında" bekliyor
+4. Diğer adaylar: Resend domain doğrulama, alıcı OTP doğrulaması (recipients.otp_* alanları hazır), canlıya çıkış (wrangler deploy + Pages)
 
 ## API Sözleşmesi (sık kullanılan)
 
-- `POST /api/v1/messages` → `{ title, message_type, content_text }` → mesaj satırı (id dahil); limit dolunca 403 `LIMIT_REACHED`
-- `POST /api/v1/messages/:id/recipients` → `{ full_name, email }`
-- `POST /api/v1/messages/:id/schedule` → `{ scheduled_at }` (ISO)
-- `GET /api/v1/me` → `{ user, plan, usage: { messages_used, messages_limit } }`
-- `GET /api/v1/messages` → liste (recipient_count dahil); `GET /:id` → detay (recipients dahil)
-- Admin (`/api/v1/admin/*`, Bearer admin token): `auth/login` → `{ accessToken }`, `users`, `users/:id/status|plan`, `stats/overview|messages|plans`, `reports/users|revenue|failed-deliveries`, `settings` GET/PUT
-- `GET /api/v1/public/pricing` → auth'suz, admin_settings fiyat/limitleri (Sprint 15 Task 6)
-- Frontend: kullanıcı istekleri `apiFetch` (authToken), admin istekleri `adminFetch` (adminToken) — `src/lib/api.ts`
+- Auth: `POST /api/v1/auth/login` → `{accessToken, refreshToken}`; Bearer ile `apiFetch`/`adminFetch` (src/lib/api.ts)
+- Mesaj: `POST /messages` `{title, message_type, content_text}` → satır (id'li); 403 LIMIT_REACHED; `POST /:id/recipients` `{full_name, email}`; `POST /:id/schedule` `{scheduled_at}` (ISO, gelecek zorunlu)
+- `GET /me` → `{user, plan, usage}`
+- Admin `/api/v1/admin/*`: login → `{accessToken}`; users (+status/plan PATCH); stats/overview·messages·plans; reports/users·revenue·failed-deliveries; settings GET/PUT; **delivery/run-due** → `{delivered, failed}`
+- Public: `GET /api/v1/public/pricing` (admin↔landing fiyat senkronu); `GET /api/v1/public/view/:token` → mesaj içeriği (accessed_at damgalar)
+- Teslimat: cron 08:00 UTC + run-due; e-posta şablonu `delivery.service.ts:buildDeliveryEmail` (açık tema, tablo tabanlı, içerik gömülmez — link taşır)
 
----
+## Komutlar
 
-## Tasarım Sistemi
-
-Kaynak: `DESIGN.md` — renk tokenleri + **"APPLE TASARIM DİLİ v2"** (tipografi, boşluk, kart/form/sidebar kuralları, hareket) + **"Buton Sistemi v2"** (yumuşak dikdörtgen, 3 seviye; inline buton stili yasak).
-Kısa yasaklar: Tailwind custom renk class'ı yok (`bg-Copper` ❌), `transition: all` yok, 2px focus border yerine focus-ring token.
-
----
-
-## Test Altyapısı
-
-- `crew/tests/api_smoke.py` — deterministik; izole wrangler dev (:8788, geçici DB, migrations baştan). Statik kontroller ('use client', rota mount) + API akışları (auth→mesaj→alıcı→zamanlama→me→admin→limit→public pricing).
-- Çıktı: `RESULTS_JSON:` satırı; Tester Ajani bunu parse edip hataları owner'a göre dağıtır.
-- Test dosyası ajanlara karşı korumalı: "test doğru, kod hatalı" + DB ALTER yasağı prompt'ta.
-
----
-
-## Bildirim / Uzaktan Kumanda
-
-- Sprint/test bitince: ntfy push (`vasi-iko-7ca81627`) + iMessage ("Patron Sprint X tamamlandı. Bilgine.")
-- Telefondan komut: ntfy `vasi-iko-cmd-57f994b1` konusuna yaz (`sprint 15`, `test`, `durum`...). Yer imi linkleri: `https://ntfy.sh/vasi-iko-cmd-57f994b1/publish?message=durum`
-
----
-
-## Model Bilgisi
-
-- **Güçlü**: `qwen2.5-coder:32b` — karmaşık görevler. **Hızlı**: `qwen2.5-coder:7b` — basit fix'ler. Ollama: `localhost:11434`
-- Bilinen zaaf: uzun düzeltme oturumlarında context şişince kilitlenme (`###</code>` döngüsü) — adım limitleri bunun sigortası.
+```bash
+pnpm dev:api / dev:web          # :8787 / :3000
+pnpm db:migrate:local           # D1 şema
+python3 crew/tests/api_smoke.py # testler (veya manager'da `test`)
+git push origin main            # push HER ZAMAN kullanıcıdan
+```
