@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { adminFetch } from '@/lib/adminFetch'  // Assuming this is where adminFetch is defined
+import { adminFetch } from '@/lib/api'
 import { Stats, Plan } from '@/types'
 
 const LANGS = {
@@ -17,7 +17,12 @@ const LANGS = {
     teslimat_orani: "Teslimat Oranı",
     plan_dagilimi: "Plan Dağılımı",
     yukleniyor: "Yükleniyor...",
-    veriler_alinamadi: "Veriler alınamadı"
+    veriler_alinamadi: "Veriler alınamadı",
+    teslimat_calistir: "Teslimatları Şimdi Çalıştır",
+    teslimat_calisiyor: "Çalışıyor...",
+    teslimat_sonuc: "Sonuç: %d teslim edildi, %f başarısız",
+    teslimat_hata: "Teslimat tetiklenemedi",
+    teslimat_aciklama: "Vadesi gelen zamanlanmış mesajları hemen işler (lokal ortamda cron çalışmaz)."
   },
   en: {
     genel_bakis: "General Overview",
@@ -30,7 +35,12 @@ const LANGS = {
     teslimat_orani: "Delivery Rate",
     plan_dagilimi: "Plan Distribution",
     yukleniyor: "Loading...",
-    veriler_alinamadi: "Data could not be retrieved"
+    veriler_alinamadi: "Data could not be retrieved",
+    teslimat_calistir: "Run Deliveries Now",
+    teslimat_calisiyor: "Running...",
+    teslimat_sonuc: "Result: %d delivered, %f failed",
+    teslimat_hata: "Delivery trigger failed",
+    teslimat_aciklama: "Processes due scheduled messages immediately (cron does not run locally)."
   }
 } as { [key: string]: { [key: string]: string } }
 
@@ -42,6 +52,27 @@ const AdminOverviewPage = () => {
   const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [runDueBusy, setRunDueBusy] = useState(false)
+  const [runDueResult, setRunDueResult] = useState('')
+
+  const runDue = async () => {
+    setRunDueBusy(true)
+    setRunDueResult('')
+    try {
+      const r: { delivered?: number; failed?: number } = await adminFetch(
+        '/api/v1/admin/delivery/run-due', { method: 'POST' }
+      )
+      setRunDueResult(
+        LANGS[lang].teslimat_sonuc
+          .replace('%d', String(r.delivered ?? 0))
+          .replace('%f', String(r.failed ?? 0))
+      )
+    } catch {
+      setRunDueResult(LANGS[lang].teslimat_hata)
+    } finally {
+      setRunDueBusy(false)
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,6 +123,24 @@ const AdminOverviewPage = () => {
           <div style={{ fontSize: '11px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '8px' }}>{t.teslimat_orani}</div>
         </div>
       </div>
+      {/* Manuel teslimat tetikleyici — lokal ortamda cron çalışmaz (TestBulgulari_1 #5) */}
+      <div style={{
+        background: 'var(--midnight)', border: 'var(--border-subtle)',
+        borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)',
+        padding: '24px', marginTop: '32px',
+        display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap',
+      }}>
+        <button className="btn btn-primary" onClick={runDue} disabled={runDueBusy}
+          style={{ opacity: runDueBusy ? 0.7 : 1 }}>
+          {runDueBusy ? t.teslimat_calisiyor : t.teslimat_calistir}
+        </button>
+        <div>
+          {runDueResult
+            ? <span style={{ fontSize: '14px', color: 'var(--copper)', fontWeight: 600 }}>{runDueResult}</span>
+            : <span style={{ fontSize: '13px', color: 'var(--mist)' }}>{t.teslimat_aciklama}</span>}
+        </div>
+      </div>
+
       {/* Plan Distribution Section */}
       <h2 style={{ fontSize: '17px', fontWeight: '600', marginTop: '32px' }}>
         {t.plan_dagilimi}

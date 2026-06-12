@@ -7,7 +7,8 @@ export async function findById(env: Env, id: string, userId: string) {
 }
 
 export async function findAllByUser(env: Env, userId: string) {
-  const stmt = env.DB.prepare(`SELECT m.*, COUNT(r.id) AS recipient_count FROM messages m LEFT JOIN recipients r ON r.message_id = m.id WHERE m.user_id = ? GROUP BY m.id ORDER BY m.created_at DESC`).bind(userId);
+  // Silinen mesajlar (status='cancelled') listelerde görünmez — TestBulgulari_1 #4/#7
+  const stmt = env.DB.prepare(`SELECT m.*, COUNT(r.id) AS recipient_count FROM messages m LEFT JOIN recipients r ON r.message_id = m.id WHERE m.user_id = ? AND m.status != 'cancelled' GROUP BY m.id ORDER BY m.created_at DESC`).bind(userId);
   const result = await stmt.all();
   return result.results;
 }

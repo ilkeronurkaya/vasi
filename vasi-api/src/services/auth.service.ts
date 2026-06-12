@@ -5,11 +5,15 @@ import { hashPassword, verifyPassword } from '../lib/password'
 import * as UsersDB from '../db/users.db'
 import * as RefreshTokensDB from '../db/refresh-tokens.db'
 import * as EmailVerificationsDB from '../db/email-verifications.db'
+import { DeliveryService } from './delivery.service'
 
 type ServiceResult = Record<string, unknown>
 
 export async function register(env: Env, userData: Record<string, string>): Promise<ServiceResult> {
   const { email, password, first_name, last_name, phone } = userData
+  if (!email || !password || !first_name || !last_name) {
+    return { error: 'email, password, first_name ve last_name zorunlu', code: 'VALIDATION_ERROR', status: 400 }
+  }
   const existingUser = await UsersDB.findByEmail(env, email)
   if (existingUser) return { error: 'E-posta zaten kayıtlı', code: 'EMAIL_ALREADY_REGISTERED', status: 409 }
 
@@ -19,7 +23,15 @@ export async function register(env: Env, userData: Record<string, string>): Prom
   const otpHash = await hashOTP(otp)
   await EmailVerificationsDB.create(env, userId as string, otpHash)
 
-  console.log(`E-posta doğrulama OTP'si: ${otp}`) // TODO: Resend ile gerçek e-posta gönderimi
+  // Doğrulama kodunu e-postala; gönderim başarısızsa kayıt YİNE başarılı —
+  // lokal/test ortamında kod dev-api.log'dan okunabilir (Resend test modu
+  // yalnızca hesap sahibinin adresine gönderir).
+  try {
+    await DeliveryService.sendOtpEmail(env, { name: first_name, email }, otp)
+  } catch (error) {
+    console.error('Doğrulama e-postası gönderilemedi:', error)
+  }
+  console.log(`E-posta doğrulama OTP'si (${email}): ${otp}`)
 
   return { message: 'Kayıt başarılı. Lütfen e-postanızı kontrol edin ve doğrulayın.' }
 }
@@ -46,7 +58,7 @@ export async function verifyEmail(env: Env, email: string, otp: string): Promise
   if (!verification) return { error: 'Geçersiz veya kullanılmış doğrulama kodu', code: 'INVALID_OTP', status: 401 }
 
   const otpHash = await hashOTP(otp)
-  if (verification.token_hash !== otpHash) return { error: 'Geçersiz doğrulama kodu', code: 'INVALID_OTP', status: 401 }
+  if (verification.code_hash !== otpHash) return { error: 'Geçersiz doğrulama kodu', code: 'INVALID_OTP', status: 401 }
 
   await UsersDB.updateEmailVerified(env, user.id as string)
   await EmailVerificationsDB.markUsed(env, verification.id as string)

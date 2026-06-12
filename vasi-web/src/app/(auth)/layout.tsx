@@ -10,6 +10,7 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div style={{
             minHeight: '100vh',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             background: 'var(--obsidian)',
@@ -42,6 +43,14 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 </a>
                 {children}
             </div>
+            <a href="/" style={{
+                marginTop: '20px',
+                color: 'var(--mist)',
+                fontSize: '13px',
+                textDecoration: 'none',
+            }}>
+                ← Ana sayfaya dön
+            </a>
         </div>
     );
 };

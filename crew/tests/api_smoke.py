@@ -172,6 +172,30 @@ def api_tests() -> None:
            status == 200 and me.get("user", {}).get("email") == TEST_EMAIL
            and usage.get("messages_used", 0) >= 1, f"status={status} body={me}")
 
+    # TestBulgulari_1 #3: telefonsuz kayıt 500 vermemeli (D1 undefined bind hatası)
+    status, reg = req("POST", "/api/v1/auth/register",
+                      {"email": f"smoke-reg-{int(time.time())}@test.dev", "password": "Test1234!",
+                       "first_name": "Smoke", "last_name": "Kayıt"})
+    record("Kayıt telefonsuz çalışıyor (D1 null bind)", "auth", "Backend Ajani",
+           status == 201, f"status={status} body={reg}")
+
+    # TestBulgulari_1 #3: eksik alanla kayıt 400 dönmeli (500 değil)
+    status, reg_bad = req("POST", "/api/v1/auth/register", {"email": "eksik@test.dev"})
+    record("Eksik alanla kayıt 400 dönüyor", "auth", "Backend Ajani",
+           status == 400 and (reg_bad or {}).get("code") == "VALIDATION_ERROR",
+           f"status={status} body={reg_bad}")
+
+    # TestBulgulari_1 #4/#7: silinen mesaj listeden düşmeli
+    status, delmsg = req("POST", "/api/v1/messages",
+                         {"title": "Silinecek mesaj", "message_type": "text", "content_text": "sil"}, token)
+    del_id = (delmsg or {}).get("id")
+    if del_id:
+        req("DELETE", f"/api/v1/messages/{del_id}", None, token)
+        status, lst2 = req("GET", "/api/v1/messages", None, token)
+        gone = isinstance(lst2, list) and all(m.get("id") != del_id for m in lst2)
+        record("Silinen mesaj listede görünmüyor", "messages", "Backend Ajani",
+               status == 200 and gone, f"status={status} silinen={del_id}")
+
     # Admin login (is_admin setup main() içinde yapıldı)
     status, adm = req("POST", "/api/v1/admin/auth/login", {"email": TEST_EMAIL, "password": TEST_PASS})
     admin_token = (adm or {}).get("accessToken", "")

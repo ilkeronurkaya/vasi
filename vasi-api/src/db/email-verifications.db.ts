@@ -2,10 +2,13 @@
 // db/email-verifications.db.ts
 import type { Env } from '../types'
 
-export async function create(env: Env, userId: string, tokenHash: string): Promise<string> {
+export async function create(env: Env, userId: string, codeHash: string): Promise<string> {
   const id = crypto.randomUUID()
-  await env.DB.prepare('INSERT INTO email_verifications (id, user_id, token_hash) VALUES (?, ?, ?)')
-    .bind(id, userId, tokenHash)
+  // Şema sütunu code_hash (0008) — token_hash diye sütun yok; expires_at NOT NULL (10 dk)
+  await env.DB.prepare(
+    "INSERT INTO email_verifications (id, user_id, code_hash, expires_at) VALUES (?, ?, ?, datetime('now', '+10 minutes'))"
+  )
+    .bind(id, userId, codeHash)
     .run()
   return id
 }

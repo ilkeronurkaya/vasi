@@ -89,7 +89,7 @@ const Dashboard: React.FC = () => {
                 {[
                     { label: t.total_messages, value: messages.length },
                     { label: t.scheduled_messages, value: messages.filter(msg => msg.status === 'scheduled').length },
-                    { label: t.sent_messages, value: messages.filter(msg => msg.status === 'sent').length },
+                    { label: t.sent_messages, value: messages.filter(msg => msg.status === 'sent' || msg.status === 'delivered').length },
                 ].map((stat, index) => (
                     <div key={index} style={{
                         background: 'var(--midnight)',

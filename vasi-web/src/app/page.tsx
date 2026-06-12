@@ -372,12 +372,15 @@ const LANG_OPTIONS = [
 ]
 
 export default function LandingPage() {
-  const [lang, setLang] = useState(() => {
-    if (typeof window === 'undefined') return 'tr'
+  // SSR her zaman 'tr' üretir; tarayıcı dili mount SONRASI uygulanır.
+  // useState initializer'da navigator okumak hydration mismatch yaratıyordu (TestBulgulari_1 #1).
+  const [lang, setLang] = useState('tr')
+  useEffect(() => {
     const saved = localStorage.getItem('vasi_lang')
     const browser = (navigator.language || 'tr').split('-')[0]
-    return saved || (LANGS[browser] ? browser : 'tr')
-  })
+    const detected = saved || (LANGS[browser] ? browser : 'tr')
+    if (detected !== 'tr') setLang(detected)
+  }, [])
   const [menuOpen, setMenuOpen] = useState(false)
   const langRef = useRef<HTMLDivElement>(null)
 

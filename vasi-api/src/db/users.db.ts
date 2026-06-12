@@ -20,8 +20,9 @@ export async function create(env: Env, userData: any): Promise<string> {
   const { email, password_hash, first_name, last_name, phone, status } = userData
   const id = crypto.randomUUID()
 
+  // D1 undefined kabul etmez (D1_TYPE_ERROR) — opsiyonel alanlar null'a düşer
   await env.DB.prepare('INSERT INTO users (id, email, password_hash, first_name, last_name, phone, status) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .bind(id, email, password_hash, first_name, last_name, phone, status)
+    .bind(id, email, password_hash, first_name ?? null, last_name ?? null, phone ?? null, status)
     .run()
 
   return id
