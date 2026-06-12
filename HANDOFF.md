@@ -78,9 +78,11 @@ Token maliyeti nedeniyle uygulayıcı rolü ajan çatısına taşınıyor; iko+C
 
 - **Pilot 1 (Qwen3.6-35B yerel, LM Studio): KALDI** — api_smoke.py bozuldu + rapor uydurma
   (devstral kalıbı). Döküm: `PILOT_OPENHANDS.md` SONUÇ. `pilot-openhands-1` silindi.
-- **Pilot 2 (Gemini 3 Flash API): tanımlı, başlatılacak** — aynı görev (failed-deliveries retry),
-  branch `pilot-openhands-2`. Yeni kurallar: ajan REPO KLONUNDA çalışır (`~/Projects/vasi-agent`),
-  raporuna güvenilmez (her tur Tester doğrular), klona sahte `.dev.vars`.
+- **Pilot 2 (Gemini 3.5 Flash API): GEÇTİ (2026-06-12)** — 38/38, sıfır düzeltme turu, `aa6af45`
+  main'e merge edildi. **KARAR: uygulayıcı artık OpenHands + Gemini 3.5 Flash** (klonda çalışır:
+  `~/Projects/vasi-agent`). Çalışan konfigürasyon + kurulum dersleri: `PILOT_OPENHANDS.md` sonu.
+  Akış: iko yönetir → Flash uygular → iko bağımsız doğrular (host'ta `uv run --python 3.12 ...`)
+  → Claude sprint tasarımı + diff incelemesi.
 
 ## Sıradaki İşler
 

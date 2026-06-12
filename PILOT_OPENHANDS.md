@@ -60,6 +60,26 @@ cd /workspace && python3 crew/tests/api_smoke.py koştur; çıktının SON 10
 satırını bana aynen göster. git push YAPMA.
 ```
 
-### SONUÇ (Pilot 2)
+### SONUÇ (Pilot 2) — GEÇTİ (2026-06-12)
 
-_(bittiğinde doldurulacak)_
+Commit: `aa6af45` → main'e merge edildi. Sıfır düzeltme turu.
+
+| # | Kriter | Sonuç |
+|---|--------|-------|
+| 1 | Testler yeşil | GEÇTİ — 38/38 (ajan ham çıktı gösterdi + iko host'ta bağımsız doğruladı) |
+| 2 | Mevcut testler korunur | GEÇTİ — diff salt ekleme, assertion'lar gerçek (409'a 409, DB'den 3 alan doğrulanıyor) |
+| 3 | Kod+test aynı commit | GEÇTİ — tek commit, doğru branch, push yok |
+| 4 | Max 1 düzeltme turu | GEÇTİ — 0 tur |
+
+Kozmetik notlar (kabulü etkilemedi): UI hata durumunda `alert()`; yanıt gövdesi `{success:true}` (spec `{message}` idi).
+
+**KARAR: Uygulayıcı = OpenHands + Gemini 3.5 Flash.** İş akışı: iko yönetir (sprint tanımı + kabul + merge + push) → Gemini Flash uygular (klonda) → iko bağımsız doğrular → Claude tasarım + diff incelemesi.
+
+### Çalışan Konfigürasyon + Kurulum Dersleri
+
+- Settings > LLM > Advanced: Custom Model `gemini/gemini-3.5-flash`, API Key (AI Studio).
+- **LiteLLM çift-URL hatası** (404: `...generateContent/models/...generateContent`): Base URL'i açıkça sabitleyerek aşıldı — `https://generativelanguage.googleapis.com/v1beta` (alternatif: OpenAI-uyumlu kapı `openai/gemini-3.5-flash` + `https://generativelanguage.googleapis.com/v1beta/openai`).
+- LLM ayarı konuşma AÇILIRKEN sabitlenir — ayar değişince YENİ konuşma aç.
+- Ajan klonda `pnpm install` çalıştırınca binary'ler (workerd) Linux'a döner — host'ta doğrulamadan önce `rm -rf node_modules */node_modules && pnpm install`.
+- Host'ta smoke test: `uv run --python 3.12 python crew/tests/api_smoke.py` (sistem python3 3.9, `str | None` sözdizimini desteklemiyor).
+- Eski openhands-app/agent-server container'ları birikir: `docker ps -aq --filter "name=oh-agent-server" | xargs docker rm -f`.
