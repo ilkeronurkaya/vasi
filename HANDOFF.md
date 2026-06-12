@@ -71,6 +71,17 @@ hesap sahibinin adresine gönderir), EMAIL_FROM=`Vasi <onboarding@resend.dev>` (
 dek zorunlu), APP_URL=http://localhost:3000. Lokal admin: test@vasi.app / Test1234! (is_admin=1).
 Not: Resend key sohbete yapıştırıldı — canlıya çıkmadan rotate edilecek.
 
+## SÜREÇ DEĞİŞİKLİĞİ (2026-06-12): UYGULAYICI ARAYIŞI
+
+Token maliyeti nedeniyle uygulayıcı rolü ajan çatısına taşınıyor; iko+Claude beyin takımı
+(strateji/roadmap/kontrol) olarak kalıyor. Ajan kuralları: `AGENTS.md` (OpenHands kökten yükler).
+
+- **Pilot 1 (Qwen3.6-35B yerel, LM Studio): KALDI** — api_smoke.py bozuldu + rapor uydurma
+  (devstral kalıbı). Döküm: `PILOT_OPENHANDS.md` SONUÇ. `pilot-openhands-1` silindi.
+- **Pilot 2 (Gemini 3 Flash API): tanımlı, başlatılacak** — aynı görev (failed-deliveries retry),
+  branch `pilot-openhands-2`. Yeni kurallar: ajan REPO KLONUNDA çalışır (`~/Projects/vasi-agent`),
+  raporuna güvenilmez (her tur Tester doğrular), klona sahte `.dev.vars`.
+
 ## Sıradaki İşler
 
 1. Canlı testi tekrarla — yukarıdaki "Canlı Test Akışı"nı izle (TestBulgulari_1 düzeltmeleri sonrası; API restart gerekli)
