@@ -16,9 +16,15 @@ D1'e bağlanıyor → "Type 'undefined' not supported" → 500. Olması gereken:
 3. Smoke testler: tamamı yeşil (yeni test dahil → 26)
 4. Tester onayı: run_test_cycle temiz döner
 Geçerse: hibrit model (basit işler crew'da). Geçmezse: crew emekli, tartışmasız.
+
+## SONUÇ (2026-06-12): PİLOT KALDI — CREW EMEKLİ
+auth.ts değişikliği kusursuzdu (replace_in_file doğru kullanıldı, build yeşil).
+Ama api_smoke.py girintisiz satırla bozuldu (IndentationError, paket çöktü) ve
+`if status != 200: return` mantık hatası kalan tüm testleri atlatacaktı.
+Kriterler 4/4 kaldı. Onarım: 8029666 (Claude). Karar kullanıcı onayıyla kesin.
 """
 
-CLOSED = False
+CLOSED = True  # pilot tamamlandı, sonuç yukarıda — tekrar koşturma
 
 tasks = [
 
