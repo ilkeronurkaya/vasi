@@ -114,6 +114,16 @@ def static_checks() -> None:
 
 def api_tests() -> None:
     # Auth
+    # Eksik girdi 400 dönüyor test
+ok = False
+    status, body = req("POST", "/api/v1/auth/login", {})
+    if status == 400 and body.get('error') == 'E-posta ve şifre zorunlu' and body.get('code') == 'VALIDATION_ERROR':
+        record("Login eksik girdi 400 dönüyor", "auth", "Backend Ajani", True)
+    else:
+        record("Login eksik girdi 400 dönüyor", "auth", "Backend Ajani", False, f"status={status} body={body}")
+    if status != 200:
+        return  # geri kalanı token ister
+    
     status, body = req("POST", "/api/v1/auth/login", {"email": TEST_EMAIL, "password": TEST_PASS})
     token = body.get("accessToken", "")
     record("Login (seed kullanıcı)", "auth", "Backend Ajani",

@@ -19,7 +19,11 @@ authRoutes.post('/register', async (c) => {
 })
 
 authRoutes.post('/login', async (c) => {
-  const { email, password } = await c.req.json()
+  const body = await c.req.json()
+  const { email, password } = body
+  if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+    return c.json({ error: 'E-posta ve şifre zorunlu', code: 'VALIDATION_ERROR' }, 400)
+  }
   const result = await AuthService.login(c.env, email, password)
   if (result.error) return c.json(result, statusCode(result))
   return c.json(result, 200)
