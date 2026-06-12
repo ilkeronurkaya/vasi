@@ -75,6 +75,44 @@ function buildDeliveryEmail(opts: {
 </html>`;
 }
 
+/**
+ * OTP doğrulama e-postası — teslimat şablonuyla aynı açık tema / tablo yapısı.
+ * Kod 10 dakika geçerli; e-postada bunun dışında işlem bağlantısı yok.
+ */
+function buildOtpEmail(opts: { recipientName: string; otp: string }): string {
+  const { recipientName, otp } = opts;
+  return `<!DOCTYPE html>
+<html lang="tr">
+<body style="margin:0;padding:0;background-color:#F5F3EE;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F3EE;padding:40px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+        style="max-width:480px;background-color:#FFFFFF;border-radius:16px;border:1px solid #E8E4DA;overflow:hidden;">
+        <tr><td style="height:4px;background-color:#D4763B;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="padding:36px 40px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+          <p style="margin:0 0 24px;font-size:15px;font-weight:700;letter-spacing:0.04em;color:#0C1525;">
+            VASİ
+          </p>
+          <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#3D4452;">
+            Sevgili ${recipientName},
+          </p>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#3D4452;">
+            Mesajını görüntülemek için doğrulama kodun:
+          </p>
+          <p style="margin:0 0 24px;font-size:34px;font-weight:700;letter-spacing:0.18em;color:#0C1525;text-align:center;">
+            ${otp}
+          </p>
+          <p style="margin:0;font-size:12px;line-height:1.5;color:#9AA1AE;">
+            Kod 10 dakika geçerlidir. Bu isteği sen yapmadıysan bu e-postayı yok sayabilirsin.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export class DeliveryService {
   static async scheduleMessage(env: Env, messageId: string, userId: string, scheduledAt: string) {
     const message = await findById(env, messageId, userId);
@@ -144,6 +182,15 @@ export class DeliveryService {
     }
 
     return { delivered, failed };
+  }
+
+  static async sendOtpEmail(env: Env, to: { name: string; email: string }, otp: string) {
+    return await this.sendEmail(
+      env,
+      to,
+      'Vasi doğrulama kodun',
+      buildOtpEmail({ recipientName: to.name, otp })
+    );
   }
 
   static async sendEmail(env: Env, to: { name: string; email: string }, subject: string, html: string) {

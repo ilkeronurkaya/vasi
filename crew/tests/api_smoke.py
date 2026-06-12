@@ -10,6 +10,8 @@ Exit code: 0 = hepsi geçti, 1 = en az bir hata.
 """
 
 import json
+import base64
+import hashlib
 import re
 import shutil
 import signal
@@ -237,12 +239,46 @@ def api_tests() -> None:
     record("Teslimatta erişim token'ı üretiliyor", "delivery", "Backend Ajani",
            bool(token_val), tok.stdout[-200:] if not token_val else "")
 
-    # Sprint 17: public görüntüleme endpoint'i
+    # Sprint 19 (OTP): public önizleme içerik DÖNMEZ, otp_required işaretler
     if token_val:
         status, view = req("GET", f"/api/v1/public/view/{token_val}")
-        record("Public görüntüleme endpoint'i mesajı dönüyor", "public", "Backend Ajani",
-               status == 200 and "content_text" in (view or {}) and "sender_name" in (view or {}),
+        record("Public önizleme içerik içermiyor (OTP gerekli)", "public", "Backend Ajani",
+               status == 200 and "content_text" not in (view or {})
+               and (view or {}).get("otp_required") is True and "sender_name" in (view or {}),
                f"status={status} body={view}")
+
+        # OTP isteği: test alıcısı sahte olduğundan e-posta 502 verebilir —
+        # önemli olan kodun DB'ye hash olarak yazılması.
+        status, _otp_resp = req("POST", f"/api/v1/public/view/{token_val}/otp", {})
+        otp_q = wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--json", "--command",
+                              f"SELECT otp_code FROM recipients WHERE access_token = '{token_val}'"])
+        otp_stored = bool(re.search(r'"otp_code":\s*"[A-Za-z0-9+/=]+"', otp_q.stdout))
+        record("OTP isteği kodu DB'ye yazıyor", "public", "Backend Ajani",
+               status in (200, 502) and otp_stored, f"status={status} d1={otp_q.stdout[-150:]}")
+
+        # Bilinen OTP hash'ini elle yaz → verify akışı deterministik test edilir
+        known_otp = "123456"
+        known_hash = base64.b64encode(hashlib.sha256(known_otp.encode()).digest()).decode()
+        wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--command",
+                      f"UPDATE recipients SET otp_code='{known_hash}', "
+                      f"otp_expires_at=datetime('now','+10 minutes'), otp_attempts=0 "
+                      f"WHERE access_token='{token_val}'"])
+
+        status, wrong = req("POST", f"/api/v1/public/view/{token_val}/verify", {"otp": "000000"})
+        record("Yanlış OTP 401 + deneme sayacı", "public", "Backend Ajani",
+               status == 401 and (wrong or {}).get("code") == "INVALID_OTP"
+               and (wrong or {}).get("remaining_attempts") == 4,
+               f"status={status} body={wrong}")
+
+        status, good = req("POST", f"/api/v1/public/view/{token_val}/verify", {"otp": known_otp})
+        record("Doğru OTP mesaj içeriğini dönüyor", "public", "Backend Ajani",
+               status == 200 and "content_text" in (good or {}),
+               f"status={status} body={str(good)[:150]}")
+
+        status, replay = req("POST", f"/api/v1/public/view/{token_val}/verify", {"otp": known_otp})
+        record("OTP tek kullanımlık (replay 400)", "public", "Backend Ajani",
+               status == 400 and (replay or {}).get("code") == "OTP_NOT_REQUESTED",
+               f"status={status} body={replay}")
     status, bad = req("GET", "/api/v1/public/view/gecersiztokendeneme1234567890abcdef")
     record("Geçersiz token 404 dönüyor", "public", "Backend Ajani",
            status == 404, f"status={status}")
