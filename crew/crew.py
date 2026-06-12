@@ -8,7 +8,8 @@ Manager arayüzü:
   chainlit run manager.py
 
 Gereksinim:
-  Ollama çalışıyor olmalı: ollama run qwen2.5-coder:32b
+  Ollama çalışıyor olmalı. Tercih edilen model: devstral (ollama pull devstral)
+  Devstral yoksa qwen2.5-coder:32b'ye geri düşer.
 """
 
 import argparse
@@ -22,42 +23,54 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
-from smolagents import CodeAgent, LiteLLMModel, tool
+from smolagents import LiteLLMModel, ToolCallingAgent, tool
 
 # ── Ayarlar ──────────────────────────────────────────────────────────────────
 ROOT            = Path(__file__).parent.parent
 OLLAMA_BASE_URL = "http://localhost:11434"
 LOG_FILE        = Path(__file__).parent / "sprint.log"
 
-MODEL        = "qwen2.5-coder:32b"  # varsayılan (geriye dönük uyumluluk)
-MODEL_STRONG = "qwen2.5-coder:32b"  # karmaşık görevler
-MODEL_FAST   = "qwen2.5-coder:7b"   # basit görevler
+MODEL_PREFERRED   = "devstral"           # Devstral Small 24B — ajan tipi kodlama, native tool calling
+MODEL_LEGACY      = "qwen2.5-coder:32b"  # devstral yoksa geri dönüş
+MODEL_FAST_PREF   = "qwen2.5-coder:7b"   # basit görevler
 
-# ── Modeller (TensorPM pattern) ───────────────────────────────────────────────
-llm_strong = LiteLLMModel(
-    model_id=f"ollama/{MODEL_STRONG}",
-    api_base=OLLAMA_BASE_URL,
-    temperature=0.1,
-)
-
-# 7b yoksa 32b'ye düş — Ollama'da kontrol et
 def _check_model_available(model_name: str) -> bool:
     try:
         r = subprocess.run(
-            f"ollama list", shell=True, capture_output=True, text=True, timeout=5
+            "ollama list", shell=True, capture_output=True, text=True, timeout=5
         )
         return model_name in r.stdout
     except Exception:
         return False
 
-if _check_model_available(MODEL_FAST):
+# ── Modeller ──────────────────────────────────────────────────────────────────
+# NOT: ollama_chat/ prefix'i zorunlu — /api/chat endpoint'i tool calling destekler,
+# ollama/ (generate) desteklemez. ToolCallingAgent bunsuz çalışmaz.
+
+if _check_model_available(MODEL_PREFERRED):
+    MODEL_STRONG = MODEL_PREFERRED
+else:
+    print(f"⚠ {MODEL_PREFERRED} bulunamadı (ollama pull devstral) — {MODEL_LEGACY} kullanılıyor")
+    MODEL_STRONG = MODEL_LEGACY
+
+MODEL = MODEL_STRONG  # geriye dönük uyumluluk (manager.py import eder)
+
+llm_strong = LiteLLMModel(
+    model_id=f"ollama_chat/{MODEL_STRONG}",
+    api_base=OLLAMA_BASE_URL,
+    temperature=0.1,
+)
+
+if _check_model_available(MODEL_FAST_PREF):
+    MODEL_FAST = MODEL_FAST_PREF
     llm_fast = LiteLLMModel(
-        model_id=f"ollama/{MODEL_FAST}",
+        model_id=f"ollama_chat/{MODEL_FAST}",
         api_base=OLLAMA_BASE_URL,
         temperature=0.1,
     )
 else:
-    print(f"⚠ {MODEL_FAST} bulunamadı — {MODEL_STRONG} kullanılıyor")
+    print(f"⚠ {MODEL_FAST_PREF} bulunamadı — {MODEL_STRONG} kullanılıyor")
+    MODEL_FAST = MODEL_STRONG
     llm_fast = llm_strong
 
 llm = llm_strong  # geriye dönük uyumluluk
@@ -136,6 +149,31 @@ def read_file(path: str) -> str:
     if not full.exists():
         return f"[Dosya bulunamadı: {path}]"
     return full.read_text(encoding="utf-8")
+
+
+@tool
+def replace_in_file(path: str, old: str, new: str) -> str:
+    """Dosyada birebir eşleşen alt-string'i değiştirir. Küçük, hedefli düzenlemeler için
+    write_file'dan güvenlidir: eşleşme yoksa veya birden fazlaysa dosyaya DOKUNMAZ ve hata döner.
+
+    Args:
+        path: Proje root'a göre dosya yolu
+        old: Değiştirilecek mevcut metin (birebir kopya, dosyada tam 1 kez geçmeli)
+        new: Yerine yazılacak yeni metin
+    """
+    full = ROOT / path
+    if not full.exists():
+        return f"[Dosya bulunamadı: {path}]"
+    content = full.read_text(encoding="utf-8")
+    count = content.count(old)
+    if count == 0:
+        return ("[HATA: eşleşme yok — dosyaya dokunulmadı. "
+                "read_file ile oku ve 'old' metnini birebir kopyala.]")
+    if count > 1:
+        return (f"[HATA: {count} eşleşme — dosyaya dokunulmadı. "
+                f"'old' metnini benzersiz olacak şekilde uzat.]")
+    full.write_text(content.replace(old, new, 1), encoding="utf-8")
+    return f"Değiştirildi: {path} (1 eşleşme, {len(new)} karakter yeni metin)"
 
 
 @tool
@@ -359,12 +397,11 @@ def run_test_cycle(sprint_n: int = 0) -> str:
                 f"Düzeltince run_tsc() ile build kontrolü yap. Temizse:\n"
                 f'git_commit("fix({label}): tester bulgusu düzeltildi — {fails[0]["area"]}")\n'
             )
-            fix_agent = CodeAgent(
-                tools=[bash, write_file, read_file, list_dir, git_commit, run_tsc],
+            fix_agent = ToolCallingAgent(
+                tools=[bash, write_file, read_file, replace_in_file, list_dir, git_commit, run_tsc],
                 model=llm_strong,
                 max_steps=15,
                 verbosity_level=1,
-                additional_authorized_imports=["os", "pathlib", "subprocess", "re", "json"],
             )
             fix_agent.run(fix_prompt)
             _dump_agent_log(fix_agent, f"tester-{label}-{owner.split()[0].lower()}-deneme{attempt}")
@@ -480,6 +517,10 @@ def _dump_agent_log(agent, label: str) -> None:
             out = getattr(step, "model_output", None)
             if out:
                 lines.append(f"--- Model çıktısı ---\n{str(out)[:4000]}")
+            tcs = getattr(step, "tool_calls", None)
+            if tcs:
+                for tc in tcs:
+                    lines.append(f"--- Araç çağrısı ---\n{str(tc)[:2000]}")
             obs = getattr(step, "observations", None)
             if obs:
                 lines.append(f"--- Gözlem ---\n{str(obs)[:2500]}")
@@ -516,21 +557,14 @@ def run_task(task: "TaskSpec", sprint_n: int, task_idx: int = 0) -> tuple[str, f
         f"Sen {task.role} olarak çalışıyorsun. Sprint {sprint_n} görevindesin.\n\n"
         f"## Rol ve Bağlam\n{context}\n\n"
         f"## Görev\n{task.description}\n\n"
-        f"## KOD BLOĞU KURALI (KRİTİK)\n"
-        f"Yazdığın her kod bloğu GEÇERLİ PYTHON olmalı — araç çağrıları için kullanılır.\n"
-        f"TSX/JS/CSS içeriğini ASLA doğrudan blok olarak yazma; her zaman Python string\n"
-        f"olarak write_file'a ver:\n"
-        f'```python\n'
-        f'content = """\\\n'
-        f"'use client'\\n... (dosyanın tam içeriği) ...\n"
-        f'"""\n'
-        f'write_file(path="vasi-web/src/app/.../page.tsx", content=content)\n'
-        f'```\n'
-        f"- re/os/json kullanacaksan bloğun BAŞINDA import et (import re).\n"
-        f"- Dosya düzenlerken regex KULLANMA — kırılgan. Yöntem: read_file ile oku,\n"
-        f"  Python .replace() ile birebir eşleşen alt-string değiştir ya da dosyanın\n"
-        f"  TAMAMINI yeniden yazıp write_file ile kaydet. Değişiklik sonrası dosyayı\n"
-        f"  tekrar read_file ile okuyup değişikliğin gerçekten uygulandığını DOĞRULA.\n\n"
+        f"## ARAÇ KULLANIM KURALLARI (KRİTİK)\n"
+        f"Tüm işleri araç çağrılarıyla yaparsın — serbest kod bloğu çalıştırma YOK.\n"
+        f"- Yeni dosya veya dosyayı baştan yazma: write_file(path, content) — content\n"
+        f"  dosyanın TAM içeriğidir, parça değil.\n"
+        f"- Mevcut dosyada küçük/hedefli değişiklik: replace_in_file(path, old, new) —\n"
+        f"  önce read_file ile oku, 'old' metnini oradan BİREBİR kopyala.\n"
+        f"- Her yazma işleminden sonra read_file ile değişikliğin uygulandığını DOĞRULA.\n"
+        f"- Kabuk işleri (listeleme, build, sqlite doğrulama) için bash aracını kullan.\n\n"
         f"## ZORUNLU SON ADIMLAR\n"
         f"Tüm dosyaları yazdıktan ve build/doğrulama başarılı olduktan sonra:\n"
         f'git_commit("feat(sprint-{sprint_n}): {task.role.lower()} done")\n\n'
@@ -541,12 +575,11 @@ def run_task(task: "TaskSpec", sprint_n: int, task_idx: int = 0) -> tuple[str, f
     # UX görevleri uzun açıklamalarla context'i hızlı dolduruyor → daha az adım
     max_steps = 20 if task.role == "UX/UI Ajani" else 30
 
-    agent = CodeAgent(
-        tools=[bash, write_file, read_file, list_dir, git_commit, check_css, run_tsc],
+    agent = ToolCallingAgent(
+        tools=[bash, write_file, read_file, replace_in_file, list_dir, git_commit, check_css, run_tsc],
         model=model,
         max_steps=max_steps,
         verbosity_level=1,
-        additional_authorized_imports=["os", "pathlib", "subprocess", "re", "json"],
     )
 
     result = str(agent.run(prompt))
@@ -587,12 +620,11 @@ def run_task(task: "TaskSpec", sprint_n: int, task_idx: int = 0) -> tuple[str, f
             f'git_commit("fix(sprint-{sprint_n}): build hataları düzeltildi (deneme {attempt})")\n'
         )
 
-        fix_agent = CodeAgent(
-            tools=[bash, write_file, read_file, list_dir, git_commit, run_tsc],
+        fix_agent = ToolCallingAgent(
+            tools=[bash, write_file, read_file, replace_in_file, list_dir, git_commit, run_tsc],
             model=llm_fast,  # build fix için fast model yeterli
             max_steps=20,
             verbosity_level=1,
-            additional_authorized_imports=["os", "pathlib", "subprocess", "re", "json"],
         )
         fix_agent.run(fix_prompt)
         _dump_agent_log(fix_agent, f"sprint{sprint_n}-task{task_idx}-buildfix{attempt}")
@@ -649,12 +681,11 @@ SADECE bu ihlalleri düzelt, başka değişiklik yapma.
 5. Temizse: git_commit("fix(sprint-{sprint_n}): UX kural ihlalleri düzeltildi (deneme {attempt})")
 """
 
-            ux_fix_agent = CodeAgent(
-                tools=[bash, write_file, read_file, list_dir, git_commit, check_css],
+            ux_fix_agent = ToolCallingAgent(
+                tools=[bash, write_file, read_file, replace_in_file, list_dir, git_commit, check_css],
                 model=llm_fast,
                 max_steps=25,
                 verbosity_level=1,
-                additional_authorized_imports=["os", "pathlib", "subprocess", "re", "json"],
             )
             ux_fix_agent.run(ux_fix_prompt)
             _dump_agent_log(ux_fix_agent, f"sprint{sprint_n}-task{task_idx}-uxfix{attempt}")

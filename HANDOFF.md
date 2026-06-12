@@ -20,14 +20,20 @@ Monorepo: `vasi-web` (Next.js 15, edge, koyu Apple-dili tasarım), `vasi-api` (C
 17 teslimat deneyimi: tasarımlı e-posta şablonu + alıcı erişim token'ı + `/m/[token]` sayfası (Claude).
 Tüm sprint dosyaları `CLOSED = True` ile kilitli — manager koşturmayı reddeder.
 
-## ⚠️ CREW KARARI (açık konu)
+## ⚠️ CREW KARARI (2026-06-12: yeni modelle pilot)
 
-Crew (qwen2.5-coder, yerel) son 3 sprintte üst üste başarısız: TSX'i Python bloğu olarak yazma,
-find()==-1 ile dosya bozma, aynı kodu 15 kez tekrarlama, `###</code>` felci. Prompt kuralları
-(KOD BLOĞU KURALI, regex yasağı, doğrulama şartı) eklendi ama model uymuyor.
-**Öneri sunuldu: sprint işlerini Claude yapar, crew emekli.** Kullanıcı süreç iyileştirme
-konuşması yapacak — karar bu konuşmada netleşecek. Manager/Tester/bildirim altyapısı her
-durumda kalıyor (değerli ve deterministik).
+Karar: crew'a **devstral + ToolCallingAgent** ile bir şans daha (kullanıcı seçimi).
+Eski hataların kökü iki katmandı: zayıf model (qwen2.5-coder) + CodeAgent paradigması
+(her adım Python bloğu → TSX'i Python'a sarma, find()==-1 dosya bozma).
+`crew-devstral` branch'inde ikisi de değişti: CodeAgent→ToolCallingAgent (4 ajan),
+yeni `replace_in_file` aracı (eşleşme 0 veya >1 ise dosyaya dokunmaz), KOD BLOĞU
+kuralları → ARAÇ KURALLARI, model `ollama_chat/devstral` (yoksa qwen 32b'ye düşer).
+
+**Pilot protokolü:** küçük, düşük riskli tek iş + baştan yazılı kriterler:
+dosya bozma 0 · ≤2 iterasyon · 23 smoke yeşil · Tester onayı.
+Geçerse hibrit (basit işler crew'da), geçmezse emeklilik kesin. Donanım: M5 Pro 48GB.
+Gerekenler: kullanıcı Mac'te `ollama pull devstral`; pilot manager'dan koşulur.
+Manager/Tester/bildirim altyapısı her durumda kalıyor (değerli ve deterministik).
 
 ## Çalışan Süreç Altyapısı
 
@@ -47,7 +53,7 @@ Not: Resend key sohbete yapıştırıldı — canlıya çıkmadan rotate edilece
 ## Sıradaki İşler
 
 1. Sprint 17 canlı testi: API restart → kendine mesaj zamanla → `run-due` → yeni tasarım e-posta → butondan `/m/[token]` aç
-2. **Süreç iyileştirme konuşması** (crew kararı + yeni iş akışı) — kullanıcı başlatacak
+2. **Crew pilotu**: `ollama pull devstral` (kullanıcı) → `crew-devstral` branch'inde pilot iş seç → kriterlere göre değerlendir (üstteki bölüm)
 3. Sprint 18 adayı: **İyzico sandbox** (kullanıcının merchant hesabı açması gerek) — /upgrade CTA'sı "Yakında" bekliyor
 4. Diğer adaylar: Resend domain doğrulama, alıcı OTP doğrulaması (recipients.otp_* alanları hazır), canlıya çıkış (wrangler deploy + Pages)
 
