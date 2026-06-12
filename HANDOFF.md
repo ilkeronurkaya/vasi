@@ -51,8 +51,7 @@ Not: Resend key sohbete yapıştırıldı — canlıya çıkmadan rotate edilece
 ## Sıradaki İşler
 
 1. Sprint 17 canlı testi: API restart → kendine mesaj zamanla → `run-due` → yeni tasarım e-posta → butondan `/m/[token]` aç
-2. sprint-18 → main merge + push (kullanıcı): pilot işin ürünü (login validasyonu + test) ve crew refaktörü değerli, kalsın
-3. Sprint 18 adayı: **İyzico sandbox** (kullanıcının merchant hesabı açması gerek) — /upgrade CTA'sı "Yakında" bekliyor
+2. Sprint 19 adayı: **İyzico sandbox** (kullanıcının merchant hesabı açması gerek) — /upgrade CTA'sı "Yakında" bekliyor
 4. Diğer adaylar: Resend domain doğrulama, alıcı OTP doğrulaması (recipients.otp_* alanları hazır), canlıya çıkış (wrangler deploy + Pages)
 
 ## API Sözleşmesi (sık kullanılan)
