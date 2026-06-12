@@ -58,8 +58,24 @@ const tdStyle: React.CSSProperties = {
 const ReportsPage: React.FC = () => {
     const [revenue, setRevenue] = useState<{ breakdown: RevenueItem[]; total_monthly_revenue: number } | null>(null);
     const [failed, setFailed] = useState<{ data: FailedDelivery[]; total: number } | null>(null);
+    const [retrying, setRetrying] = useState<Record<string, boolean>>({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+
+    const handleRetry = async (messageId: string) => {
+        setRetrying(prev => ({ ...prev, [messageId]: true }));
+        try {
+            await adminFetch(`/api/v1/admin/delivery/retry/${messageId}`, {
+                method: 'POST',
+            });
+            const fail = await adminFetch('/api/v1/admin/reports/failed-deliveries?page=1&limit=30');
+            setFailed(fail);
+        } catch {
+            alert('Yeniden deneme başarısız oldu.');
+        } finally {
+            setRetrying(prev => ({ ...prev, [messageId]: false }));
+        }
+    };
 
     useEffect(() => {
         Promise.all([
@@ -125,6 +141,7 @@ const ReportsPage: React.FC = () => {
                                 <th style={thStyle}>Kullanıcı</th>
                                 <th style={thStyle}>Alıcı</th>
                                 <th style={thStyle}>Tarih</th>
+                                <th style={thStyle}>İşlem</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -138,6 +155,16 @@ const ReportsPage: React.FC = () => {
                                     <td style={tdStyle}>{item.recipient_count}</td>
                                     <td style={{ ...tdStyle, color: 'var(--mist)' }}>
                                         {new Date(item.updated_at).toLocaleDateString('tr-TR')}
+                                    </td>
+                                    <td style={tdStyle}>
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary btn-sm"
+                                            disabled={retrying[item.message_id]}
+                                            onClick={() => handleRetry(item.message_id)}
+                                        >
+                                            {retrying[item.message_id] ? 'Deneniyor...' : 'Yeniden Dene'}
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

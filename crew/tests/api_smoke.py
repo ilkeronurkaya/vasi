@@ -325,6 +325,46 @@ def api_tests() -> None:
     record("Geçersiz token 404 dönüyor", "public", "Backend Ajani",
            status == 404, f"status={status}")
 
+    # Failed-Deliveries Retry Testleri (3 smoke testi)
+    # 1. Olmayan id -> 404 NOT_FOUND
+    status, retry_404 = req("POST", "/api/v1/admin/delivery/retry/olmayan-id-123456", {}, admin_token)
+    record("Yeniden deneme olmayan id 404 dönüyor", "delivery", "Backend Ajani",
+           status == 404 and (retry_404 or {}).get("code") == "NOT_FOUND", f"status={status} body={retry_404}")
+
+    # 2. non-error status -> 409 INVALID_STATUS
+    status, temp_msg = req("POST", "/api/v1/messages",
+                           {"title": "Retry Non-Error Test", "message_type": "text", "content_text": "draft"}, token)
+    temp_id = (temp_msg or {}).get("id")
+    if temp_id:
+        status, retry_409 = req("POST", f"/api/v1/admin/delivery/retry/{temp_id}", {}, admin_token)
+        record("Yeniden deneme error olmayan status 409 dönüyor", "delivery", "Backend Ajani",
+               status == 409 and (retry_409 or {}).get("code") == "INVALID_STATUS", f"status={status} body={retry_409}")
+
+        # 3. error -> retry -> 200 + scheduled
+        wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--command",
+                      f"UPDATE messages SET status='error', failed_reason='Some error' WHERE id='{temp_id}'"])
+        status, retry_200 = req("POST", f"/api/v1/admin/delivery/retry/{temp_id}", {}, admin_token)
+
+        db_res = wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--json", "--command",
+                               f"SELECT status, scheduled_at, failed_reason FROM messages WHERE id='{temp_id}'"])
+
+        try:
+            start_idx = db_res.stdout.find('[')
+            end_idx = db_res.stdout.rfind(']') + 1
+            rows = json.loads(db_res.stdout[start_idx:end_idx])
+            results_list = rows[0].get("results", [])
+            db_status = results_list[0].get("status")
+            db_failed_reason = results_list[0].get("failed_reason")
+            scheduled_at = results_list[0].get("scheduled_at")
+        except Exception as e:
+            db_status = f"JSON Error: {e}"
+            db_failed_reason = "error"
+            scheduled_at = None
+
+        success = (status == 200 and db_status == "scheduled" and db_failed_reason is None and scheduled_at is not None)
+        record("Yeniden deneme error'dan scheduled'a dönüştürüyor", "delivery", "Backend Ajani",
+               success, f"status={status} db_status={db_status} db_failed_reason={db_failed_reason} scheduled_at={scheduled_at}")
+
 
 # ── Ana akış ──────────────────────────────────────────────────────────────────
 

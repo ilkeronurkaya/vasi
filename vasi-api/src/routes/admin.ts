@@ -374,3 +374,27 @@ admin.post('/delivery/run-due', async (c) => {
   const result = await DeliveryService.deliverDueMessages(c.env)
   return c.json({ success: true, ...result })
 })
+
+// POST /admin/delivery/retry/:messageId — başarısız teslimatları yeniden zamanla/kuyruğa al
+admin.post('/delivery/retry/:messageId', async (c) => {
+  const messageId = c.req.param('messageId')
+
+  const message = await c.env.DB.prepare(
+    'SELECT * FROM messages WHERE id = ?'
+  ).bind(messageId).first()
+
+  if (!message) {
+    return c.json({ error: 'Mesaj bulunamadı', code: 'NOT_FOUND' }, 404)
+  }
+
+  if (message.status !== 'error') {
+    return c.json({ error: 'Mesaj durumu error olmalı', code: 'INVALID_STATUS' }, 409)
+  }
+
+  const now = new Date().toISOString()
+  await c.env.DB.prepare(
+    "UPDATE messages SET status = ?, scheduled_at = ?, failed_reason = NULL, updated_at = datetime('now') WHERE id = ?"
+  ).bind('scheduled', now, messageId).run()
+
+  return c.json({ success: true }, 200)
+})
