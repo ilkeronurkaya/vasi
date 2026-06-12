@@ -30,11 +30,12 @@ SONUÇ bölümü + `crew/logs/sprint18-task1-ana.log`. (TS tarafı temizdi ama y
 **Yeni iş akışı (kesin):** kullanıcı yönetir (sprint tanımı + kabul + push) →
 Claude uygular (kod + test AYNI commit'te) → Tester doğrular (manager `test`).
 Manager/Tester/bildirim altyapısı kalıyor; crew kod yazımı kapalı.
-Bekleyen küçük iş: manager.py'den crew-koşturma yollarını pasifleştirme (ayrı iş).
+manager.py temizliği yapıldı (2026-06-12): `sprint N` iki kanalda da kapalı,
+`test` artık salt rapor (LLM düzelttirme yok), panel "Süreç Paneli" oldu.
 
 ## Çalışan Süreç Altyapısı
 
-- **Manager** (chainlit run manager.py): sprint N · test · durum · log · kontrol · migrate · dev · durdur · bildirim. Canlı log akışı var.
+- **Manager / Süreç Paneli** (chainlit run manager.py): test · durum · log · kontrol · migrate · dev · durdur · bildirim. (`sprint N` kapalı — crew emekli.)
 - **Tester**: `crew/tests/api_smoke.py` — 26 deterministik test (izole DB :8788). Statik: 'use client', rota mount, CSS sözdizimi. Komut: `test`.
 - **Bildirim**: ntfy `vasi-iko-7ca81627` (çıktı) / `vasi-iko-cmd-57f994b1` (telefondan komut) + iMessage ("Patron ... Bilgine.").
 - **Ajan adım logları**: `crew/logs/` (denetim için; sohbete log yapıştırmak yerine buradan okunur).

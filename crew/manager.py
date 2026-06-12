@@ -1,17 +1,19 @@
 """
-Vasi — Agent Manager (Chainlit Chat Arayüzü)
-=============================================
-Kullanıcının agent ekibiyle konuşmasını sağlar.
+Vasi — Süreç Paneli (Chainlit Chat Arayüzü)
+============================================
+Crew (yerel LLM kod yazımı) 2026-06-12'de emekli edildi (bkz. HANDOFF.md).
+Bu panel artık deterministik süreç araçlarını yönetir: test, dev sunucuları,
+migration, kontrol, log ve bildirimler. Kod yazımı: Claude (sohbet üzerinden).
 
 Çalıştırmak için:
   cd crew/
   chainlit run manager.py
 
 Komutlar:
-  sprint 1       — Sprint 1'i başlat
-  durum          — Mevcut sprint durumu
-  sprintler      — Tüm sprint listesi
-  log            — Son log kayıtları
+  test           — Smoke testleri koş (salt rapor, otomatik düzelttirme yok)
+  durum / log    — Durum ve son log kayıtları
+  dev / durdur   — Dev sunucularını yönet
+  migrate        — Lokal D1 migration
   yardım         — Bu yardım mesajı
 """
 
@@ -32,7 +34,13 @@ import chainlit as cl
 # crew modülünü import et (aynı dizinde)
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from crew import run_sprint, run_test_cycle, ROOT, MODEL, MODEL_STRONG, MODEL_FAST, LOG_FILE, check_builds, check_ux_rules
+from crew import run_smoke_tests, ROOT, LOG_FILE, check_builds, check_ux_rules
+
+CREW_RETIRED_MSG = (
+    "🪦 **Crew emekli (2026-06-12).** Sprint koşturma kapalı — kod işleri artık "
+    "Claude ile sohbette yürüyor (bkz. `HANDOFF.md`, CREW KARARI). "
+    "Bu panel test/dev/migrate/log/bildirim için kullanılmaya devam ediyor."
+)
 
 # ── Sabitler ─────────────────────────────────────────────────────────────────
 
@@ -58,22 +66,18 @@ HELP_TEXT = """
 
 | Komut | Açıklama |
 |-------|----------|
-| `sprint 1` | Sprint 1'i başlat |
-| `durum` | Mevcut sprint durumunu göster |
-| `sprintler` | Tüm sprint listesi |
-| `log` | Son log kayıtları |
+| `test` | Smoke testleri koş (salt rapor — düzeltme Claude'da) |
 | `kontrol` | TypeScript build + UX/UI kural ihlallerini tara |
-| `test` | Smoke testleri koş; hata varsa Tester Ajani sahibine düzelttirir |
 | `dev` | API (:8787) + Web (:3000) sunucularını arka planda başlat |
 | `durdur` | Dev sunucularını kapat |
 | `migrate` | Lokal D1 migration'larını uygula |
+| `log` | Son log kayıtları |
+| `sprintler` | Geçmiş sprint listesi (arşiv) |
 | `bildirim` | Telefona test bildirimi gönder (ntfy) |
 | `yardım` | Bu mesajı göster |
 
-**Notlar:**
-- Sprint çalışırken yeni sprint başlatılamaz
-- `git log --oneline` ile commit'leri görebilirsiniz
-- Build hatası varsa ajan otomatik düzeltir, ardından commit atar
+**Not:** Crew emekli — `sprint N` koşturma kapalı. Kod işleri Claude ile yürür;
+test kırmızıysa bulguyu Claude'a taşı.
 """
 
 # ── Sprint Durumu ─────────────────────────────────────────────────────────────
@@ -220,6 +224,19 @@ def detect_intent(text: str) -> tuple[str, dict]:
     return "unknown", {}
 
 
+# ── Test koşucu (salt rapor — LLM düzelttirme yok, crew emekli) ──────────────
+
+def _run_tests_plain() -> str:
+    data = run_smoke_tests()
+    if data["failed"] == 0:
+        return f"✅ {data['passed']}/{data['passed']} test geçti"
+    lines = [f"❌ {data['failed']} başarısız, {data['passed']} geçti:"]
+    for f in data["failures"][:10]:
+        lines.append(f"- [{f.get('area', '?')}] {f.get('name', '?')} — {str(f.get('detail', ''))[:120]}")
+    lines.append("\nDüzeltme için bulguları Claude'a taşı (otomatik düzelttirme kapalı).")
+    return "\n".join(lines)
+
+
 # ── Log Okuyucu ───────────────────────────────────────────────────────────────
 
 def read_log(last_n: int = 20) -> str:
@@ -262,10 +279,9 @@ async def _run_with_live_log(fn, *args, header: str):
 async def on_start():
     await cl.Message(
         content=(
-            "## 🕰️ Vasi Agent Manager\n\n"
-            f"**Güçlü model:** `{MODEL_STRONG}` — karmaşık görevler\n"
-            f"**Hızlı model:** `{MODEL_FAST}` — basit görevler (otomatik routing)\n"
-            f"**Root:** `{ROOT}`\n\n"
+            "## 🕰️ Vasi Süreç Paneli\n\n"
+            f"**Root:** `{ROOT}`\n"
+            "**Mod:** Crew emekli — kod işleri Claude'da, burası süreç paneli.\n\n"
             + HELP_TEXT
         )
     ).send()
@@ -275,103 +291,9 @@ async def on_start():
 async def on_message(message: cl.Message):
     intent, params = detect_intent(message.content)
 
-    # ── Sprint Başlat ──────────────────────────────────────────────────────
+    # ── Sprint Başlat — KAPALI (crew emekli, 2026-06-12) ──────────────────
     if intent == "start_sprint":
-        n = params["number"]
-        sprint_file = Path(__file__).parent / f"sprint{n}.py"
-
-        if not sprint_file.exists():
-            await cl.Message(
-                content=f"❌ `sprint{n}.py` bulunamadı. Önce sprint dosyasını oluşturmanız gerekiyor."
-            ).send()
-            return
-
-        if _state["status"] == "running":
-            await cl.Message(
-                content=(
-                    f"⚠️ Sprint {_state['sprint']} zaten çalışıyor.\n"
-                    "Tamamlanmasını bekleyin ya da `log` ile durumu kontrol edin."
-                )
-            ).send()
-            return
-
-        desc = SPRINTS.get(n, "Tanımsız")
-
-        # Sprint dosyasından agent rollerini oku
-        try:
-            from crew import load_sprint, TaskSpec
-            preview_tasks = load_sprint(n)
-            agent_line = " → ".join(f"**{t.role}**" for t in preview_tasks)
-        except Exception:
-            agent_line = "Ajanlar yükleniyor..."
-
-        _state.update(sprint=n, status="running", start_time=datetime.now(), error=None)
-
-        msg = await cl.Message(
-            content=(
-                f"🚀 **Sprint {n} başlatılıyor...**\n\n"
-                f"**Kapsam:** {desc}\n\n"
-                f"**Ajanlar:** {agent_line}\n"
-                "Her ajan kod yazdıktan sonra build kontrol eder; başarılıysa commit atar.\n\n"
-                f"_Güçlü: `{MODEL_STRONG}` / Hızlı: `{MODEL_FAST}` — otomatik routing_"
-            )
-        ).send()
-
-        try:
-            result = await _run_with_live_log(
-                run_sprint, n,
-                header=f"⚙️ **Sprint {n}** çalışıyor — canlı log:",
-            )
-            elapsed = datetime.now() - _state["start_time"]
-            mins, secs = elapsed.seconds // 60, elapsed.seconds % 60
-            _state["status"] = "done"
-
-            # Per-agent timer tablosu
-            task_rows = []
-            if isinstance(result, dict) and "tasks" in result:
-                task_rows.append("\n| Agent | Durum | Süre |")
-                task_rows.append("|-------|-------|------|")
-                for t in result["tasks"]:
-                    icon = "✅" if t["status"] == "OK" else "❌"
-                    m, s = int(t["elapsed"]) // 60, int(t["elapsed"]) % 60
-                    task_rows.append(f"| {t['role']} | {icon} {t['status'][:30]} | {m}dk {s}sn |")
-                summary = result.get("summary", "")
-            else:
-                summary = str(result)[:500]
-
-            ok = sum(1 for t in result.get("tasks", []) if t["status"] == "OK") if isinstance(result, dict) else 0
-            total_t = len(result.get("tasks", [])) if isinstance(result, dict) else 0
-            _notify(
-                f"Sprint {n} tamamlandi",
-                f"✅ {ok}/{total_t} görev başarılı — {mins}dk {secs}sn\n{summary}",
-                tags="white_check_mark",
-            )
-            _notify_imessage(f"Patron Sprint {n} tamamlandı. Bilgine.")
-
-            await cl.Message(
-                content=(
-                    f"✅ **Sprint {n} tamamlandı!**\n\n"
-                    f"⏱️ Toplam süre: {mins}dk {secs}sn\n"
-                    + "\n".join(task_rows) +
-                    f"\n\nCommit'leri görmek için:\n"
-                    f"```bash\ngit log --oneline sprint-{n}\n```"
-                )
-            ).send()
-
-        except Exception as e:
-            _state["status"] = "error"
-            _state["error"] = str(e)
-
-            _notify(f"Sprint {n} BASARISIZ", f"❌ Hata: {str(e)[:300]}", tags="x")
-            _notify_imessage(f"Patron Sprint {n} başarısız oldu. Bilgine.")
-
-            await cl.Message(
-                content=(
-                    f"❌ **Sprint {n} başarısız!**\n\n"
-                    f"```\n{str(e)[:800]}\n```\n\n"
-                    "`log` yazarak detaylara bakabilirsiniz."
-                )
-            ).send()
+        await cl.Message(content=CREW_RETIRED_MSG).send()
 
     # ── Durum ─────────────────────────────────────────────────────────────
     elif intent == "status":
@@ -467,13 +389,9 @@ async def on_message(message: cl.Message):
         await cl.Message(content=result).send()
 
     elif intent == "run_tests":
-        if _state["status"] == "running":
-            await cl.Message(content="⚠️ Sprint çalışırken test koşulamaz.").send()
-            return
-        result = await _run_with_live_log(
-            run_test_cycle, 0,
-            header="🧪 **Tester Ajani** smoke testleri koşuyor (izole DB, ~1-2 dk; hata bulursa sahibine düzelttirir)",
-        )
+        msg = await cl.Message(content="🧪 Smoke testler koşuyor (izole DB, ~1-2 dk)...")
+        await msg.send()
+        result = await asyncio.to_thread(_run_tests_plain)
         await cl.Message(content=f"## 🧪 Test Sonucu\n\n{result}\n\nDetay: `crew/tests/wrangler.log`").send()
 
     elif intent == "test_notify":
@@ -516,37 +434,11 @@ def _remote_reply(text: str) -> None:
     _notify("Vasi Manager", text[:3500], tags="speech_balloon")
 
 
-def _remote_run_sprint(n: int) -> None:
-    """Telefondan tetiklenen sprint — ayrı thread'de koşar, sonucu bildirir."""
-    try:
-        result = run_sprint(n)
-        _state["status"] = "done"
-        ok = sum(1 for t in result.get("tasks", []) if t["status"] == "OK")
-        total = len(result.get("tasks", []))
-        _notify(f"Sprint {n} tamamlandi",
-                f"✅ {ok}/{total} görev başarılı\n{result.get('summary', '')}",
-                tags="white_check_mark")
-        _notify_imessage(f"Patron Sprint {n} tamamlandı. Bilgine.")
-    except Exception as e:
-        _state["status"] = "error"
-        _state["error"] = str(e)
-        _notify(f"Sprint {n} BASARISIZ", f"❌ {str(e)[:300]}", tags="x")
-        _notify_imessage(f"Patron Sprint {n} başarısız oldu. Bilgine.")
-
-
 def _handle_remote_command(text: str) -> None:
     intent, params = detect_intent(text)
 
     if intent == "start_sprint":
-        n = params["number"]
-        if not (Path(__file__).parent / f"sprint{n}.py").exists():
-            _remote_reply(f"❌ sprint{n}.py bulunamadı.")
-        elif _state["status"] == "running":
-            _remote_reply(f"⚠️ Sprint {_state['sprint']} zaten çalışıyor.")
-        else:
-            _state.update(sprint=n, status="running", start_time=datetime.now(), error=None)
-            threading.Thread(target=_remote_run_sprint, args=(n,), daemon=True).start()
-            _remote_reply(f"🚀 Sprint {n} başlatıldı. Bitince haber veririm.")
+        _remote_reply("🪦 Crew emekli — sprint koşturma kapalı. Kod işleri Claude'da (HANDOFF.md).")
 
     elif intent == "status":
         s = _state["status"]
@@ -575,11 +467,8 @@ def _handle_remote_command(text: str) -> None:
         _remote_reply("Kontrol:\n" + "\n".join(parts))
 
     elif intent == "run_tests":
-        if _state["status"] == "running":
-            _remote_reply("⚠️ Sprint çalışırken test koşulamaz.")
-        else:
-            _remote_reply("🧪 Testler koşuluyor — sonuç birazdan...")
-            _remote_reply(run_test_cycle(0))
+        _remote_reply("🧪 Testler koşuluyor — sonuç birazdan...")
+        _remote_reply(_run_tests_plain())
 
     elif intent == "migrate":
         _remote_reply(_run_migrate()[:3000])
@@ -591,7 +480,7 @@ def _handle_remote_command(text: str) -> None:
         _remote_reply(_stop_dev())
 
     elif intent == "help":
-        _remote_reply("Komutlar: sprint N, test, durum, log, sprintler, kontrol, migrate, dev, durdur")
+        _remote_reply("Komutlar: test, durum, log, sprintler, kontrol, migrate, dev, durdur (sprint koşturma kapalı — crew emekli)")
 
     else:
         _remote_reply(f"🤔 Anlayamadım: '{text[:50]}' — 'yardım' yaz.")
