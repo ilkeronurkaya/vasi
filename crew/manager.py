@@ -389,8 +389,7 @@ async def on_message(message: cl.Message):
         await cl.Message(content=result).send()
 
     elif intent == "run_tests":
-        msg = await cl.Message(content="🧪 Smoke testler koşuyor (izole DB, ~1-2 dk)...")
-        await msg.send()
+        await cl.Message(content="🧪 Smoke testler koşuyor (izole DB, ~1-2 dk)...").send()
         result = await asyncio.to_thread(_run_tests_plain)
         await cl.Message(content=f"## 🧪 Test Sonucu\n\n{result}\n\nDetay: `crew/tests/wrangler.log`").send()
 
