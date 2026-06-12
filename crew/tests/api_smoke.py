@@ -173,11 +173,29 @@ def api_tests() -> None:
            and usage.get("messages_used", 0) >= 1, f"status={status} body={me}")
 
     # TestBulgulari_1 #3: telefonsuz kayıt 500 vermemeli (D1 undefined bind hatası)
+    reg_email = f"smoke-reg-{int(time.time())}@test.dev"
     status, reg = req("POST", "/api/v1/auth/register",
-                      {"email": f"smoke-reg-{int(time.time())}@test.dev", "password": "Test1234!",
+                      {"email": reg_email, "password": "Test1234!",
                        "first_name": "Smoke", "last_name": "Kayıt"})
     record("Kayıt telefonsuz çalışıyor (D1 null bind)", "auth", "Backend Ajani",
            status == 201, f"status={status} body={reg}")
+
+    # E-posta doğrulama kodunda süre kontrolü: bilinen hash'i enjekte et,
+    # süresi GEÇMİŞ → 401; süre uzatılınca aynı kod → 200 (recipients OTP deseni)
+    ver_hash = base64.b64encode(hashlib.sha256(b"123456").digest()).decode()
+    ver_where = f"user_id = (SELECT id FROM users WHERE email='{reg_email}')"
+    wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--command",
+                  f"UPDATE email_verifications SET code_hash='{ver_hash}', "
+                  f"expires_at=datetime('now','-1 minute') WHERE {ver_where}"])
+    status, exp_resp = req("POST", "/api/v1/auth/verify-email", {"email": reg_email, "otp": "123456"})
+    record("Süresi geçmiş doğrulama kodu 401 dönüyor", "auth", "Backend Ajani",
+           status == 401, f"status={status} body={exp_resp}")
+
+    wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--command",
+                  f"UPDATE email_verifications SET expires_at=datetime('now','+10 minutes') WHERE {ver_where}"])
+    status, ver_ok = req("POST", "/api/v1/auth/verify-email", {"email": reg_email, "otp": "123456"})
+    record("Geçerli doğrulama kodu kabul ediliyor", "auth", "Backend Ajani",
+           status == 200, f"status={status} body={ver_ok}")
 
     # TestBulgulari_1 #3: eksik alanla kayıt 400 dönmeli (500 değil)
     status, reg_bad = req("POST", "/api/v1/auth/register", {"email": "eksik@test.dev"})

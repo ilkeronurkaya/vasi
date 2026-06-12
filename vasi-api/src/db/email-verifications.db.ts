@@ -14,7 +14,10 @@ export async function create(env: Env, userId: string, codeHash: string): Promis
 }
 
 export async function findActiveByUser(env: Env, userId: string): Promise<any | null> {
-  const verification = await env.DB.prepare('SELECT * FROM email_verifications WHERE user_id = ? AND used = 0')
+  // Süre kontrolü SQL'de — süresi geçmiş kod (expires_at <= now) aktif sayılmaz
+  const verification = await env.DB.prepare(
+    "SELECT * FROM email_verifications WHERE user_id = ? AND used = 0 AND expires_at > datetime('now')"
+  )
     .bind(userId)
     .first()
   return verification || null
