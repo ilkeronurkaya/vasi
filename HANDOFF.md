@@ -3,7 +3,7 @@ _Tarih: 2026-06-13 · Bu dosya her oturum başında okunur; durumu git ile çapr
 
 > Proje: `~/Projects/vasi` · Ajan klonu: `~/Projects/vasi-agent` · GitHub: `git@github.com:ilkeronurkaya/vasi.git` (private)
 > Ürün durumu: **UÇTAN UCA ÇALIŞIYOR** — kayıt → e-posta doğrulama → mesaj → zamanlama → tasarımlı e-posta → /m/[token] → alıcı OTP → içerik.
-> İlk gerçek e-posta 2026-06-11'de teslim edildi (Resend). Smoke: **38/38 yeşil.**
+> İlk gerçek e-posta 2026-06-11'de teslim edildi (Resend). Smoke: **45/45 yeşil** (S21 sonrası). Sprint 20+21 KAPANDI (admin/plan düzeltmeleri + paket CRUD).
 >
 > **2026-06-13 canlı test turu (Chrome + Gmail + yerel D1):** Tüm akış gerçek tarayıcıdan baştan sona doğrulandı. İKİ P0 bug bulundu+düzeltildi (commit `e2eae52`, push edildi):
 > 1. UI kayıt kırıktı — `register/page.tsx` camelCase (`firstName`) gönderiyordu, API snake_case (`first_name`) bekliyor → her zaman 400.
@@ -63,11 +63,13 @@ Monorepo (pnpm): `vasi-web` (Next.js 15, edge runtime, koyu Apple-dili tasarım 
 `vasi-api` (Cloudflare Workers + Hono + D1; rotalar `src/routes/`, servisler `src/services/`, DB erişimi `src/db/`, yardımcılar `src/lib/`),
 `migrations/` (13 dosya, D1), `crew/` (emekli ajan altyapısı; canlı kalanlar: `crew/tests/api_smoke.py` + manager + loglar), `AGENTS.md` (ajan kuralları).
 
-## 5. SPRINT GEÇMİŞİ — 19/19 + 1 KAPALI
+## 5. SPRINT GEÇMİŞİ — 21 KAPALI
 
 1-7 temel · 8 gerçek veri · 9 eksikler · 10-11 Apple tasarım · 12 e-posta bug+upgrade · 13 admin backend · 14 admin UI ·
 15 buton v2+fiyat senkronu · 16 e-posta uçtan uca · 17 teslimat deneyimi (şablon + erişim token'ı + /m/[token]) ·
-18 devstral pilotu (KALDI) · 19 alıcı OTP (`1527a7b`) · +failed-deliveries retry (`aa6af45`, pilot 2 ürünü).
+18 devstral pilotu (KALDI) · 19 alıcı OTP (`1527a7b`) · +failed-deliveries retry (`aa6af45`, pilot 2 ürünü) ·
+**20 admin & plan düzeltmeleri + UI** (ikotest 7 bulgu; auth kontrat fix'leri `e2eae52`, pie/audit fix `2454f1f`) ·
+**21 paket (plan) CRUD** (plans tablosu + admin yönetimi; Flash-Lite pilot 3, "ajan sadece kod" iş akışı burada doğdu).
 Eski sprint dosyaları `CLOSED = True` ile kilitli.
 
 ## 6. TESTBULGULARI_1 — 7/7 DÜZELTİLDİ (2026-06-12, main'de)
@@ -113,9 +115,10 @@ Lokal admin: test@vasi.app / Test1234! (is_admin=1). NOT: Resend key sohbete yap
 - Auth: `POST /api/v1/auth/login` → `{accessToken, refreshToken}`; `POST /auth/register` (400 eksik alan, 409 kayıtlı e-posta); `POST /auth/verify-email` `{email, otp}`
 - Mesaj: `POST /messages` `{title, message_type, content_text}` (403 LIMIT_REACHED); `POST /:id/recipients` `{full_name, email}`; `POST /:id/schedule` `{scheduled_at}` (ISO, gelecek); `DELETE /:id` (soft, status=cancelled)
 - `GET /me` → `{user, plan, usage}`
-- Admin `/api/v1/admin/*`: login; users (+status/plan PATCH); stats/overview·messages·plans; reports/users·revenue·failed-deliveries;
+- Admin `/api/v1/admin/*` (rotalara INLINE adminMiddleware — `admin.use('/x*')` iç içe PATCH'i yakalamıyor): login; users (+status/plan PATCH); stats/overview·messages·plans; reports/users·revenue·failed-deliveries;
   settings GET/PUT; `POST delivery/run-due` → `{delivered, failed}`; `POST delivery/retry/:messageId` → 200/404/409 (error→scheduled, failed_reason=NULL)
-- Public: `GET /public/pricing`; `GET /public/view/:token` → önizleme (`otp_required`, içerik YOK); `POST /view/:token/otp` → kod e-postala;
+- **Plan CRUD (S21)** `/api/v1/admin/plans`: `GET` → `{plans:[...]}`; `POST` `{slug,name,price_monthly,message_limit,recipient_limit,is_active?}` (201, 409 SLUG_EXISTS); `PUT /:id` (200/404); `DELETE /:id` → 409 PLAN_IN_USE (aktif abone varsa), yoksa 200. Plan = `plans` tablosu (slug,name,price_monthly,message_limit,recipient_limit,is_active,sort_order). `subscriptions.plan_type` = plan slug (CHECK YOK).
+- Public: **`GET /public/pricing` → `{plans:[aktif: {slug,name,price_monthly,message_limit,recipient_limit}]}`** (S21'de `{pricing:{key:value}}`'dan değişti); `GET /public/view/:token` → önizleme (`otp_required`, içerik YOK); `POST /view/:token/otp` → kod e-postala;
   `POST /view/:token/verify` `{otp}` → içerik (5 deneme, 10 dk, tek kullanımlık, accessed_at damgalar)
 - Teslimat: cron 08:00 UTC + run-due; şablon `delivery.service.ts:buildDeliveryEmail` (açık tema, tablo; içerik gömülmez, link taşır)
 - Statü sözlüğü: messages.status ∈ draft/scheduled/sent/delivered/error/cancelled — CHECK kısıtı `'failed'` KABUL ETMEZ.
@@ -138,10 +141,10 @@ Lokal admin: test@vasi.app / Test1234! (is_admin=1). NOT: Resend key sohbete yap
    - #7 askıya alma 500: kök neden `admin.use('/users*')` Hono'da iç içe PATCH rotasını yakalamıyordu → patch rotalarına **inline** `adminMiddleware` eklendi; audit artık admin id kaydediyor (NULL değil).
    - #1 /upgrade `GET /public/pricing`'ten okuyor (₺49/100 mesaj) · #2 her yerde **"Premium"** (`lib/plans.ts` planLabel) · #3 buton `btn btn-primary` · #4 pie chart sabit 320×240 + `isAnimationActive=false` (ResponsiveContainer 1702px yanlış ölçüyordu) · #5 `premium.test@vasi.app` seed.
    - **Kalan ufak iş:** premium seed kullanıcının şifre hash'i sahte → onunla giriş yapılamaz (sadece görünür). Giriş gerekirse `test@vasi.app`'inki gibi gerçek hash koy.
-1. **Sprint 21 — Paket (plan) CRUD** (`ikotest.md` #6) ← SIRADAKİ. Detay prompt ayrı verildi. Yeni `plans` tablosu (migration 0014) + admin CRUD; kullanan kullanıcı varsa silinemez; limit/fiyat pakete bağlı. **Şema notu:** `subscriptions.plan_type`'taki `CHECK (... IN ('free','personal'))` dinamik paket için kaldırılmalı (SQLite'ta tablo yeniden oluşturma). Büyük sprint — 3.5 Flash düşünülebilir.
-3. **İyzico sandbox** — iko'nun merchant hesabı gerek; /upgrade CTA "Yakında" bekliyor.
-4. Resend domain doğrulama (test modu kısıtını kaldırır) → sonra key rotate.
-5. Canlıya çıkış: wrangler deploy + Pages.
+~~Sprint 21 — Paket (plan) CRUD~~ **KAPANDI (06-13).** `plans` tablosu (migration 0014) + admin Ayarlar'da CRUD; `subscriptions.plan_type` CHECK'i kaldırıldı (tablo yeniden oluşturuldu); fiyat/limit artık `plans`'tan (public/pricing → `{plans:[...]}`, mesaj limiti `messages.ts`'te plans.message_limit). Canlı doğrulandı: yaratma 201, kullanılmayan silme 200, kullanımdaki silme 409 (masaüstü alert ile uyarı). Smoke 45/45. **Backlog (ufak UX):** "Yeni Paket" sayısal alanları `0` default'unu temizlemiyor (`099` görünür, kayıt doğru).
+1. **İyzico sandbox** ← SIRADAKİ. iko'nun merchant hesabı gerek; /upgrade'de ücretli plan CTA'sı "Yakında" bekliyor; `subscriptions`'ta iyzico kolonları hazır (`iyzico_card_user_key/token`, `last_payment_ref/at`).
+2. Resend domain doğrulama (test modu kısıtını kaldırır) → sonra key rotate.
+3. Canlıya çıkış: wrangler deploy + Pages.
 
 > **Açık process boşluğu:** frontend↔API kontrat kayması smoke'ta görünmüyor (06-13'te 2 P0 böyle kaçmıştı). Sprint kabul kriterlerine UI akış kontrolü ekle veya web↔api paylaşılan tip/şema kullan.
 
