@@ -37,10 +37,12 @@ export default function VerifyEmailPage() {
         setError('');
         setLoading(true);
         try {
+            const email = (() => { try { return localStorage.getItem('verifyEmail') ?? ''; } catch { return ''; } })();
             await apiFetch('/api/v1/auth/verify-email', {
                 method: 'POST',
-                body: JSON.stringify({ otp }),
+                body: JSON.stringify({ email, otp }),
             });
+            try { localStorage.removeItem('verifyEmail'); } catch {}
             router.push('/login');
         } catch (err: any) {
             setError(err?.data?.error ?? 'Kod hatalı veya süresi dolmuş.');

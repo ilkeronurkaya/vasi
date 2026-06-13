@@ -45,9 +45,11 @@ export default function RegisterPage() {
         try {
             await apiFetch('/api/v1/auth/register', {
                 method: 'POST',
-                body: JSON.stringify({ firstName, lastName, email, password }),
+                body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password }),
             });
             // Kayıt sonrası e-posta doğrulama ekranına yönlendir
+            // Doğrulama ekranı e-postayı API'ye göndermek için saklar
+            try { localStorage.setItem('verifyEmail', email); } catch {}
             router.push('/verify-email');
         } catch (err: any) {
             setError(err?.data?.error ?? 'Kayıt başarısız. Tekrar deneyin.');
