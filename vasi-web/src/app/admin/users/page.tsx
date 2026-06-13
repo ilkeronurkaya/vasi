@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { adminFetch } from '@/lib/api';
+import { planLabel } from '@/lib/plans';
 
 export const runtime = 'edge';
 
@@ -179,7 +180,7 @@ const UsersPage: React.FC = () => {
                                     </td>
                                     <td style={{ ...tdStyle, color: 'var(--mist)' }}>{user.email}</td>
                                     <td style={{ ...tdStyle, color: user.plan_type === 'free' ? 'var(--mist)' : 'var(--copper)', fontWeight: 600 }}>
-                                        {user.plan_type}
+                                        {planLabel[user.plan_type] || user.plan_type}
                                     </td>
                                     <td style={tdStyle}>
                                         <span style={badgeStyle(user.status)}>
@@ -204,8 +205,8 @@ const UsersPage: React.FC = () => {
                                                 onChange={e => changePlan(user, e.target.value)}
                                                 style={selectStyle}
                                             >
-                                                <option value="free">free</option>
-                                                <option value="personal">personal</option>
+                                                <option value="free">{planLabel['free']}</option>
+                                                <option value="personal">{planLabel['personal']}</option>
                                             </select>
                                         </div>
                                     </td>

@@ -2,8 +2,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { adminFetch } from '@/lib/api'
 import { Stats, Plan } from '@/types'
+
+const PlanDistributionChart = dynamic(() => import('@/components/PlanDistributionChart'), { ssr: false })
 
 const LANGS = {
   tr: {
@@ -130,8 +133,7 @@ const AdminOverviewPage = () => {
         padding: '24px', marginTop: '32px',
         display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap',
       }}>
-        <button className="btn btn-primary" onClick={runDue} disabled={runDueBusy}
-          style={{ opacity: runDueBusy ? 0.7 : 1 }}>
+        <button className="btn btn-primary" onClick={runDue} disabled={runDueBusy}>
           {runDueBusy ? t.teslimat_calisiyor : t.teslimat_calistir}
         </button>
         <div>
@@ -145,16 +147,8 @@ const AdminOverviewPage = () => {
       <h2 style={{ fontSize: '17px', fontWeight: '600', marginTop: '32px' }}>
         {t.plan_dagilimi}
       </h2>
-      <div style={{ marginTop: '16px' }}>
-        {plans.map((plan, index) => (
-          <div key={index} style={{ marginBottom: '8px' }}>
-            <span style={{ marginRight: '8px' }}>{plan.plan_type}</span>
-            <span style={{ marginRight: '8px' }}>({plan.user_count})</span>
-            <div style={{ width: '100%', height: '4px', background: 'var(--horizon)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ width: `${(plan.user_count / (stats?.total_users ?? 1) * 100).toFixed(2)}%`, height: '100%', background: 'var(--copper)' }}></div>
-            </div>
-          </div>
-        ))}
+      <div style={{ marginTop: '16px', background: 'var(--midnight)', padding: '24px', borderRadius: 'var(--radius-card)', border: 'var(--border-subtle)' }}>
+        <PlanDistributionChart plans={plans} />
       </div>
     </div>
   )

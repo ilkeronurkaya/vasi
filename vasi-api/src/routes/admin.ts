@@ -141,7 +141,7 @@ admin.patch('/users/:id/status', async (c) => {
   await c.env.DB.prepare(`
     INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, ip_address, created_at)
     VALUES (?, ?, ?, 'user', ?, ?, datetime('now'))
-  `).bind(crypto.randomUUID(), adminId, `admin_status_change_${status}`, id, c.req.header('CF-Connecting-IP') ?? '').run()
+  `).bind(crypto.randomUUID(), adminId ?? null, `admin_status_change_${status}`, id, c.req.header('CF-Connecting-IP') ?? null).run()
 
   return c.json({ success: true, status })
 })
@@ -179,7 +179,7 @@ admin.patch('/users/:id/plan', async (c) => {
   await c.env.DB.prepare(`
     INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, ip_address, created_at)
     VALUES (?, ?, ?, 'subscription', ?, ?, datetime('now'))
-  `).bind(crypto.randomUUID(), adminId, `admin_plan_change_${plan_type}`, id, c.req.header('CF-Connecting-IP') ?? '').run()
+  `).bind(crypto.randomUUID(), adminId ?? null, `admin_plan_change_${plan_type}`, id, c.req.header('CF-Connecting-IP') ?? null).run()
 
   return c.json({ success: true, plan_type })
 })

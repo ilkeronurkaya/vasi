@@ -222,6 +222,38 @@ def api_tests() -> None:
     if not admin_token:
         return
 
+    # SPRINT 20: Kullanıcı askıya alma testi (Admin status change)
+    status, users_list = req("GET", "/api/v1/admin/users", None, admin_token)
+    user_id = users_list["users"][0]["id"]
+    
+    status, res = req("PATCH", f"/api/v1/admin/users/{user_id}/status", {"status": "suspended"}, admin_token)
+    record("Admin kullanıcı askıya alma 200 dönüyor", "admin", "Backend Ajani", status == 200, f"status={status}")
+
+    check = wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--json", "--command", 
+                          f"SELECT status FROM users WHERE id='{user_id}'"])
+    audit = wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--json", "--command",
+                          f"SELECT action FROM audit_logs WHERE entity_id='{user_id}' AND action='admin_status_change_suspended'"])
+    
+    # JSON ayrıştırarak kontrol et (boşluklara karşı dirençli)
+    status_ok = False
+    audit_ok = False
+    try:
+        check_rows = json.loads(check.stdout)
+        status_ok = check_rows[0]["results"][0]["status"] == "suspended"
+        
+        audit_rows = json.loads(audit.stdout)
+        audit_ok = len(audit_rows[0]["results"]) > 0 and audit_rows[0]["results"][0]["action"] == "admin_status_change_suspended"
+    except Exception as e:
+        print(f"JSON parsing error: {e}")
+
+    record("Admin kullanıcı askıya alma DB ve audit güncellendi", "admin", "Backend Ajani", 
+           status_ok and audit_ok, f"status_ok={status_ok} audit_ok={audit_ok}")
+
+    # Reset status
+    req("PATCH", f"/api/v1/admin/users/{user_id}/status", {"status": "active"}, admin_token)
+
+
+
     # İstatistikler
     status, ov = req("GET", "/api/v1/admin/stats/overview", None, admin_token)
     record("Admin stats/overview", "admin", "Backend Ajani",

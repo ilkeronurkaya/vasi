@@ -74,3 +74,25 @@ VALUES (
   'active',
   1
 );
+-- Kullanıcı 3: Premium test kullanıcısı
+INSERT OR IGNORE INTO users (id, email, password_hash, first_name, last_name, status, email_verified)
+VALUES (
+  '550e8400-e29b-41d4-a716-446655440004',
+  'premium.test@vasi.app',
+  'pbkdf2:sha256:260000$dev_salt_premium$hashedpassword_premium_user_dev_only',
+  'Premium',
+  'Test',
+  'active',
+  1
+);
+
+INSERT OR IGNORE INTO subscriptions (id, user_id, plan_type, status, started_at, expires_at)
+VALUES (
+  '660e8400-e29b-41d4-a716-446655440004',
+  '550e8400-e29b-41d4-a716-446655440004',
+  'personal',
+  'active',
+  datetime('now'),
+  datetime('now', '+1 year')
+);
+

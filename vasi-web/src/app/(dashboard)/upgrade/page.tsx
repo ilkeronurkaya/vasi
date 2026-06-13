@@ -2,23 +2,24 @@
 export const runtime = 'edge'
 
 import { apiFetch } from '@/lib/api'
+import { planLabel } from '@/lib/plans'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
 
-const PLANS = [
+const PLANS = (pricing: any) => [
   {
     key: 'free',
-    name: 'Ücretsiz',
+    name: planLabel['free'],
     price: '₺0',
     period: '/ay',
-    features: ['10 mesaj', 'E-posta teslimi'],
+    features: [`${pricing.plan_limit_free} mesaj`, 'E-posta teslimi'],
   },
   {
     key: 'personal',
-    name: 'Kişisel',
-    price: '₺49',
+    name: planLabel['personal'],
+    price: `₺${pricing.price_personal_monthly}`,
     period: '/ay',
-    features: ['100 mesaj', 'Medya ekleri', 'SMS+e-posta'],
+    features: [`${pricing.plan_limit_personal} mesaj`, 'Medya ekleri', 'SMS+e-posta'],
   },
 ];
 
@@ -26,20 +27,25 @@ export default function UpgradePage() {
   const router = useRouter()
   const [currentPlan, setCurrentPlan] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [pricing, setPricing] = useState(null)
 
   useEffect(() => {
-    apiFetch('/api/v1/me')
-      .then(data => {
-        setCurrentPlan(data.plan)
+    Promise.all([
+      apiFetch('/api/v1/me'),
+      apiFetch('/api/v1/public/pricing')
+    ])
+      .then(([meData, pricingData]) => {
+        setCurrentPlan(meData.plan)
+        setPricing(pricingData.pricing)
         setLoading(false)
       })
       .catch(error => {
-        console.error('Error fetching current plan:', error)
+        console.error('Error fetching data:', error)
         setLoading(false)
       })
   }, [])
 
-  if (loading) {
+  if (loading || !pricing) {
     return <div style={{ color: 'var(--mist)', fontSize: '14px' }}>Yükleniyor...</div>
   }
 
@@ -56,7 +62,7 @@ export default function UpgradePage() {
       <h1 style={{ fontSize: '22px', fontWeight: '700', letterSpacing: '-0.01em', color: 'var(--cream)' }}>Planını Yükselt</h1>
       <p style={{ fontSize: '15px', color: 'var(--mist)', marginBottom: '32px' }}>Farklı planlarımızla mesaj gönderme deneyiminizi artırın.</p>
       <div style={{ display: 'flex', gap: '32px' }}>
-        {PLANS.map(plan => (
+        {PLANS(pricing).map(plan => (
           <div key={plan.key} style={{
             ...cardStyle,
             border: currentPlan === plan.key ? '1px solid var(--copper)' : cardStyle.border,

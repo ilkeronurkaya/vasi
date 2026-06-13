@@ -59,7 +59,7 @@ const LANGS: Record<string, Lang> = {
     plan_popular: 'En Popüler', plan_per: '/ay',
     plan_free_name: 'Ücretsiz', plan_free_desc: 'Başlamak için ideal.',
     plan_free_f1: '3 mesaj', plan_free_f2: '1 alıcı / mesaj', plan_free_f3: 'E-posta teslimat', plan_free_cta: 'Başla',
-    plan_personal_name: 'Kişisel', plan_personal_desc: 'Kişisel kullanım için tam donanımlı.',
+    plan_personal_name: 'Premium', plan_personal_desc: 'Kişisel kullanım için tam donanımlı.',
     plan_personal_f1: '50 mesaj', plan_personal_f2: '10 alıcı / mesaj', plan_personal_f3: 'Medya ekleri (5 GB)',
     plan_personal_f4: 'SMS + E-posta', plan_personal_f5: 'Şifreli mesajlar', plan_personal_cta: 'Ücretsiz Dene',
     plan_family_name: 'Aile', plan_family_desc: '5 kişiye kadar aile için.',
