@@ -49,7 +49,7 @@ export { admin as adminRoutes }
 
 // ── Admin User Management ───────────────────────────────────────────────
 
-admin.use('/users*', adminMiddleware)
+admin.use('/users/*', adminMiddleware)
 
 // 1. GET /admin/users — Kullanıcı listesi (sayfalı, filtrelenebilir)
 admin.get('/users', async (c) => {
@@ -121,7 +121,7 @@ admin.get('/users/:id', async (c) => {
 })
 
 // 3. PATCH /admin/users/:id/status — Askıya al / aktifleştir
-admin.patch('/users/:id/status', async (c) => {
+admin.patch('/users/:id/status', adminMiddleware, async (c) => {
   const id = c.req.param('id')
   const adminId = c.get('userId')
   const { status } = await c.req.json()
@@ -147,7 +147,7 @@ admin.patch('/users/:id/status', async (c) => {
 })
 
 // 4. PATCH /admin/users/:id/plan — Plan değiştir
-admin.patch('/users/:id/plan', async (c) => {
+admin.patch('/users/:id/plan', adminMiddleware, async (c) => {
   const id = c.req.param('id')
   const adminId = c.get('userId')
   const { plan_type } = await c.req.json()
