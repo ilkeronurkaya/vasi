@@ -17,34 +17,34 @@ _Tarih: 2026-06-13 · Bu dosya her oturum başında okunur; durumu git ile çapr
 ## 1. ROLLER VE İŞ AKIŞI (2026-06-12'de kesinleşti)
 
 **Beyin takımı = iko + Claude.** Strateji, roadmap, sprint tasarımı, kabul kriterleri, diff incelemesi, mimari kararlar.
-**Uygulayıcı = OpenHands + Gemini 3.5 Flash** (API). Kod + test yazımı, klonda çalışır.
+**Uygulayıcı = OpenHands + Gemini Flash** (API). **YALNIZCA kod + test yazar.** Klonda çalışır.
 **Tüm işlemler iko'nun Mac'inde yapılır; Claude sandbox'tan commit ATMAZ** (bayat .git lock bırakıyor — yaşandı).
 
+> **YENİ İŞ AKIŞI (2026-06-13'te kesinleşti):** Ajan **branch/commit/push YAPMAZ** — sadece çalışma ağacında kod+test yazar.
+> Branch açma, commit, merge, push HEPSİ iko'da. Sebep: Flash-Lite iki turda da git'i batırdı (yanlış branch, eksik/derlenmeyen redo,
+> "tamamlandı" uydurması — bkz. Bölüm 2). Bu değişiklikle git riski tamamen ortadan kalkar; ajanın sadece kod kalitesi değerlendirilir.
+
 Sprint döngüsü, adım adım:
-1. iko + Claude sprint'i tanımlar → görev dosyası/prompt hazırlanır (kabul kriterli).
-2. iko klonu tazeler: `cd ~/Projects/vasi-agent && git checkout main && git pull origin main`
-3. OpenHands'te YENİ konuşma → prompt yapıştırılır. Prompt şablonu (uyarlayarak):
-   - Repo kökü /workspace; önce /workspace/AGENTS.md oku
-   - Branch adı (main'den), kod + testler AYNI commit'te
-   - Commit'ten önce smoke koştur; çıktının SON 10 satırını AYNEN göster
-   - git push YAPMA
-4. Ajan bitirince: **raporuna güvenilmez** — iko host'ta bağımsız doğrular:
-   `cd ~/Projects/vasi-agent && rm -rf node_modules */node_modules && pnpm install && uv run --python 3.12 python crew/tests/api_smoke.py`
-   (node_modules tazeleme şart: ajan Linux'ta kurduysa workerd binary'si Mac'te çalışmaz.)
-5. Claude diff'i inceler: `git diff main..<branch>` (klonda) — assertion'lar gerçek mi, mevcut testler korunmuş mu, spec'e uygun mu.
-6. Yeşil + incelemeden geçtiyse iko merge + push:
-   `cd ~/Projects/vasi && git fetch ../vasi-agent <branch>:<branch> && git checkout main && git merge <branch> && git push origin main`
-7. Düzeltme gerekirse ajana TEK tur verilir, satır seviyesinde tarifle; 2. turda hâlâ kırmızıysa sprint Claude'a döner.
+1. iko + Claude sprint'i tanımlar → prompt hazırlanır (kabul kriterli). Promtta: **"branch/commit/push YAPMA; sadece çalışma ağacında kod+test yaz; bitince değişen dosyaların listesini + `git status` çıktısını ver."**
+2. iko klonu tazeler: `cd ~/Projects/vasi-agent && git checkout main && git pull origin main` (klon main asıl repo main ile aynı olmalı).
+3. OpenHands'te YENİ konuşma → prompt yapıştırılır. (Repo kökü /workspace; önce /workspace/AGENTS.md oku.)
+4. Ajan bitince **raporuna güvenilmez.** iko klonda `git status` ile gerçek değişen dosyaları görür; Claude diff'i klondaki çalışma ağacından inceler (`cd ~/Projects/vasi-agent && git --no-pager diff`).
+5. İnceleme OK ise işi asıl repoya iko taşır: en temizi klondaki değişiklikleri asıl repoda elle uygulamak (küçükse) ya da `git -C ~/Projects/vasi-agent diff > /tmp/s.patch && git -C ~/Projects/vasi apply /tmp/s.patch`. Sonra asıl repoda: `git checkout -b sprint-NN ... && git add -A && git commit && smoke && git push`.
+6. Bağımsız doğrulama ŞART: asıl repoda `rm -rf node_modules */node_modules && pnpm install && uv run --python 3.12 python crew/tests/api_smoke.py` + UI işleri Chrome'dan elle (smoke UI'yi görmez).
+7. Düzeltme gerekirse ajana TEK tur (satır seviyesinde tarifle); 2. turda hâlâ kırmızıysa düzeltme Claude'a döner (S20'de yaşandı — Claude asıl repoda 2 satırlık fix'i kendi uyguladı).
 
 ## 2. UYGULAYICI TARİHÇESİ VE MALİYET
 
 - **Crew/devstral (sprint 18): KALDI** — api_smoke.py bozuldu, rapor güvenilmez. `crew/` emekli; manager/Tester/bildirim kalıyor.
 - **Pilot 1, Qwen3.6-35B yerel (LM Studio): KALDI** — aynı kalıp (testler bozuldu + "3/4 geçti" uydurması). Yerel LLM bir daha DENENMEZ.
 - **Pilot 2, Gemini 3.5 Flash: GEÇTİ** — failed-deliveries retry, 38/38, sıfır düzeltme turu (`aa6af45`). Döküm: `PILOT_OPENHANDS.md`.
-- **Maliyet:** Pilot 2 ≈ $1.5 (kurulum debelenmesi dahil). iko için hâlâ yüksek. **Sıradaki hamle: bir sonraki sprint'i
-  Gemini 3.1 Flash-Lite ile dene** (Custom Model `gemini/gemini-3.1-flash-lite`, aynı Base URL) — Google'ın en ucuz modeli;
-  geçerse ~10x ucuzlar. Alternatif: DeepSeek (`deepseek/deepseek-chat`, görev başına ~$0.03). Kalite düşerse 3.5 Flash'a dön.
-  Ek tasarruf: OpenHands Settings > Condenser'ı aç (bağlam sıkıştırma); kullanılmayan skill'leri kapat (50 skill yükleniyor).
+- **Pilot 3, Gemini 3.1 Flash-Lite (Sprint 20): KISMİ.** Kod mantığı çoğunlukla doğruydu (admin/plan UI, 6 maddenin 5'i ilk turda kabul edilebilir),
+  AMA git akışını İKİ turda da batırdı: işi feature branch yerine klon main'ine commit'ledi; düzeltme turunda orijinal işi içermeyen
+  eksik/**derlenmeyen** bir redo yaptı (plans.ts/recharts unutuldu); her seferinde "tamamlandı, branch açıldı" diye uydurdu.
+  #4 pie chart görünmüyordu, #7 audit attribution NULL'dı — ikisini de Claude asıl repoda elle düzeltti. **Sonuç: model ucuz ve kod üretebiliyor,
+  ama git/iş-akışı güvenilmez → kalıcı çözüm: ajan artık SADECE kod yazar, git iko'da (Bölüm 1 yeni iş akışı).** Kalite hâlâ 3.5 Flash'ın altında;
+  riskli/büyük sprintlerde 3.5 Flash tercih et, ufak/net işlerde Flash-Lite dene.
+- **Maliyet:** Pilot 2 ≈ $1.5. Flash-Lite belirgin ucuz. Ek tasarruf: OpenHands Settings > Condenser'ı aç; kullanılmayan skill'leri kapat.
 
 ## 3. OPENHANDS ÇALIŞTIRMA REHBERİ (sıfırdan)
 
@@ -134,14 +134,11 @@ Lokal admin: test@vasi.app / Test1234! (is_admin=1). NOT: Resend key sohbete yap
 
 > Canlı test (06-13) + ikinci tur elle test (`ikotest.md`, 7 bulgu) sonrası öncelikler güncellendi. İyzico ileri kaydı; önce admin/plan deneyimi düzeltilecek.
 
-1. **Sprint 20 — Admin & Paket düzeltmeleri + UI** (maliyet pilotu: **Gemini 3.1 Flash-Lite**). `ikotest.md`'deki 7 bulgudan #1,#2,#3,#4,#5,#7. Detay prompt + kabul kriterleri ayrı verildi.
-   - #7 askıya alma 500: `admin.ts:144` audit_logs insert'i `adminId` (`c.get('userId')`) undefined bind ediyor → D1_TYPE_ERROR. Kaynağı düzelt + guard.
-   - #1 /upgrade fiyatları hardcoded → `GET /public/pricing`'ten oku (kontrat alan adları eşleşmeli).
-   - #2 ücretli plan UI'da **"Premium"** etiketlensin (DB `plan_type='personal'` kalır; tek label haritası).
-   - #3 admin "Teslimatları Çalıştır" butonu DESIGN.md Buton v2'ye uysun.
-   - #4 Genel Bakış plan dağılımı → **recharts** Pie/Donut (client component, dynamic import ssr:false).
-   - #5 Premium test kullanıcısı seed (dev seed; aktif `personal` subscription).
-2. **Sprint 21 — Paket (plan) CRUD** (`ikotest.md` #6): yeni `plans` tablosu + migration; yarat/edit/sil; kullanan kullanıcı varsa silinemez; limitler/fiyatlar pakete bağlı. Şema değişikliği → yeni migration.
+~~1. Sprint 20 — Admin & Paket düzeltmeleri + UI~~ **KAPANDI (06-13).** `ikotest.md` #1,#2,#3,#4,#5,#7 tamam; canlı doğrulandı.
+   - #7 askıya alma 500: kök neden `admin.use('/users*')` Hono'da iç içe PATCH rotasını yakalamıyordu → patch rotalarına **inline** `adminMiddleware` eklendi; audit artık admin id kaydediyor (NULL değil).
+   - #1 /upgrade `GET /public/pricing`'ten okuyor (₺49/100 mesaj) · #2 her yerde **"Premium"** (`lib/plans.ts` planLabel) · #3 buton `btn btn-primary` · #4 pie chart sabit 320×240 + `isAnimationActive=false` (ResponsiveContainer 1702px yanlış ölçüyordu) · #5 `premium.test@vasi.app` seed.
+   - **Kalan ufak iş:** premium seed kullanıcının şifre hash'i sahte → onunla giriş yapılamaz (sadece görünür). Giriş gerekirse `test@vasi.app`'inki gibi gerçek hash koy.
+1. **Sprint 21 — Paket (plan) CRUD** (`ikotest.md` #6) ← SIRADAKİ. Detay prompt ayrı verildi. Yeni `plans` tablosu (migration 0014) + admin CRUD; kullanan kullanıcı varsa silinemez; limit/fiyat pakete bağlı. **Şema notu:** `subscriptions.plan_type`'taki `CHECK (... IN ('free','personal'))` dinamik paket için kaldırılmalı (SQLite'ta tablo yeniden oluşturma). Büyük sprint — 3.5 Flash düşünülebilir.
 3. **İyzico sandbox** — iko'nun merchant hesabı gerek; /upgrade CTA "Yakında" bekliyor.
 4. Resend domain doğrulama (test modu kısıtını kaldırır) → sonra key rotate.
 5. Canlıya çıkış: wrangler deploy + Pages.
