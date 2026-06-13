@@ -121,12 +121,68 @@ def api_tests() -> None:
            status == 400 and body.get("code") == "VALIDATION_ERROR",
            f"status={status} body={str(body)[:120]}")
 
+    # Login (seed kullanıcı)
     status, body = req("POST", "/api/v1/auth/login", {"email": TEST_EMAIL, "password": TEST_PASS})
     token = body.get("accessToken", "")
     record("Login (seed kullanıcı)", "auth", "Backend Ajani",
            status == 200 and bool(token), f"status={status} body={body}")
     if not token:
         return  # geri kalanı token ister
+
+    # Admin login
+    status, auth = req("POST", "/api/v1/admin/auth/login", {"email": TEST_EMAIL, "password": TEST_PASS})
+    admin_token = auth.get("accessToken", "")
+    record("Admin login", "admin", "Backend Ajani", status == 200 and bool(admin_token))
+
+    # --- PLAN CRUD TESTLERİ ---
+    # Deterministiklik: önceki koşulardan kalan test planlarını temizle
+    status, _existing = req("GET", "/api/v1/admin/plans", None, admin_token)
+    for _p in (_existing.get("plans", []) if _existing else []):
+        if _p["slug"] in ("test_plan", "unused_plan"):
+            req("DELETE", f"/api/v1/admin/plans/{_p['id']}", None, admin_token)
+    # POST plan
+    status, _ = req("POST", "/api/v1/admin/plans", 
+                    {"slug": "test_plan", "name": "Test Plan", "price_monthly": 10, "message_limit": 50, "recipient_limit": 50}, admin_token)
+    record("Plan oluşturma (201)", "admin-plans", "Backend Ajani", status == 201)
+    
+    # POST same slug -> 409
+    status, _ = req("POST", "/api/v1/admin/plans", 
+                    {"slug": "test_plan", "name": "Test Plan", "price_monthly": 10, "message_limit": 50, "recipient_limit": 50}, admin_token)
+    record("Aynı slug ile plan oluşturma (409)", "admin-plans", "Backend Ajani", status == 409)
+    
+    # GET plans
+    status, data = req("GET", "/api/v1/admin/plans", None, admin_token)
+    record("Plan listesi (200)", "admin-plans", "Backend Ajani", status == 200 and len(data.get("plans", [])) >= 3)
+    
+    # DELETE plan
+    # create unused
+    req("POST", "/api/v1/admin/plans", 
+        {"slug": "unused_plan", "name": "Unused Plan", "price_monthly": 0, "message_limit": 5, "recipient_limit": 5}, admin_token)
+    
+    status, data = req("GET", "/api/v1/admin/plans", None, admin_token)
+    unused_id = next(p["id"] for p in data["plans"] if p["slug"] == "unused_plan")
+    
+    status, _ = req("DELETE", f"/api/v1/admin/plans/{unused_id}", None, admin_token)
+    record("Kullanılmayan plan silme (200)", "admin-plans", "Backend Ajani", status == 200)
+    
+    # Public pricing
+    status, p = req("GET", "/api/v1/public/pricing")
+    record("Public pricing endpoint", "public", "Backend Ajani", status == 200 and "plans" in (p or {}))
+    
+    # Admin fiyat değişikliği
+    status, data = req("GET", "/api/v1/admin/plans", None, admin_token)
+    free_plan = next(p for p in data["plans"] if p["slug"] == "free")
+    
+    status, _ = req("PUT", f"/api/v1/admin/plans/{free_plan['id']}", 
+                    {**free_plan, "price_monthly": 10}, admin_token)
+    
+    status, p = req("GET", "/api/v1/public/pricing")
+    updated_free = next(p for p in p["plans"] if p["slug"] == "free")
+    
+    record("Admin fiyat değişikliği public'e yansıyor", "public", "Backend Ajani",
+           status == 200 and updated_free["price_monthly"] == 10)
+    
+    # --- END PLAN TESTLERİ ---
 
     # Mesaj oluşturma — id dönmeli (regresyon: 'Message not found' bug'ı)
     status, msg = req("POST", "/api/v1/messages",
@@ -259,34 +315,27 @@ def api_tests() -> None:
     record("Admin stats/overview", "admin", "Backend Ajani",
            status == 200 and (ov or {}).get("total_users", 0) >= 3, f"status={status} body={ov}")
 
-    # Ayar güncelleme → limit zorlaması
+    # Ayar güncelleme (admin_settings endpoint hâlâ mevcut)
     status, _ = req("PUT", "/api/v1/admin/settings", {"key": "plan_limit_free", "value": "1"}, admin_token)
     record("Admin ayar güncelleme", "admin", "Backend Ajani", status == 200, f"status={status}")
 
+    # Limit zorlaması — S21: limit artık plans.message_limit'ten okunuyor (admin_settings değil)
+    status, _plans = req("GET", "/api/v1/admin/plans", None, admin_token)
+    _free = next(p for p in _plans["plans"] if p["slug"] == "free")
+    req("PUT", f"/api/v1/admin/plans/{_free['id']}", {**_free, "message_limit": 0}, admin_token)
     status, lim = req("POST", "/api/v1/messages",
                       {"title": "Limit testi", "message_type": "text", "content_text": "limit"}, token)
     record("Plan limiti uygulanıyor (403 LIMIT_REACHED)", "messages", "Backend Ajani",
            status == 403 and (lim or {}).get("code") == "LIMIT_REACHED", f"status={status} body={lim}")
-
-    req("PUT", "/api/v1/admin/settings", {"key": "plan_limit_free", "value": "10"}, admin_token)
+    req("PUT", f"/api/v1/admin/plans/{_free['id']}", {**_free, "message_limit": 10}, admin_token)
 
     # Gelir raporu
     status, rev = req("GET", "/api/v1/admin/reports/revenue", None, admin_token)
     record("Admin gelir raporu", "admin", "Backend Ajani",
            status == 200 and "total_monthly_revenue" in (rev or {}), f"status={status}")
 
-    # Public pricing — auth'suz çalışmalı ve admin değişikliğini yansıtmalı
-    status, pub = req("GET", "/api/v1/public/pricing")
-    record("Public pricing endpoint (auth'suz)", "public", "Backend Ajani",
-           status == 200 and "price_personal_monthly" in (pub or {}).get("pricing", {}),
-           f"status={status} body={pub}")
-
-    req("PUT", "/api/v1/admin/settings", {"key": "price_personal_monthly", "value": "59"}, admin_token)
-    status, pub2 = req("GET", "/api/v1/public/pricing")
-    record("Admin fiyat değişikliği public'e yansıyor", "public", "Backend Ajani",
-           status == 200 and (pub2 or {}).get("pricing", {}).get("price_personal_monthly") == "59",
-           f"status={status} body={pub2}")
-    req("PUT", "/api/v1/admin/settings", {"key": "price_personal_monthly", "value": "49"}, admin_token)
+    # (Eski {pricing:{...}} şekilli public-pricing testleri kaldırıldı — S21 yeni
+    #  {plans:[...]} kontratı PLAN CRUD bloğunda test ediliyor.)
 
     # Manuel teslimat tetikleyici (Sprint 16 Task 3) — sayaçlar dönmeli
     status, dr = req("POST", "/api/v1/admin/delivery/run-due", {}, admin_token)

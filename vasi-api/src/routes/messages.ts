@@ -27,14 +27,13 @@ messages.post('/', async (c) => {
     const planRow = await c.env.DB.prepare(
   `SELECT plan_type FROM subscriptions WHERE user_id = ? AND status = 'active'`
 ).bind(userId).first()
-const plan = (planRow?.plan_type as string) ?? 'free'
-const limitKey = plan === 'free' ? 'plan_limit_free'
-  : plan === 'personal' ? 'plan_limit_personal'
-  : 'plan_limit_unlimited'
-const limitRow = await c.env.DB.prepare(
-  `SELECT value FROM admin_settings WHERE key = ?`
-).bind(limitKey).first()
-const limit = parseInt((limitRow?.value as string) ?? (plan === 'free' ? '10' : plan === 'personal' ? '100' : '1000'))
+const planSlug = (planRow?.plan_type as string) ?? 'free'
+
+const plan = await c.env.DB.prepare(
+  `SELECT message_limit FROM plans WHERE slug = ?`
+).bind(planSlug).first()
+const limit = (plan?.message_limit as number) ?? 10
+
 const countRow = await c.env.DB.prepare(
   `SELECT COUNT(*) AS n FROM messages WHERE user_id = ? AND status != 'cancelled'`
 ).bind(userId).first()

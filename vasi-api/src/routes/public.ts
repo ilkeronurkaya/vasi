@@ -9,16 +9,11 @@ const pub = new Hono<{ Bindings: Env }>()
 
 pub.get('/pricing', async (c) => {
   const result = await c.env.DB.prepare(
-    `SELECT key, value FROM admin_settings WHERE key IN
-     ('plan_limit_free','plan_limit_personal','recipient_limit_free',
-      'recipient_limit_personal','price_personal_monthly','price_family_monthly')`
+    `SELECT slug, name, price_monthly, message_limit, recipient_limit FROM plans WHERE is_active = 1 ORDER BY sort_order ASC`
   ).all()
-  const pricing: Record<string, string> = {}
-  for (const row of (result.results ?? []) as Array<{ key: string; value: string }>) {
-    pricing[row.key] = row.value
-  }
+  
   c.header('Cache-Control', 'public, max-age=300')
-  return c.json({ pricing })
+  return c.json({ plans: result.results })
 })
 
 // Token ile alıcı + mesaj kaydını getirir. otp_valid süre kontrolü SQL'de yapılır —

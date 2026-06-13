@@ -184,6 +184,68 @@ admin.patch('/users/:id/plan', adminMiddleware, async (c) => {
   return c.json({ success: true, plan_type })
 })
 
+// ── Admin Plans CRUD ────────────────────────────────────────────────────────────
+
+// GET /admin/plans
+admin.get('/plans', adminMiddleware, async (c) => {
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM plans ORDER BY sort_order ASC`
+  ).all()
+  return c.json({ plans: result.results })
+})
+
+// POST /admin/plans
+admin.post('/plans', adminMiddleware, async (c) => {
+  const { slug, name, price_monthly, message_limit, recipient_limit, is_active } = await c.req.json()
+  
+  if (!slug || !name || price_monthly === undefined || message_limit === undefined || recipient_limit === undefined) {
+    return c.json({ error: 'Eksik alanlar', code: 'VALIDATION_ERROR' }, 400)
+  }
+
+  const existing = await c.env.DB.prepare(`SELECT 1 FROM plans WHERE slug = ?`).bind(slug).first()
+  if (existing) {
+    return c.json({ error: 'Slug zaten var', code: 'SLUG_EXISTS' }, 409)
+  }
+
+  const id = `plan_${slug}`
+  await c.env.DB.prepare(
+    `INSERT INTO plans (id, slug, name, price_monthly, message_limit, recipient_limit, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).bind(id, slug, name, price_monthly, message_limit, recipient_limit, is_active ?? 1).run()
+  
+  return c.json({ success: true }, 201)
+})
+
+// PUT /admin/plans/:id
+admin.put('/plans/:id', adminMiddleware, async (c) => {
+  const id = c.req.param('id')
+  const { slug, name, price_monthly, message_limit, recipient_limit, is_active, sort_order } = await c.req.json()
+
+  const existing = await c.env.DB.prepare(`SELECT 1 FROM plans WHERE id = ?`).bind(id).first()
+  if (!existing) return c.json({ error: 'Plan bulunamadı', code: 'NOT_FOUND' }, 404)
+
+  await c.env.DB.prepare(
+    `UPDATE plans SET slug = ?, name = ?, price_monthly = ?, message_limit = ?, recipient_limit = ?, is_active = ?, sort_order = ?, updated_at = datetime('now') WHERE id = ?`
+  ).bind(slug, name, price_monthly, message_limit, recipient_limit, is_active, sort_order, id).run()
+
+  return c.json({ success: true })
+})
+
+// DELETE /admin/plans/:id
+admin.delete('/plans/:id', adminMiddleware, async (c) => {
+  const id = c.req.param('id')
+  
+  const plan = await c.env.DB.prepare(`SELECT slug FROM plans WHERE id = ?`).bind(id).first()
+  if (!plan) return c.json({ error: 'Plan bulunamadı', code: 'NOT_FOUND' }, 404)
+
+  const inUse = await c.env.DB.prepare(`SELECT 1 FROM subscriptions WHERE plan_type = ? AND status = 'active'`).bind(plan.slug).first()
+  if (inUse) {
+    return c.json({ error: 'Bu planı kullanan kullanıcılar var', code: 'PLAN_IN_USE' }, 409)
+  }
+
+  await c.env.DB.prepare(`DELETE FROM plans WHERE id = ?`).bind(id).run()
+  return c.json({ success: true })
+})
+
 // ── İstatistikler ─────────────────────────────────────────────────────────────
 admin.use('/stats*', adminMiddleware)
 
