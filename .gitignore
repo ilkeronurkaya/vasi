@@ -45,3 +45,13 @@ sprint10-*.png
 
 # Build artifacts
 build_output.txt
+dist/
+vasi-api/dist/
+vasi-web/dist/
+
+# npm lock (proje pnpm kullanıyor)
+package-lock.json
+vasi-web/package-lock.json
+
+# Chainlit (otomatik üretilir)
+.chainlit/
