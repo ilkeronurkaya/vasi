@@ -1,9 +1,16 @@
 # Vasi App BD — Oturum El Geçirme Notu (DETAYLI)
-_Tarih: 2026-06-12 gece · Bu dosya her oturum başında okunur; durumu git ile çapraz doğrula: `git log --oneline -5 --all`_
+_Tarih: 2026-06-13 · Bu dosya her oturum başında okunur; durumu git ile çapraz doğrula: `git log --oneline -5 --all`_
 
 > Proje: `~/Projects/vasi` · Ajan klonu: `~/Projects/vasi-agent` · GitHub: `git@github.com:ilkeronurkaya/vasi.git` (private)
 > Ürün durumu: **UÇTAN UCA ÇALIŞIYOR** — kayıt → e-posta doğrulama → mesaj → zamanlama → tasarımlı e-posta → /m/[token] → alıcı OTP → içerik.
 > İlk gerçek e-posta 2026-06-11'de teslim edildi (Resend). Smoke: **38/38 yeşil.**
+>
+> **2026-06-13 canlı test turu (Chrome + Gmail + yerel D1):** Tüm akış gerçek tarayıcıdan baştan sona doğrulandı. İKİ P0 bug bulundu+düzeltildi (commit `e2eae52`, push edildi):
+> 1. UI kayıt kırıktı — `register/page.tsx` camelCase (`firstName`) gönderiyordu, API snake_case (`first_name`) bekliyor → her zaman 400.
+> 2. UI e-posta doğrulama kırıktı — `verify-email/page.tsx` body'de email göndermiyordu; register email'i taşımıyordu. Düzeltme: email `localStorage('verifyEmail')` ile taşınıyor.
+> **Ders:** API-only smoke (38 test) frontend↔API kontrat kaymasını GÖREMEZ. Canlıya çıkmadan ince bir e2e/UI testi şart.
+> Repo temizliği yapıldı: nested `vasi/` kopyası, `conversations/`, junk, eski v1 dokümanlar silindi; `dist/` + npm lock + `.chainlit` git'ten çıkarıldı (`.gitignore` güncellendi).
+> Canlı testte OTP'ler yerel D1'den çözülebiliyor: `email_verifications.code_hash` ve `recipients.otp_code` = saltsız `base64(SHA-256(otp))` → 6 hane brute-force. Resend test modu yalnız `ilkeronurkaya@gmail.com`'a gerçekten gönderir (Gmail'den okunur).
 
 ---
 
@@ -125,11 +132,21 @@ Lokal admin: test@vasi.app / Test1234! (is_admin=1). NOT: Resend key sohbete yap
 
 ## 13. SIRADAKİ İŞLER (öncelik sırasıyla)
 
-1. **Canlı testi tekrarla** (Bölüm 7) — TestBulgulari düzeltmeleri + OTP + retry sonrası tam tur (API restart gerekli).
-2. **Maliyet pilotu**: bir sonraki sprint'i Gemini 3.1 Flash-Lite ile koş (Bölüm 2) — kabul kriterleri aynı.
-3. **Sprint 20: İyzico sandbox** — iko'nun merchant hesabı gerek; /upgrade CTA "Yakında" bekliyor.
+> Canlı test (06-13) + ikinci tur elle test (`ikotest.md`, 7 bulgu) sonrası öncelikler güncellendi. İyzico ileri kaydı; önce admin/plan deneyimi düzeltilecek.
+
+1. **Sprint 20 — Admin & Paket düzeltmeleri + UI** (maliyet pilotu: **Gemini 3.1 Flash-Lite**). `ikotest.md`'deki 7 bulgudan #1,#2,#3,#4,#5,#7. Detay prompt + kabul kriterleri ayrı verildi.
+   - #7 askıya alma 500: `admin.ts:144` audit_logs insert'i `adminId` (`c.get('userId')`) undefined bind ediyor → D1_TYPE_ERROR. Kaynağı düzelt + guard.
+   - #1 /upgrade fiyatları hardcoded → `GET /public/pricing`'ten oku (kontrat alan adları eşleşmeli).
+   - #2 ücretli plan UI'da **"Premium"** etiketlensin (DB `plan_type='personal'` kalır; tek label haritası).
+   - #3 admin "Teslimatları Çalıştır" butonu DESIGN.md Buton v2'ye uysun.
+   - #4 Genel Bakış plan dağılımı → **recharts** Pie/Donut (client component, dynamic import ssr:false).
+   - #5 Premium test kullanıcısı seed (dev seed; aktif `personal` subscription).
+2. **Sprint 21 — Paket (plan) CRUD** (`ikotest.md` #6): yeni `plans` tablosu + migration; yarat/edit/sil; kullanan kullanıcı varsa silinemez; limitler/fiyatlar pakete bağlı. Şema değişikliği → yeni migration.
+3. **İyzico sandbox** — iko'nun merchant hesabı gerek; /upgrade CTA "Yakında" bekliyor.
 4. Resend domain doğrulama (test modu kısıtını kaldırır) → sonra key rotate.
 5. Canlıya çıkış: wrangler deploy + Pages.
+
+> **Açık process boşluğu:** frontend↔API kontrat kayması smoke'ta görünmüyor (06-13'te 2 P0 böyle kaçmıştı). Sprint kabul kriterlerine UI akış kontrolü ekle veya web↔api paylaşılan tip/şema kullan.
 
 ## 14. KOMUT ÖZETİ
 
