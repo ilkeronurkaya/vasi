@@ -2,17 +2,26 @@
 export const runtime = 'edge'
 
 import { apiFetch } from '@/lib/api'
-import { planLabel } from '@/lib/plans'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
 
 export default function UpgradePage() {
   const router = useRouter()
-  const [currentPlan, setCurrentPlan] = useState(null)
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [plans, setPlans] = useState([])
+  const [plans, setPlans] = useState<any[]>([])
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Query'i client-only oku (useSearchParams Next 15'te Suspense ister; window ile gerek kalmaz)
+    const payment = new URLSearchParams(window.location.search).get('payment')
+    if (payment === 'success') {
+      setMessage('Ödeme başarılı, planın artık Premium.')
+    } else if (payment === 'failed') {
+      setError('Ödeme tamamlanamadı, tekrar deneyebilirsin.')
+    }
+
     Promise.all([
       apiFetch('/api/v1/me'),
       apiFetch('/api/v1/public/pricing')
@@ -28,6 +37,15 @@ export default function UpgradePage() {
       })
   }, [])
 
+  const handleUpgrade = async (plan_slug: string) => {
+    try {
+        const response = await apiFetch('/api/v1/payment/checkout/init', { method:'POST', body: JSON.stringify({ plan_slug }) })
+        window.location.href = response.paymentPageUrl
+    } catch (e: any) {
+        setError('Ödeme başlatılamadı: ' + (e.message || 'Hata'))
+    }
+  }
+
   if (loading || !plans.length) {
     return <div style={{ color: 'var(--mist)', fontSize: '14px' }}>Yükleniyor...</div>
   }
@@ -42,6 +60,8 @@ export default function UpgradePage() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px' }}>
+      {message && <div style={{ background: 'rgba(75, 181, 67, 0.2)', color: '#4bb543', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>{message}</div>}
+      {error && <div style={{ background: 'rgba(212, 59, 59, 0.2)', color: '#d43b3b', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>{error}</div>}
       <h1 style={{ fontSize: '22px', fontWeight: '700', letterSpacing: '-0.01em', color: 'var(--cream)' }}>Planını Yükselt</h1>
       <p style={{ fontSize: '15px', color: 'var(--mist)', marginBottom: '32px' }}>Farklı planlarımızla mesaj gönderme deneyiminizi artırın.</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '32px' }}>
@@ -57,10 +77,14 @@ export default function UpgradePage() {
                 <li style={{ fontSize: '14px', color: 'var(--mist)', lineHeight: '2' }}>{plan.message_limit} mesaj</li>
                 <li style={{ fontSize: '14px', color: 'var(--mist)', lineHeight: '2' }}>{plan.recipient_limit} alıcı</li>
             </ul>
-            <button className="btn btn-primary btn-md" style={{ width: '100%', marginTop: '16px', opacity: currentPlan === plan.slug ? 0.5 : 1, cursor: currentPlan === plan.slug ? 'not-allowed' : 'pointer' }} disabled={currentPlan === plan.slug}>
-              {currentPlan === plan.slug ? 'Kullanımda' : 'Yakında'}
+            <button 
+                className="btn btn-primary btn-md" 
+                style={{ width: '100%', marginTop: '16px', opacity: currentPlan === plan.slug ? 0.5 : 1 }} 
+                disabled={currentPlan === plan.slug}
+                onClick={() => handleUpgrade(plan.slug)}
+            >
+              {currentPlan === plan.slug ? 'Kullanımda' : 'Premium\'a Yükselt'}
             </button>
-            {plan.slug !== currentPlan && <p style={{ fontSize: '12px', color: 'var(--mist)', marginTop: '8px' }}>Ödeme entegrasyonu yakında</p>}
           </div>
         ))}
       </div>

@@ -6,6 +6,7 @@ import { authMiddleware } from './middleware/auth'
 import { messageRoutes } from './routes/messages'
 import { deliveryRoutes } from './routes/delivery'
 import { meRoutes } from './routes/me'
+import { paymentRoutes } from './routes/payment'
 import { adminRoutes } from './routes/admin'
 import { publicRoutes } from './routes/public'
 
@@ -14,6 +15,7 @@ import { DeliveryService } from './services/delivery.service'
 const app = new Hono<{ Bindings: Env; Variables: { userId: string } }>()
 
 app.route('/api/v1/auth', authRoutes)
+app.route('/api/v1/payment', paymentRoutes)
 
 app.use('/api/v1/messages*', authMiddleware)
 app.route('/api/v1/messages', messageRoutes)

@@ -56,6 +56,9 @@ def req(method: str, path: str, body=None, token: str | None = None):
             return e.code, json.loads(e.read() or b"{}")
         except Exception:
             return e.code, {}
+    except urllib.error.URLError:
+        # Callback 302 ile çalışmayan web sunucusuna (APP_URL) yönlenir; bağlantı reddini yut.
+        return 0, {}
 
 
 def wrangler_cmd(args: list[str], timeout: int = 120) -> subprocess.CompletedProcess:
@@ -183,6 +186,49 @@ def api_tests() -> None:
            status == 200 and updated_free["price_monthly"] == 10)
     
     # --- END PLAN TESTLERİ ---
+
+    # --- PAYMENT TESTLERİ ---
+    # personal planı garanti et (seed'de var; yoksa oluştur — varsa 409 no-op)
+    req("POST", "/api/v1/admin/plans",
+        {"slug": "personal", "name": "Premium", "price_monthly": 49, "message_limit": 100, "recipient_limit": 50}, admin_token)
+
+    # Init — token yok → 401
+    status, _ = req("POST", "/api/v1/payment/checkout/init", {"plan_slug": "personal"})
+    record("Init 401 (token yok)", "payment", "Backend Ajani", status == 401)
+
+    # Init — geçerli (mock) → 200 + token
+    status, body = req("POST", "/api/v1/payment/checkout/init", {"plan_slug": "personal"}, token)
+    payment_token = body.get("token")
+    record("Init valid (200)", "payment", "Backend Ajani", status == 200 and bool(payment_token))
+
+    # Callback success → yükseltme (callback'ten ÖNCE 409 beklenemez, kullanıcı hâlâ free)
+    req("POST", f"/api/v1/payment/checkout/callback?token={payment_token}")
+    status, me = req("GET", "/api/v1/me", None, token)
+    record("Callback success + Yükseltme (Premium, limit 100)", "payment", "Backend Ajani",
+           status == 200 and me.get("plan") == "personal" and (me.get("usage") or {}).get("messages_limit") == 100)
+
+    # Init — kullanıcı artık aktif Premium → 409 ALREADY_PREMIUM
+    status, res_again = req("POST", "/api/v1/payment/checkout/init", {"plan_slug": "personal"}, token)
+    record("Init zaten premium (409)", "payment", "Backend Ajani",
+           status == 409 and res_again.get("code") == "ALREADY_PREMIUM")
+
+    # Callback idempotent — ikinci kez çağrı plan'ı bozmaz
+    req("POST", f"/api/v1/payment/checkout/callback?token={payment_token}")
+    status, me_after = req("GET", "/api/v1/me", None, token)
+    record("Callback idempotent", "payment", "Backend Ajani", status == 200 and me_after.get("plan") == "personal")
+
+    # Callback bilinmeyen token → 404 (yükseltme yok, güvenlik)
+    status, _ = req("POST", "/api/v1/payment/checkout/callback?token=mock_unknown_token")
+    record("Callback bilinmeyen token (404)", "payment", "Backend Ajani", status == 404)
+
+    # Test kullanıcısını free'ye geri al — sonraki limit testleri free planı varsayıyor
+    _u_status, _u_body = req("GET", f"/api/v1/admin/users?q={TEST_EMAIL}", None, admin_token)
+    _test_user = next((u for u in (_u_body.get("users", []) if _u_body else []) if u.get("email") == TEST_EMAIL), None)
+    if _test_user:
+        req("PATCH", f"/api/v1/admin/users/{_test_user['id']}/plan", {"plan_type": "free"}, admin_token)
+    status, me_reset = req("GET", "/api/v1/me", None, token)
+    record("Ödeme sonrası free'ye reset", "payment", "Backend Ajani", status == 200 and me_reset.get("plan") == "free")
+    # --- END PAYMENT TESTLERİ ---
 
     # Mesaj oluşturma — id dönmeli (regresyon: 'Message not found' bug'ı)
     status, msg = req("POST", "/api/v1/messages",

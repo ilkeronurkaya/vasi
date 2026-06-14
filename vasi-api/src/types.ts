@@ -14,4 +14,6 @@ export interface Env {
   NETGSM_PASS: string
   IYZICO_API_KEY: string
   IYZICO_SECRET_KEY: string
+  IYZICO_MODE: string
+  IYZICO_BASE_URL?: string
 }
