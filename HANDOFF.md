@@ -1,9 +1,13 @@
 # Vasi App BD — Oturum El Geçirme Notu (DETAYLI)
-_Tarih: 2026-06-13 · Bu dosya her oturum başında okunur; durumu git ile çapraz doğrula: `git log --oneline -5 --all`_
+_Tarih: 2026-06-14 · Bu dosya her oturum başında okunur; durumu git ile çapraz doğrula: `git log --oneline -5 --all`_
 
 > Proje: `~/Projects/vasi` · Ajan klonu: `~/Projects/vasi-agent` · GitHub: `git@github.com:ilkeronurkaya/vasi.git` (private)
 > Ürün durumu: **UÇTAN UCA ÇALIŞIYOR** — kayıt → e-posta doğrulama → mesaj → zamanlama → tasarımlı e-posta → /m/[token] → alıcı OTP → içerik.
-> İlk gerçek e-posta 2026-06-11'de teslim edildi (Resend). Smoke: **45/45 yeşil** (S21 sonrası). Sprint 20+21 KAPANDI (admin/plan düzeltmeleri + paket CRUD).
+> İlk gerçek e-posta 2026-06-11'de teslim edildi (Resend). Smoke: **52/52 yeşil** (S22 sonrası). Sprint 20+21+22 KAPANDI (admin/plan düzeltmeleri + paket CRUD + İyzico ödeme mock).
+>
+> **2026-06-14 Sprint 22 — İyzico Checkout Form ödeme (mock mod, commit `7b24ff3`, branch `sprint-22`):** /upgrade'de "Premium'a Yükselt" → `POST /payment/checkout/init` → İyzico Checkout Form → `callback` token ile retrieve → başarılıysa subscription 30 gün `personal`'a yükselir. `payments` tablosu (migration 0015) audit+idempotency. İyzico imzası (IYZWSv2 HMAC-SHA256 hex) Web Crypto ile edge-uyumlu; `iyzico.ts`. **Credential YOK → `IYZICO_MODE=mock` ile tüm akış offline/deterministik; smoke böyle geçiyor.**
+> **Ders (ajan = OpenHands+Flash, "sadece kod" iş akışı):** Flash kodu mantıken doğruydu ama smoke'u HİÇ koşamadı ("miniflare" dedi) → 6 gerçek bug Claude'un bağımsız doğrulamasında yakalandı: (1) migration yanlış dizinde (`vasi-api/migrations/` — doğrusu kök `migrations/`, `wrangler.toml migrations_dir=../migrations`); (2) callback upsert `ON CONFLICT(user_id)` kullanmış ama `subscriptions.user_id`'de UNIQUE yok + INSERT'te `id` PK eksik → runtime 500; admin.ts SELECT→UPDATE/INSERT kalıbına çevrildi; (3) `await response.json()` `unknown` → tsc patlıyor → `as any`; (4) `useSearchParams` Suspense'siz → Next15 build riski → `window.location.search` useEffect'te; (5) mock callback GET 404 → callback GET+POST ortak handler; (6) smoke sıralama (callback'ten önce 409) + test@vasi.app'i premium bırakıp limit testini kırıyordu → reset eklendi + smoke callback'i `?token=` query'sine çevrildi (JSON body handler'a ulaşmıyordu). **Bağımsız doğrulama olmasa hepsi kaçardı.**
+> **Askıdaki blocker:** Gerçek İyzico sandbox ödeme testi — merchant hesabı açılıp gerçek key'ler `.dev.vars`'a konup `IYZICO_MODE=sandbox` yapılana dek YALNIZ mock doğrulandı. Tasarım+kabul kriterleri: `SPRINT_22_IYZICO.md`. Ajan promtu: `AGENT_PROMPT_SPRINT_22.md`.
 >
 > **2026-06-13 canlı test turu (Chrome + Gmail + yerel D1):** Tüm akış gerçek tarayıcıdan baştan sona doğrulandı. İKİ P0 bug bulundu+düzeltildi (commit `e2eae52`, push edildi):
 > 1. UI kayıt kırıktı — `register/page.tsx` camelCase (`firstName`) gönderiyordu, API snake_case (`first_name`) bekliyor → her zaman 400.
@@ -69,7 +73,8 @@ Monorepo (pnpm): `vasi-web` (Next.js 15, edge runtime, koyu Apple-dili tasarım 
 15 buton v2+fiyat senkronu · 16 e-posta uçtan uca · 17 teslimat deneyimi (şablon + erişim token'ı + /m/[token]) ·
 18 devstral pilotu (KALDI) · 19 alıcı OTP (`1527a7b`) · +failed-deliveries retry (`aa6af45`, pilot 2 ürünü) ·
 **20 admin & plan düzeltmeleri + UI** (ikotest 7 bulgu; auth kontrat fix'leri `e2eae52`, pie/audit fix `2454f1f`) ·
-**21 paket (plan) CRUD** (plans tablosu + admin yönetimi; Flash-Lite pilot 3, "ajan sadece kod" iş akışı burada doğdu).
+**21 paket (plan) CRUD** (plans tablosu + admin yönetimi; Flash-Lite pilot 3, "ajan sadece kod" iş akışı burada doğdu) ·
+**22 İyzico Checkout Form ödeme** (mock mod, `7b24ff3`; `payments` tablosu 0015, `iyzico.ts` edge-uyumlu IYZWSv2, /upgrade yükseltme; Flash pilot — 6 bug bağımsız doğrulamada düzeltildi; gerçek sandbox testi askıda).
 Eski sprint dosyaları `CLOSED = True` ile kilitli.
 
 ## 6. TESTBULGULARI_1 — 7/7 DÜZELTİLDİ (2026-06-12, main'de)
@@ -132,6 +137,11 @@ Lokal admin: test@vasi.app / Test1234! (is_admin=1). NOT: Resend key sohbete yap
 - adminFetch `@/lib/api`'den (Bearer ekler).
 - Klonda ajan pnpm install yaptıysa workerd Linux'a döner → host'ta yeniden kur.
 - Tarayıcı çeviri eklentisi hydration uyarısı üretebilir — uygulama hatası değil.
+- **Migration'lar KÖK `migrations/`'a yazılır** (`wrangler.toml migrations_dir = ../migrations`). `vasi-api/migrations/` atıl/yanlış — oraya yazılan migration uygulanmaz (S22'de ajan buraya koydu).
+- **`subscriptions.user_id`'de UNIQUE YOK** → `ON CONFLICT(user_id)` PATLAR. Upsert için SELECT (status='active') → UPDATE ya da açık `crypto.randomUUID()` id ile INSERT (admin.ts kalıbı).
+- Workers'da `await response.json()` tipi `unknown` (tsc strict) → `const data: any = ...` ile bağla.
+- Client sayfada `useSearchParams` Next15'te `<Suspense>` ister yoksa build kırılır → query'i `useEffect` içinde `window.location.search`'ten oku.
+- İyzico callback'i gerçekte form-POST, mock'ta `?token=` query gelir — handler ikisini de okur, JSON body OKUMAZ. Smoke callback'i query ile çağırmalı (JSON body handler'a ulaşmaz). Başarı callback'i 302 ile `APP_URL`'e döner; smoke'ta web kapalı → `req()` `URLError`'ı yutar.
 
 ## 13. SIRADAKİ İŞLER (öncelik sırasıyla)
 
@@ -142,9 +152,11 @@ Lokal admin: test@vasi.app / Test1234! (is_admin=1). NOT: Resend key sohbete yap
    - #1 /upgrade `GET /public/pricing`'ten okuyor (₺49/100 mesaj) · #2 her yerde **"Premium"** (`lib/plans.ts` planLabel) · #3 buton `btn btn-primary` · #4 pie chart sabit 320×240 + `isAnimationActive=false` (ResponsiveContainer 1702px yanlış ölçüyordu) · #5 `premium.test@vasi.app` seed.
    - **Kalan ufak iş:** premium seed kullanıcının şifre hash'i sahte → onunla giriş yapılamaz (sadece görünür). Giriş gerekirse `test@vasi.app`'inki gibi gerçek hash koy.
 ~~Sprint 21 — Paket (plan) CRUD~~ **KAPANDI (06-13).** `plans` tablosu (migration 0014) + admin Ayarlar'da CRUD; `subscriptions.plan_type` CHECK'i kaldırıldı (tablo yeniden oluşturuldu); fiyat/limit artık `plans`'tan (public/pricing → `{plans:[...]}`, mesaj limiti `messages.ts`'te plans.message_limit). Canlı doğrulandı: yaratma 201, kullanılmayan silme 200, kullanımdaki silme 409 (masaüstü alert ile uyarı). Smoke 45/45. **Backlog (ufak UX):** "Yeni Paket" sayısal alanları `0` default'unu temizlemiyor (`099` görünür, kayıt doğru).
-1. **İyzico sandbox** ← SIRADAKİ. iko'nun merchant hesabı gerek; /upgrade'de ücretli plan CTA'sı "Yakında" bekliyor; `subscriptions`'ta iyzico kolonları hazır (`iyzico_card_user_key/token`, `last_payment_ref/at`).
+~~1. İyzico sandbox~~ **KAPANDI (06-14, mock mod).** `7b24ff3` / branch `sprint-22`. /upgrade'de "Premium'a Yükselt" çalışıyor (mock). Gerçek sandbox ödeme testi askıda (merchant hesabı + gerçek key + `IYZICO_MODE=sandbox`). Kart saklama/recurring/webhook kapsam dışıydı.
+1. **ikotest.md 2. tur (9 bulgu, 06-14)** ← SIRADAKİ ürün backlog'u: (1) login/kayıt "hesap aç" metinleri bold; (2) Google + Apple login (admin yalnız email+şifre); (3) SMS gönderme (NetGSM kolonları/Env hazır); (4) mesaj sihirbazında son tuş "Gönder" yerine "Oluştur"; (5) admin'e giriş yapılamıyor — incele; (6) sol-altta "N" butonu (Next dev göstergesi) kaldır; (7) admin girişine e-posta OTP; (8) settings'te profil düzenleme + her değişiklikte OTP; (9) mesaj hakkı sayacı "5/100" rakamla. **Önce iko ile önceliklendir + sprintlere böl.**
 2. Resend domain doğrulama (test modu kısıtını kaldırır) → sonra key rotate.
-3. Canlıya çıkış: wrangler deploy + Pages.
+3. Gerçek İyzico sandbox testi — merchant hesabı açılınca (Böl. üstteki blocker).
+4. Canlıya çıkış: wrangler deploy + Pages.
 
 > **Açık process boşluğu:** frontend↔API kontrat kayması smoke'ta görünmüyor (06-13'te 2 P0 böyle kaçmıştı). Sprint kabul kriterlerine UI akış kontrolü ekle veya web↔api paylaşılan tip/şema kullan.
 
