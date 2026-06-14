@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   async rewrites() {
     // Local dev'de API isteklerini wrangler dev'e yönlendir
     // Production'da Cloudflare Pages, aynı domain üzerinde çalışır

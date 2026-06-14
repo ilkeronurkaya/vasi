@@ -139,7 +139,7 @@ export default function LoginPage() {
                 <a href="#" style={{ fontSize: '13px', color: 'var(--mist)', textDecoration: 'none' }}>
                     {t.forgot}
                 </a>
-                <a href="/register" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none' }}>
+                <a href="/register" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none', fontWeight: 700 }}>
                     {t.register}
                 </a>
             </div>

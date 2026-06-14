@@ -55,3 +55,7 @@ vasi-web/package-lock.json
 
 # Chainlit (otomatik üretilir)
 .chainlit/
+
+bash_events/
+conversations/
+project/

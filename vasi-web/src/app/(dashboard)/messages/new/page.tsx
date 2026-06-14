@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/api';
 
 export const runtime = 'edge';
 
-const STEPS = ['İçerik', 'Alıcılar', 'Zamanlama', 'Önizleme', 'Gönder'];
+const STEPS = ['İçerik', 'Alıcılar', 'Zamanlama', 'Önizleme', 'Oluştur'];
 const BODY_MAX = 5000;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -359,7 +359,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                 {step === 5 && (
                     <div style={{ textAlign: 'center', padding: '24px 0' }}>
                         {loading ? (
-                            <p style={{ color: 'var(--cream)', fontSize: '16px', margin: 0 }}>Gönderiliyor...</p>
+                            <p style={{ color: 'var(--cream)', fontSize: '16px', margin: 0 }}>Oluşturuluyor...</p>
                         ) : submitError ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
                                 <p style={{ color: '#EF4444', fontSize: '14px', margin: 0 }}>{submitError}</p>
@@ -391,7 +391,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                         )}
                         {step === 4 && (
                             <button type="button" onClick={handleSubmit} className="btn btn-primary btn-md">
-                                Gönder ✓
+                                Oluştur ✓
                             </button>
                         )}
                     </div>

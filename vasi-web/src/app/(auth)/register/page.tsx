@@ -139,7 +139,7 @@ export default function RegisterPage() {
             </form>
 
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                <a href="/login" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none' }}>
+                <a href="/login" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none', fontWeight: 700 }}>
                     Zaten hesabınız var mı? Giriş yapın
                 </a>
             </div>

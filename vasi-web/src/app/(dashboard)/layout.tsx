@@ -182,8 +182,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
                 {/* Limit Progress Bar */}
                 <div style={{ padding: '16px 0', borderTop: 'var(--border-subtle)' }}>
-                    <div style={{ color: 'var(--mist)', fontSize: '11px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-                        Mesaj Hakkı
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
+                        <span style={{ color: 'var(--mist)', fontSize: '11px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            Mesaj Hakkı
+                        </span>
+                        <span style={{ color: 'var(--cream)', fontSize: '12px', fontWeight: 600 }}>
+                            {me?.usage.messages_used ?? 0}/{me?.usage.messages_limit ?? 0}
+                        </span>
                     </div>
                     <div style={barContainerStyle}>
                         <div style={fillStyle(me?.usage.messages_used || 0, me?.usage.messages_limit || 1)} />
