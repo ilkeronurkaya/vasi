@@ -25,6 +25,7 @@ const NAV = [
     { href: '/dashboard', label: 'Ana Sayfa' },
     { href: '/messages', label: 'Mesajlarım' },
     { href: '/messages/new', label: 'Yeni Mesaj' },
+    { href: '/settings', label: 'Ayarlar' },
 ];
 
 const barContainerStyle: React.CSSProperties = {

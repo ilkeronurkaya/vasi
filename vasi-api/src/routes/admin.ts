@@ -1,17 +1,18 @@
 
-
 import { Hono } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { adminMiddleware } from '../middleware/adminAuth'
 import { findByEmail } from '../db/users.db'
+import * as EmailVerificationsDB from '../db/email-verifications.db'
 import { generateAccessToken } from '../lib/jwt'
+import { generateOTP, hashOTP } from '../lib/otp'
 import { verifyPassword } from '../lib/password'
 import { DeliveryService } from '../services/delivery.service'
 import type { Env } from '../types'
 
 const admin = new Hono<{ Bindings: Env; Variables: { userId: string; role: string } }>()
 
-// ── Admin Login (public) ──────────────────────────────────────────────────
+// ── Admin Login (public) — OTP ile iki adımlı ──────────────────────────────
 admin.post('/auth/login', async (c) => {
   const { email, password } = await c.req.json()
   if (!email || !password) {
@@ -35,7 +36,47 @@ admin.post('/auth/login', async (c) => {
     return c.json({ error: 'Geçersiz kimlik bilgileri', code: 'INVALID_CREDENTIALS' }, 401)
   }
 
-  // role: 'admin' ile token üret
+  // Token DÖNDERMEE — OTP iki adımlı doğrulama
+  const otp = generateOTP()
+  const otpHash = await hashOTP(otp)
+  await EmailVerificationsDB.create(c.env, user.id, otpHash)
+  try {
+    await DeliveryService.sendOtpEmail(c.env, { name: user.first_name as string, email: user.email }, otp)
+  } catch (error) {
+    console.error('OTP e-postası gönderilemedi:', error)
+  }
+  console.log(`Admin OTP (${user.email}): ${otp}`)
+
+  return c.json({ otpRequired: true }, 200)
+})
+
+// ── Admin Verify OTP (public) ───────────────────────────────────────────────
+admin.post('/auth/verify-otp', async (c) => {
+  const { email, otp } = await c.req.json()
+  if (!email || !otp) {
+    return c.json({ error: 'email ve otp zorunlu', code: 'VALIDATION_ERROR' }, 400)
+  }
+
+  // Kullanıcıyı bul + is_admin tekrar
+  const user = await findByEmail(c.env, email)
+  if (!user || !user.is_admin) {
+    return c.json({ error: 'Geçersiz kimlik bilgileri', code: 'INVALID_OTP' }, 401)
+  }
+
+  // Aktif doğrulama kontrolü
+  const verification = await EmailVerificationsDB.findActiveByUser(c.env, user.id)
+  if (!verification) {
+    return c.json({ error: 'Geçersiz veya süresi dolmuş doğrulama kodu', code: 'INVALID_OTP' }, 401)
+  }
+
+  // OTP hash karşılaştırması
+  const otpHash = await hashOTP(otp)
+  if (verification.code_hash !== otpHash) {
+    return c.json({ error: 'Geçersiz doğrulama kodu', code: 'INVALID_OTP' }, 401)
+  }
+
+  // Kullanıldı işaretle + admin token
+  await EmailVerificationsDB.markUsed(c.env, verification.id)
   const accessToken = await generateAccessToken(
     { userId: user.id, role: 'admin', exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8 },
     c.env.JWT_SECRET

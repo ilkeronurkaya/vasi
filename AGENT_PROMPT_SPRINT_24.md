@@ -12,6 +12,7 @@ Sen YALNIZCA kod+test yazan uygulayıcısın. Kurallar (İHLAL = BAŞARISIZ):
 5. Kapsam kilidi: sadece aşağıda sayılan dosyalar. Başka dosyayı "iyileştirme" diye değiştirme. **Migration EKLEME — bu sprintte şema değişmiyor.**
 6. Mevcut testleri silme/zayıflatma. Edge runtime: Node `crypto/http/https` yok; mevcut `lib/otp.ts`/`lib/password.ts`/Web Crypto kullan.
 7. Bitince ver: (a) değişen/eklenen dosya listesi, (b) `git status`, (c) her madde 1 satır özet, (d) her dosyanın diff'i.
+8. **OpenHands `task_tracker` / planlama aracını KULLANMA** (yanlış şema değerleriyle çökertiyor). Plan yapma, doğrudan dosyaları düzenle.
 
 ## Önce OKU (kalıpları buradan al)
 `/workspace/AGENTS.md`, `vasi-api/src/routes/admin.ts` (login handler), `vasi-api/src/routes/me.ts`, `vasi-api/src/services/auth.service.ts` (OTP üret+gönder+doğrula kalıbı: register/verifyEmail), `vasi-api/src/db/users.db.ts`, `vasi-api/src/db/email-verifications.db.ts`, `vasi-api/src/lib/otp.ts`, `vasi-api/src/lib/password.ts`, `vasi-web/src/app/admin/login/page.tsx`, `vasi-web/src/app/(dashboard)/layout.tsx` (NAV), `vasi-web/src/app/(dashboard)/upgrade/page.tsx` (kullanıcı sayfası + `@/lib/api` kalıbı için örnek), `crew/tests/api_smoke.py` (OTP test kalıbı: satır ~286-298 ve ~428-443).

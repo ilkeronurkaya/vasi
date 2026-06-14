@@ -47,6 +47,7 @@ Sen YALNIZCA kod+test yazan bir uygulayıcısın. Kurallar (İHLAL = BAŞARISIZ)
 5. EMİN DEĞİLSEN YAPMA — SOR. Bir maddenin nasıl yapılacağından, bir dosyanın içeriğinden ya da bir değişikliğin doğruluğundan emin değilsen: DUR, neyden emin olmadığını net yaz, sor. Tahminle ilerleme. Kararsızlıkları iko+Claude çözer. Emin olduklarını yap, emin olmadıklarını listele.
 6. Şema değişikliği = KÖK `migrations/`'a yeni dosya (vasi-api/migrations/ DEĞİL). Elle ALTER yok.
 7. Bitince ver: (a) değişen/eklenen dosya listesi, (b) `git status` çıktısı, (c) her madde için ne yaptığının 1 satır özeti, (d) her değiştirdiğin dosyanın diff'i.
+8. OpenHands `task_tracker`/planlama aracını KULLANMA — yerel model yanlış şema değerleriyle (ör. status='pending') çağırıp crash ettiriyor. Plan yapma, doğrudan dosyaları düzenle.
 Edge runtime (Cloudflare Workers): Node `crypto/http/https`/`iyzipay` KULLANMA — sadece `fetch` + Web Crypto.
 Görevler aşağıda, madde madde. Her maddeyi tam tarif edildiği gibi uygula.
 ```

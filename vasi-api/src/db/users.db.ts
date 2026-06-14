@@ -33,3 +33,32 @@ export async function updateEmailVerified(env: Env, userId: string): Promise<voi
     .bind(userId)
     .run()
 }
+
+export async function updateProfile(env: Env, userId: string, fields: { first_name?: string; last_name?: string; phone?: string }): Promise<void> {
+  const parts: string[] = []
+  const bindings: any[] = []
+
+  if (fields.first_name !== undefined) { parts.push('first_name = ?'); bindings.push(fields.first_name ?? null) }
+  if (fields.last_name !== undefined) { parts.push('last_name = ?'); bindings.push(fields.last_name ?? null) }
+  if (fields.phone !== undefined) { parts.push('phone = ?'); bindings.push(fields.phone ?? null) }
+
+  if (parts.length === 0) return
+  parts.push("updated_at = datetime('now')")
+  bindings.push(userId)
+
+  await env.DB.prepare(
+    `UPDATE users SET ${parts.join(', ')} WHERE id = ?`
+  ).bind(...bindings).run()
+}
+
+export async function updateEmail(env: Env, userId: string, newEmail: string): Promise<void> {
+  await env.DB.prepare(
+    "UPDATE users SET email = ?, email_verified = 0, updated_at = datetime('now') WHERE id = ?"
+  ).bind(newEmail, userId).run()
+}
+
+export async function updatePassword(env: Env, userId: string, passwordHash: string): Promise<void> {
+  await env.DB.prepare(
+    "UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?"
+  ).bind(passwordHash, userId).run()
+}

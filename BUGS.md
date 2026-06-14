@@ -11,6 +11,8 @@
 |----|--------|----------|---------|--------------|-------|
 | B1 | P2 | `premium.test@vasi.app` seed kullanıcısının şifre hash'i sahte → onunla **giriş yapılamıyor** (panelde sadece görünür). Giriş gerekirse `test@vasi.app`'inki gibi gerçek PBKDF2 hash koy. | S20 | — | Açık |
 | B2 | P2 | Admin **"Yeni Paket"** formunda sayısal alanlar `0` default'unu temizlemiyor → `099` görünür (kayıt doğru). | S21 | — | Açık |
+| B3 | P1 | `pnpm --filter vasi-web build` (`next build`) tsc'yi geçiyor ("Compiled successfully") ama **ESLint hatalarında kırılıyor** — kod tabanı geneli (`no-explicit-any`, `react-hooks/set-state-in-effect`, `no-html-link-for-pages`, `no-unescaped-entities`). **Prod deploy `next build` kullanıyorsa şu an bloke.** Çözüm: lint-temizlik sprinti veya `next.config` `eslint.ignoreDuringBuilds` (geçici). Proje CI'ı şu an smoke; build değil. | S24 (review) | — | Açık |
+| B4 | P1 | Smoke, payment callback'i başarı 302'siyle `APP_URL`=:3000'e yönlenince, **3000'de bir şey çalışıyorsa** HTML'i JSON sanıp `JSONDecodeError` ile TÜM smoke'u çökertiyor (web kapalıyken URLError yutuluyordu). `req()` redirect'i izlememeli ya da non-JSON'u tolere etmeli. Geçici workaround: smoke öncesi `:3000`'i kapat. | S24 (review) | — | Açık |
 
 ## Kapalı buglar
 

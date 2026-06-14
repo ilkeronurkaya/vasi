@@ -132,10 +132,66 @@ def api_tests() -> None:
     if not token:
         return  # geri kalanı token ister
 
-    # Admin login
+    # ── SPRINT 24: Profil OTP testleri (kullanıcı) ──
+    # request-otp: 200 dönüyor mu?
+    status, otp_req = req("POST", "/api/v1/me/profile/request-otp", None, token)
+    record("Me profile request-otp 200 döner", "profile", "Backend Ajani",
+           status == 200, f"status={status} body={str(otp_req)[:120]}")
+
+    # Bilinen OTP hash'ini DB'ye yaz → verify deterministik
+    status, me_before = req("GET", "/api/v1/me", None, token)
+    test_user_id = (me_before or {}).get("user", {}).get("id", "")
+    known_otp2 = "123456"
+    known_hash2 = base64.b64encode(hashlib.sha256(known_otp2.encode()).digest()).decode()
+    wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--command",
+                  f"UPDATE email_verifications SET code_hash='{known_hash2}', "
+                  f"expires_at=datetime('now','+10 minutes'), used=0 "
+                  f"WHERE user_id = '{test_user_id}'"])
+
+    # PATCH /me/profile: yanlış OTP → 401
+    status, bad_patch = req("PATCH", "/api/v1/me/profile",
+                            {"first_name": "Yanlış", "otp": "000000"}, token)
+    record("Me profile PATCH yanlış OTP 401", "profile", "Backend Ajani",
+           status == 401 and (bad_patch or {}).get("code") == "INVALID_OTP",
+           f"status={status} body={str(bad_patch)[:120]}")
+
+    # PATCH /me/profile: doğru OTP → first_name değişiyor
+    status, good_patch = req("PATCH", "/api/v1/me/profile",
+                             {"first_name": "SmokeOtp", "otp": known_otp2}, token)
+    record("Me profile PATCH doğru OTP first_name değişiyor", "profile", "Backend Ajani",
+           status == 200, f"status={status} body={str(good_patch)[:120]}")
+
+    # GET /me ile doğrula: first_name değişti mi?
+    status, me_after = req("GET", "/api/v1/me", None, token)
+    changed_name = (me_after or {}).get("user", {}).get("first_name") == "SmokeOtp"
+    record("GET /me ile first_name değişimi doğrulandı", "profile", "Backend Ajani",
+           status == 200 and changed_name,
+           f"status={status} first_name={str(me_after)[:120]}")
+
+    # Admin login (2 adım: OTP akışı)
     status, auth = req("POST", "/api/v1/admin/auth/login", {"email": TEST_EMAIL, "password": TEST_PASS})
-    admin_token = auth.get("accessToken", "")
-    record("Admin login", "admin", "Backend Ajani", status == 200 and bool(admin_token))
+    record("Admin login otpRequired döner", "admin", "Backend Ajani",
+           status == 200 and (auth or {}).get("otpRequired") is True,
+           f"status={status} body={str(auth)[:120]}")
+    # Bilinen OTP hash'ini DB'ye yaz → verify-otp deterministik test edilir
+    known_otp = "123456"
+    known_hash = base64.b64encode(hashlib.sha256(known_otp.encode()).digest()).decode()
+    wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--command",
+                  f"UPDATE email_verifications SET code_hash='{known_hash}', "
+                  f"expires_at=datetime('now','+10 minutes'), used=0 "
+                  f"WHERE user_id = (SELECT id FROM users WHERE email='{TEST_EMAIL}' AND is_admin=1)"])
+    # verify-otp: yanlış → 401
+    status, wrong_otp = req("POST", "/api/v1/admin/auth/verify-otp", {"email": TEST_EMAIL, "otp": "000000"})
+    record("Admin verify-otp yanlış OTP 401", "admin", "Backend Ajani",
+           status == 401 and (wrong_otp or {}).get("code") == "INVALID_OTP",
+           f"status={status} body={str(wrong_otp)[:120]}")
+    # verify-otp: doğru → token
+    status, verified = req("POST", "/api/v1/admin/auth/verify-otp", {"email": TEST_EMAIL, "otp": known_otp})
+    admin_token = (verified or {}).get("accessToken", "")
+    record("Admin verify-otp doğru token döner", "admin", "Backend Ajani",
+           status == 200 and bool(admin_token), f"status={status} body={str(verified)[:120]}")
+    if not admin_token:
+        return  # geri kalanı token ister
 
     # --- PLAN CRUD TESTLERİ ---
     # Deterministiklik: önceki koşulardan kalan test planlarını temizle
@@ -316,11 +372,20 @@ def api_tests() -> None:
         record("Silinen mesaj listede görünmüyor", "messages", "Backend Ajani",
                status == 200 and gone, f"status={status} silinen={del_id}")
 
-    # Admin login (is_admin setup main() içinde yapıldı)
+    # Admin login (2 adım: OTP akışı) — is_admin setup main() içinde yapıldı
     status, adm = req("POST", "/api/v1/admin/auth/login", {"email": TEST_EMAIL, "password": TEST_PASS})
-    admin_token = (adm or {}).get("accessToken", "")
-    record("Admin login", "admin", "Backend Ajani",
-           status == 200 and bool(admin_token), f"status={status} body={adm}")
+    # Bilinen OTP hash'ini DB'ye yaz → verify-otp deterministik test edilir
+    known_otp = "123456"
+    known_hash = base64.b64encode(hashlib.sha256(known_otp.encode()).digest()).decode()
+    wrangler_cmd(["d1", "execute", "vasi-db", "--local", "--command",
+                  f"UPDATE email_verifications SET code_hash='{known_hash}', "
+                  f"expires_at=datetime('now','+10 minutes'), used=0 "
+                  f"WHERE user_id = (SELECT id FROM users WHERE email='{TEST_EMAIL}' AND is_admin=1)"])
+    # verify-otp: doğru → token
+    status, verified = req("POST", "/api/v1/admin/auth/verify-otp", {"email": TEST_EMAIL, "otp": known_otp})
+    admin_token = (verified or {}).get("accessToken", "")
+    record("Admin login (2 adım)", "admin", "Backend Ajani",
+           status == 200 and bool(admin_token), f"status={status} body={str(verified)[:120]}")
     if not admin_token:
         return
 
