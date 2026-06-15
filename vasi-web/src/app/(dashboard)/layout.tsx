@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { VasiLogo } from '@/components/VasiLogo';
 import { apiFetch } from '@/lib/api';
+import { useLang, t } from '@/lib/i18n';
 
 interface Me {
     user: {
@@ -22,10 +23,10 @@ interface Me {
 export const runtime = 'edge';
 
 const NAV = [
-    { href: '/dashboard', label: 'Ana Sayfa' },
-    { href: '/messages', label: 'Mesajlarım' },
-    { href: '/messages/new', label: 'Yeni Mesaj' },
-    { href: '/settings', label: 'Ayarlar' },
+    { href: '/dashboard', key: 'nav_home' },
+    { href: '/messages', key: 'nav_messages' },
+    { href: '/messages/new', key: 'nav_new_message' },
+    { href: '/settings', key: 'nav_settings' },
 ];
 
 const barContainerStyle: React.CSSProperties = {
@@ -100,6 +101,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const pathname = usePathname();
     const [me, setMe] = useState<Me | null>(null);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [lang] = useLang();
 
     useEffect(() => {
         const token = localStorage.getItem('authToken');
@@ -175,7 +177,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                     }
                                 }}
                             >
-                                {item.label}
+                                {t(item.key, lang)}
                             </Link>
                         );
                     })}
@@ -185,7 +187,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 <div style={{ padding: '16px 0', borderTop: 'var(--border-subtle)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
                         <span style={{ color: 'var(--mist)', fontSize: '11px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                            Mesaj Hakkı
+                            {t('sidebar_quota', lang)}
                         </span>
                         <span style={{ color: 'var(--cream)', fontSize: '12px', fontWeight: 600 }}>
                             {me?.usage.messages_used ?? 0}/{me?.usage.messages_limit ?? 0}
@@ -195,7 +197,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                         <div style={fillStyle(me?.usage.messages_used || 0, me?.usage.messages_limit || 1)} />
                     </div>
                     {((me?.usage.messages_used || 0) / (me?.usage.messages_limit || 1) * 100 >= 80) && (
-                        <div style={{ color: 'var(--copper)', fontSize: '12px', marginTop: '4px' }}>Hakkın dolmak üzere</div>
+                        <div style={{ color: 'var(--copper)', fontSize: '12px', marginTop: '4px' }}>{t('sidebar_quota_warning', lang)}</div>
                     )}
                 </div>
 
@@ -205,7 +207,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                         <>
                             Free
                             <button onClick={() => router.push('/upgrade')} style={{ width: '100%', marginTop: '8px' }} className="btn btn-primary btn-sm">
-                                Pro'ya Geç
+                                {t('sidebar_upgrade', lang)}
                             </button>
                         </>
                     ) : (
@@ -226,7 +228,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                         onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.color = 'var(--cream)')}
                         onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.color = 'var(--mist)')}
                     >
-                        Çıkış Yap
+                        {t('sidebar_logout', lang)}
                     </button>
                 </div>
 

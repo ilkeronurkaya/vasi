@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { useLang, t } from '@/lib/i18n';
 
 export const runtime = 'edge';
 
@@ -37,6 +38,7 @@ export default function RegisterPage() {
     const [loading, setLoading] = useState(false);
     const [focusField, setFocusField] = useState('');
     const router = useRouter();
+    const [lang] = useLang();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,7 +54,7 @@ export default function RegisterPage() {
             try { localStorage.setItem('verifyEmail', email); } catch {}
             router.push('/verify-email');
         } catch (err: any) {
-            setError(err?.data?.error ?? 'Kayıt başarısız. Tekrar deneyin.');
+            setError(err?.data?.error ?? t('register_error_default', lang));
         } finally {
             setLoading(false);
         }
@@ -68,7 +70,7 @@ export default function RegisterPage() {
                 {/* Ad + Soyad yan yana */}
                 <div style={{ display: 'flex', gap: '12px' }}>
                     <div style={{ flex: 1 }}>
-                        <label style={labelStyle}>Ad</label>
+                        <label style={labelStyle}>{t('register_firstname', lang)}</label>
                         <input
                             type="text"
                             value={firstName}
@@ -81,7 +83,7 @@ export default function RegisterPage() {
                         />
                     </div>
                     <div style={{ flex: 1 }}>
-                        <label style={labelStyle}>Soyad</label>
+                        <label style={labelStyle}>{t('register_lastname', lang)}</label>
                         <input
                             type="text"
                             value={lastName}
@@ -96,7 +98,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                    <label style={labelStyle}>E-posta</label>
+                    <label style={labelStyle}>{t('register_email', lang)}</label>
                     <input
                         type="email"
                         value={email}
@@ -110,7 +112,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                    <label style={labelStyle}>Şifre</label>
+                    <label style={labelStyle}>{t('register_password', lang)}</label>
                     <input
                         type="password"
                         value={password}
@@ -119,7 +121,7 @@ export default function RegisterPage() {
                         onBlur={() => setFocusField('')}
                         required
                         minLength={8}
-                        placeholder="En az 8 karakter"
+                        placeholder={t('register_password_ph', lang)}
                         style={{ ...inputStyle, ...(focusField === 'pass' ? { border: '1px solid var(--copper)', boxShadow: 'var(--focus-ring)' } : {}) }}
                     />
                 </div>
@@ -134,13 +136,13 @@ export default function RegisterPage() {
                     className="btn btn-primary btn-lg"
                     style={{ width: '100%', opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
                 >
-                    {loading ? 'Kaydediliyor...' : 'Kayıt Ol'}
+                    {loading ? t('register_loading', lang) : t('register_submit', lang)}
                 </button>
             </form>
 
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
                 <a href="/login" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none', fontWeight: 700 }}>
-                    Zaten hesabınız var mı? Giriş yapın
+                    {t('register_login_link', lang)}
                 </a>
             </div>
         </div>

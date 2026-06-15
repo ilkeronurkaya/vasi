@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { useLang, t } from '@/lib/i18n';
 
 export const runtime = 'edge';
 
@@ -28,34 +29,8 @@ const labelStyle: React.CSSProperties = {
     marginBottom: '6px',
 };
 
-const LANGS = {
-    TR: {
-        title: 'Giriş Yap',
-        email: 'E-posta',
-        password: 'Şifre',
-        forgot: 'Şifremi unuttum',
-        register: 'Hesabınız yok mu? Kayıt ol',
-        submit: 'Giriş Yap',
-        loading: 'Giriş yapılıyor...',
-        error_default: 'E-posta veya şifre hatalı.',
-    },
-    EN: {
-        title: 'Sign In',
-        email: 'Email',
-        password: 'Password',
-        forgot: 'Forgot password?',
-        register: "Don't have an account? Register",
-        submit: 'Sign In',
-        loading: 'Signing in...',
-        error_default: 'Invalid email or password.',
-    },
-};
-
 export default function LoginPage() {
-    const lang = (typeof navigator !== 'undefined'
-        ? navigator.language.split('-')[0].toUpperCase()
-        : 'TR') as keyof typeof LANGS;
-    const t = LANGS[lang] ?? LANGS.TR;
+    const [lang] = useLang();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -63,10 +38,6 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [focusField, setFocusField] = useState('');
     const router = useRouter();
-
-    React.useEffect(() => {
-        document.documentElement.dir = (lang as string) === 'AR' ? 'rtl' : 'ltr';
-    }, [lang]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -80,7 +51,7 @@ export default function LoginPage() {
             localStorage.setItem('authToken', response.accessToken);
             router.push('/dashboard');
         } catch (err: any) {
-            setError(err?.data?.error ?? t.error_default);
+            setError(err?.data?.error ?? t('login_error_default', lang));
         } finally {
             setLoading(false);
         }
@@ -89,12 +60,12 @@ export default function LoginPage() {
     return (
         <div>
             <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', marginBottom: '24px', textAlign: 'center' }}>
-                {t.title}
+                {t('login_title', lang)}
             </h2>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                    <label htmlFor="email" style={labelStyle}>{t.email}</label>
+                    <label htmlFor="email" style={labelStyle}>{t('login_email', lang)}</label>
                     <input
                         id="email"
                         type="email"
@@ -108,7 +79,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                    <label htmlFor="password" style={labelStyle}>{t.password}</label>
+                    <label htmlFor="password" style={labelStyle}>{t('login_password', lang)}</label>
                     <input
                         id="password"
                         type="password"
@@ -131,16 +102,16 @@ export default function LoginPage() {
                     className="btn btn-primary btn-lg"
                     style={{ width: '100%', opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
                 >
-                    {loading ? t.loading : t.submit}
+                    {loading ? t('login_loading', lang) : t('login_submit', lang)}
                 </button>
             </form>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
                 <a href="#" style={{ fontSize: '13px', color: 'var(--mist)', textDecoration: 'none' }}>
-                    {t.forgot}
+                    {t('login_forgot', lang)}
                 </a>
                 <a href="/register" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none', fontWeight: 700 }}>
-                    {t.register}
+                    {t('login_register_link', lang)}
                 </a>
             </div>
         </div>

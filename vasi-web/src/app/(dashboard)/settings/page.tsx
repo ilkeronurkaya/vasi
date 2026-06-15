@@ -5,6 +5,7 @@ export const runtime = 'edge'
 import { apiFetch } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
+import { useLang, t } from '@/lib/i18n'
 
 interface MeData {
     user: {
@@ -32,6 +33,7 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [meData, setMeData] = useState<MeData | null>(null)
+    const [lang, setLang] = useLang()
 
     // Profile fields
     const [firstName, setFirstName] = useState('')
@@ -248,6 +250,20 @@ export default function SettingsPage() {
                     {error}
                 </div>
             )}
+
+            {/* Dil Bölümü — OTP YOK (dil hassas değil, OTP'li bölümlerden bağımsız) */}
+            <div style={{ ...cardStyle, marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)', marginBottom: '4px' }}>{t('settings_lang_title', lang)}</h2>
+                <p style={{ fontSize: '13px', color: 'var(--mist)', marginBottom: '20px' }}>{t('settings_lang_desc', lang)}</p>
+                <select
+                    value={lang}
+                    onChange={(e) => setLang(e.target.value as 'tr' | 'en')}
+                    style={{ ...inputStyle, cursor: 'pointer' }}
+                >
+                    <option value="tr">{t('settings_lang_tr', lang)}</option>
+                    <option value="en">{t('settings_lang_en', lang)}</option>
+                </select>
+            </div>
 
             {/* Profil Bölümü */}
             {renderSection(

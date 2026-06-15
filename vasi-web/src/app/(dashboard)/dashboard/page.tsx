@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { useLang, t } from '@/lib/i18n';
 
 export const runtime = 'edge';
 
@@ -19,33 +20,6 @@ const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }
 };
 
 
-const LANGS = {
-    TR: {
-        page_title: 'Merhaba, %s 👋',
-        page_subtitle: 'Bugün ne bırakmak istiyorsun?',
-        new_message_button: '+ Yeni Mesaj',
-        total_messages: 'Toplam',
-        scheduled_messages: 'Zamanlanmış',
-        sent_messages: 'Gönderildi',
-        view_all_messages: 'Tümünü Gör →',
-        no_messages_title: 'Henüz mesaj yok',
-        no_messages_subtitle: 'Sevdiklerine geleceğe mesaj bırak',
-        create_first_message_button: 'İlk Mesajını Oluştur',
-    },
-    EN: {
-        page_title: 'Hello, %s 👋',
-        page_subtitle: 'What would you like to leave today?',
-        new_message_button: '+ New Message',
-        total_messages: 'Total',
-        scheduled_messages: 'Scheduled',
-        sent_messages: 'Sent',
-        view_all_messages: 'View All →',
-        no_messages_title: 'No messages yet',
-        no_messages_subtitle: 'Leave a message for your loved ones in the future',
-        create_first_message_button: 'Create First Message',
-    },
-};
-
 const Dashboard: React.FC = () => {
     const [userFirstName, setUserFirstName] = useState("");
 
@@ -57,7 +31,7 @@ const Dashboard: React.FC = () => {
     const [messages, setMessages] = useState<MessageSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const lang = 'TR'; // This should be dynamic based on user preference or browser settings
+    const [lang] = useLang();
 
     useEffect(() => {
         apiFetch('/api/v1/messages')
@@ -66,30 +40,28 @@ const Dashboard: React.FC = () => {
             .finally(() => setLoading(false));
     }, []);
 
-    const t = LANGS[lang];
-
     return (
         <div style={{ padding: '24px' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '36px' }}>
                 <div>
-                    <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>{t.page_title.replace("%s", userFirstName)}</h1>
-                    <p style={{ fontSize: '15px', color: 'var(--mist)', lineHeight: 1.5 }}>{t.page_subtitle}</p>
+                    <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>{t('dash_greeting', lang).replace("%s", userFirstName)}</h1>
+                    <p style={{ fontSize: '15px', color: 'var(--mist)', lineHeight: 1.5 }}>{t('dash_subtitle', lang)}</p>
                 </div>
                 <button
                     onClick={() => router.push('/messages/new')}
                     className="btn btn-primary btn-md"
                 >
-                    {t.new_message_button}
+                    {t('dash_new_message', lang)}
                 </button>
             </div>
 
             {/* Statistics Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginBottom: '36px' }}>
                 {[
-                    { label: t.total_messages, value: messages.length },
-                    { label: t.scheduled_messages, value: messages.filter(msg => msg.status === 'scheduled').length },
-                    { label: t.sent_messages, value: messages.filter(msg => msg.status === 'sent' || msg.status === 'delivered').length },
+                    { label: t('dash_total', lang), value: messages.length },
+                    { label: t('dash_scheduled', lang), value: messages.filter(msg => msg.status === 'scheduled').length },
+                    { label: t('dash_sent', lang), value: messages.filter(msg => msg.status === 'sent' || msg.status === 'delivered').length },
                 ].map((stat, index) => (
                     <div key={index} style={{
                         background: 'var(--midnight)',
@@ -107,19 +79,19 @@ const Dashboard: React.FC = () => {
 
             {/* Message List Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <h2 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)' }}>Son Mesajlar</h2>
+                <h2 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)' }}>{t('dash_recent', lang)}</h2>
                 <button
                     onClick={() => router.push('/messages')}
                     className="btn btn-secondary btn-sm"
                     
                 >
-                    {t.view_all_messages}
+                    {t('dash_view_all', lang)}
                 </button>
             </div>
 
             {/* Message Cards */}
             {loading ? (
-                <p style={{ color: 'var(--mist)', fontSize: '14px' }}>Yükleniyor...</p>
+                <p style={{ color: 'var(--mist)', fontSize: '14px' }}>{t('dash_loading', lang)}</p>
             ) : messages.length === 0 ? (
                 <div style={{
                     display: 'flex',
@@ -129,10 +101,10 @@ const Dashboard: React.FC = () => {
                     textAlign: 'center',
                 }}>
                     <span role="img" aria-label="letter">💌</span>
-                    <p style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)', margin: '12px 0 4px' }}>{t.no_messages_title}</p>
-                    <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '24px' }}>{t.no_messages_subtitle}</p>
+                    <p style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)', margin: '12px 0 4px' }}>{t('dash_empty_title', lang)}</p>
+                    <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '24px' }}>{t('dash_empty_subtitle', lang)}</p>
                     <button onClick={() => router.push('/messages/new')} className="btn btn-primary btn-md">
-                        {t.create_first_message_button}
+                        {t('dash_create_first', lang)}
                     </button>
                 </div>
             ) : (
