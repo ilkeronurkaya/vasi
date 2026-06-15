@@ -6,24 +6,19 @@
 > Akış: iko + Claude sprint'i tasarlar (kapsam + kabul kriteri) → ayrı `SPRINT_NN_*.md` + `AGENT_PROMPT_SPRINT_NN.md` çıkar → yerel ajan (Qwen3.6-35B-A3B) kod yazar → iko+Claude bağımsız doğrular → iko commit/push.
 
 ## Durum (2026-06-14)
-- **S1–S22 KAPALI.** **S23** (hızlı kazanımlar) kod hazır — commit/push bekliyor.
-- Uygulayıcı: **yerel Qwen3.6-35B-A3B** (LM Studio + OpenHands); S23 pilotu geçti. Kurulum: `LOCAL_AGENT_SETUP.md`.
+- **S1–S24 KAPALI.** S23 (hızlı kazanımlar) + S24 (hesap güvenliği & email OTP) push edildi (`sprint-23`, `sprint-24-account-otp`). Smoke 58/58.
+- Uygulayıcı: **yerel Qwen3.6-35B-A3B** (LM Studio + OpenHands); S23 + S24 başarıyla koşuldu. Kurulum: `LOCAL_AGENT_SETUP.md`.
+- **SIRADAKİ: S25** (i18n + ayrı admin hesabı). Tasarım: `SPRINT_25_I18N.md`.
 
 ## Planlanan sprintler
 
-### S24 — Hesap güvenliği & OTP  ·  iç · ucuz · **SIRADAKİ**
-Kaynak: ikotest #3, #4
-- Admin girişine **email OTP** doğrulama (admin yalnız email + şifre + OTP; OAuth yok).
-- Settings'te **profil bilgisi düzenleme**; her değişiklikte email OTP.
-- Altyapı: mevcut `email_verifications` + Resend → yeni dış maliyet yok.
-- Bağımlılık: S23 admin login fix (`0016`) shiplenmiş olmalı.
+### S24 — Hesap güvenliği & OTP  ·  ✅ KAPANDI (2026-06-14)
+Kaynak: ikotest #3, #4. Admin login 2 adım (OTP) + settings profil/email/şifre OTP. Migration yok; mevcut `email_verifications` + Resend. Smoke 58/58. Branch `sprint-24-account-otp`. Review'da phone tsc bug'ı + 2 ortam sorunu (B3/B4) yakalandı.
 
-### S25 — Çok dillilik (i18n)  ·  iç · orta
-Kaynak: ikotest #5, #6
-- **Login ekranı + Dashboard** çok dilli (landing zaten TR/EN/FR/ES; aynı çeviri kalıbı yayılır).
-- Login sonrası **settings'ten dil tercihi** seçme + kalıcı.
-- Tasarım kararı (sprint tasarımında): dil tercihi nerede saklanacak — `users` tablosuna kolon (migration) mı, yoksa client-side mı.
-- Not: #6, #5'in i18n altyapısına bağlı → aynı sprint.
+### S25 — Çok dillilik (i18n) + ayrı admin hesabı  ·  iç · orta · **SIRADAKİ**
+Kaynak: ikotest #5, #6 + S24 carryover. Tasarım: `SPRINT_25_I18N.md`.
+- **Part A:** Login/kayıt + Dashboard (shell + ana sayfa) i18n (TR+EN, `lib/i18n.ts`, localStorage `'lang'`); settings'te OTP'siz dil seçici. Kapsam dışı: mesaj sihirbazı/upgrade/admin (sonraki i18n turu).
+- **Part B:** Ayrı gerçek admin hesabı `ilkeronurkaya@gmail.com` (migration `0017`, şifre `Test1234!`) — Resend OTP'yi gerçekten yollar; `test@vasi.app` admin kalır (smoke).
 
 ### S26 — Cookie onayı (KVKK/GDPR)  ·  iç · küçük
 Kaynak: ikotest #7
