@@ -8,7 +8,8 @@
 ## Durum (2026-06-14)
 - **S1–S24 KAPALI.** S23 (hızlı kazanımlar) + S24 (hesap güvenliği & email OTP) push edildi (`sprint-23`, `sprint-24-account-otp`). Smoke 58/58.
 - Uygulayıcı: **yerel Qwen3.6-35B-A3B** (LM Studio + OpenHands); S23 + S24 başarıyla koşuldu. Kurulum: `LOCAL_AGENT_SETUP.md`.
-- **SIRADAKİ: S25** (i18n + ayrı admin hesabı). Tasarım: `SPRINT_25_I18N.md`.
+- **S25** (i18n + ayrı admin) kod tamam + bağımsız doğrulandı (tsc temiz, smoke 58/58, sıfır yeni lint borcu); iko commit/push edecek (branch `sprint-25-i18n`). Tasarım: `SPRINT_25_I18N.md`.
+- **SIRADAKİ: S26** — güvenlik + OTP & UX düzeltmeleri + lint (B5 P0, B6 a–c, B7-B9, B2, B3). 06-15 elle test turu. Bkz. `BUGS.md`.
 
 ## Planlanan sprintler
 
@@ -20,15 +21,18 @@ Kaynak: ikotest #5, #6 + S24 carryover. Tasarım: `SPRINT_25_I18N.md`.
 - **Part A:** Login/kayıt + Dashboard (shell + ana sayfa) i18n (TR+EN, `lib/i18n.ts`, localStorage `'lang'`); settings'te OTP'siz dil seçici. Kapsam dışı: mesaj sihirbazı/upgrade/admin (sonraki i18n turu).
 - **Part B:** Ayrı gerçek admin hesabı `ilkeronurkaya@gmail.com` (migration `0017`, şifre `Test1234!`) — Resend OTP'yi gerçekten yollar; `test@vasi.app` admin kalır (smoke).
 
-### S26 — Cookie onayı (KVKK/GDPR)  ·  iç · küçük
-Kaynak: ikotest #7
-- Ana sayfada cookie onay banner'ı; en iyi-pratik "maksimum" onay (kabul/ret/ayarla, kategoriler), Vasi tasarım diline uygun.
-- Araştırma adımı: güncel KVKK/GDPR cookie onay gereksinimleri.
-- Bağımsız, dış maliyet yok. (Küçükse S25 ile birleştirilebilir.)
+### S26 — Güvenlik + OTP & UX düzeltmeleri + lint temizliği  ·  iç · orta-büyük · **SIRADAKİ**
+Kaynak: BUGS.md B5 (P0), B6 (a–c), B7, B8, B9, B2, B3 — 06-15 elle test turu.
+- **B5 (P0):** OTP kapsam açığı — `email_verifications`'a `purpose` kolonu (yeni migration) + `create`/`findActive` çağrılarını amaca göre kapsamla (admin_login / profile / email_verify). Cross-context OTP kabulünü kapat.
+- **B6 a–c:** Şifre politikası — ≥8 + küçük/büyük/rakam, özel karakter YOK; kuralları şifre alanı yanında canlı kutuda göster + uygula; doğrulama OTP'den ÖNCE (client+server). **B6d (SMS OTP) → S27.**
+- **B7/B8/B9 (+B2):** OTP alanı maskeleme (`*****`), "Teslimatları Şimdi Çalıştır" UI redesign, plan düzenleme alan label'ları, "Yeni Paket" 0-default temizliği.
+- **B3:** kod tabanı geneli lint temizliği — `any`→tip, `<a>`→`<Link>`, `set-state-in-effect`→`useSyncExternalStore`/event kalıbı. Prod deploy'u (`next build`) açar. Kapsam net → yerel modele uygun ama hacimli; gerekirse ayrı tur.
 
-### S27 — SMS gönderme  ·  dış · orta · *gerçek test askıda olabilir*
-Kaynak: ikotest #2
+### S27 — SMS (NetGSM) + şifre SMS-OTP + cookie onayı  ·  dış · orta
+Kaynak: ikotest #2, B6d, ikotest #7 (cookie S26'dan kaydı).
 - NetGSM ile SMS (kolonlar/env hazır). **Mock-mod** ile yaz; gerçek gönderim NetGSM hesabı + kredi gerektirir (İyzico gibi gerçek test askıya alınabilir).
+- **B6d:** şifre değişimi OTP'sini SMS kanalına taşı (kurallar sağlanınca SMS gönder).
+- **Cookie onayı (KVKK/GDPR):** ana sayfada onay banner'ı (kabul/ret/ayarla, kategoriler), Vasi tasarım diline uygun. Araştırma adımı: güncel KVKK/GDPR cookie onay gereksinimleri.
 
 ### S28 — Google + Apple ile giriş (OAuth)  ·  dış · büyük · pahalı
 Kaynak: ikotest #1
@@ -41,4 +45,4 @@ Kaynak: ikotest #1
 - Canlıya çıkış: wrangler deploy + Cloudflare Pages.
 
 ## Sprint sırası özeti
-S24 (OTP) → S25 (i18n) → S26 (cookie) → S27 (SMS) → S28 (OAuth). İç/ucuz önce, dış/pahalı sona.
+S24 (OTP) → S25 (i18n) → S26 (güvenlik+OTP+UX+lint) → S27 (SMS+SMS-OTP+cookie) → S28 (OAuth). İç/ucuz önce, dış/pahalı sona.

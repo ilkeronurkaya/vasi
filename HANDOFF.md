@@ -112,6 +112,8 @@ Eski sprint dosyaları `CLOSED = True` ile kilitli.
 3. Her commit öncesi `git branch --show-current` (branch kayması 2 kez yaşandı).
 4. Push HER ZAMAN iko'dan. Claude sandbox'tan commit atmaz. Ajan asıl repoya DOKUNMAZ (sadece klon).
 5. Ajan raporuna güvenilmez — bağımsız doğrulama şart.
+6. **Sprint kapanış ritüeli (ZORUNLU, her sprint sonu):** Claude, o sprintte düzeltilen her bug için iko'dan elle test + işaretleme İSTER ve adım adım kontrol ettirir. iko bir bug'ı doğruladıkça Claude o bug'ı `BUGS.md`'de **Kapandı**'ya taşır. Hedef bug'ların tamamı iko'ca doğrulanmadan sprint KAPANMAZ. Bu ritüel her sprintte tekrarlanır.
+7. **Terminal komutlarına yorum (`#`) KOYMA.** iko komutları kopyalayıp çalıştırıyor; yorumlu satırlar hata üretiyor. Sadece çalıştırılabilir satır ver.
 
 ## 10. ORTAM / SIRLAR
 
