@@ -4,9 +4,11 @@ export const runtime = 'edge'
 import { apiFetch } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
+import { useLang, t } from '@/lib/i18n'
 
 export default function UpgradePage() {
   const router = useRouter()
+  const [lang] = useLang()
   const [currentPlan, setCurrentPlan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [plans, setPlans] = useState<any[]>([])
@@ -47,7 +49,7 @@ export default function UpgradePage() {
   }
 
   if (loading || !plans.length) {
-    return <div style={{ color: 'var(--mist)', fontSize: '14px' }}>Yükleniyor...</div>
+    return <div style={{ color: 'var(--mist)', fontSize: '14px' }}>{t('common_loading', lang)}</div>
   }
 
   const cardStyle = {
@@ -62,20 +64,20 @@ export default function UpgradePage() {
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px' }}>
       {message && <div style={{ background: 'rgba(75, 181, 67, 0.2)', color: '#4bb543', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>{message}</div>}
       {error && <div style={{ background: 'rgba(212, 59, 59, 0.2)', color: '#d43b3b', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>{error}</div>}
-      <h1 style={{ fontSize: '22px', fontWeight: '700', letterSpacing: '-0.01em', color: 'var(--cream)' }}>Planını Yükselt</h1>
-      <p style={{ fontSize: '15px', color: 'var(--mist)', marginBottom: '32px' }}>Farklı planlarımızla mesaj gönderme deneyiminizi artırın.</p>
+      <h1 style={{ fontSize: '22px', fontWeight: '700', letterSpacing: '-0.01em', color: 'var(--cream)' }}>{t('upgrade_title', lang)}</h1>
+      <p style={{ fontSize: '15px', color: 'var(--mist)', marginBottom: '32px' }}>{t('upgrade_subtitle', lang)}</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '32px' }}>
         {plans.map((plan: any) => (
           <div key={plan.slug} style={{
             ...cardStyle,
             border: currentPlan === plan.slug ? '1px solid var(--copper)' : cardStyle.border,
           }}>
-            {currentPlan === plan.slug && <div style={{ background: 'var(--copper)', color: 'var(--obsidian)', fontSize: '11px', fontWeight: '700', borderRadius: '6px', padding: '2px 8px', marginBottom: '16px', display: 'inline-block' }}>Mevcut Plan</div>}
+            {currentPlan === plan.slug && <div style={{ background: 'var(--copper)', color: 'var(--obsidian)', fontSize: '11px', fontWeight: '700', borderRadius: '6px', padding: '2px 8px', marginBottom: '16px', display: 'inline-block' }}>{t('upgrade_current_plan', lang)}</div>}
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--cream)' }}>{plan.name}</h2>
-            <p style={{ fontSize: '28px', fontWeight: '700', color: 'var(--cream)', marginBottom: '8px' }}>₺{plan.price_monthly}<span style={{ fontSize: '14px', fontWeight: '400' }}>/ay</span></p>
+            <p style={{ fontSize: '28px', fontWeight: '700', color: 'var(--cream)', marginBottom: '8px' }}>₺{plan.price_monthly}<span style={{ fontSize: '14px', fontWeight: '400' }}>{t('upgrade_per_month', lang)}</span></p>
             <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-                <li style={{ fontSize: '14px', color: 'var(--mist)', lineHeight: '2' }}>{plan.message_limit} mesaj</li>
-                <li style={{ fontSize: '14px', color: 'var(--mist)', lineHeight: '2' }}>{plan.recipient_limit} alıcı</li>
+                <li style={{ fontSize: '14px', color: 'var(--mist)', lineHeight: '2' }}>{plan.message_limit + ' ' + t('upgrade_messages_suffix', lang)}</li>
+                <li style={{ fontSize: '14px', color: 'var(--mist)', lineHeight: '2' }}>{plan.recipient_limit + ' ' + t('common_recipients', lang)}</li>
             </ul>
             <button 
                 className="btn btn-primary btn-md" 
@@ -83,12 +85,12 @@ export default function UpgradePage() {
                 disabled={currentPlan === plan.slug}
                 onClick={() => handleUpgrade(plan.slug)}
             >
-              {currentPlan === plan.slug ? 'Kullanımda' : 'Premium\'a Yükselt'}
+              {currentPlan === plan.slug ? t('upgrade_in_use', lang) : t('upgrade_btn', lang)}
             </button>
           </div>
         ))}
       </div>
-      <button className="btn btn-secondary btn-sm" style={{ marginTop: '32px' }} onClick={() => router.back()}>Geri</button>
+      <button className="btn btn-secondary btn-sm" style={{ marginTop: '32px' }} onClick={() => router.back()}>{t('common_back', lang)}</button>
     </div>
   )
 }

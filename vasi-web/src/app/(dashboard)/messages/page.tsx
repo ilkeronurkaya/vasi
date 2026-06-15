@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { useLang, t } from '@/lib/i18n';
 
 export const runtime = 'edge';
 
@@ -17,71 +18,20 @@ type Message = {
 };
 
 
-const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }> = {
-    draft: { label: 'Taslak', bg: 'var(--horizon)', color: 'var(--mist)' },
-    scheduled: { label: 'Zamanlanmış', bg: 'rgba(212,118,59,0.15)', color: 'var(--copper)' },
-    sent: { label: 'Gönderildi', bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
-    delivered: { label: 'Teslim Edildi', bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
-    failed: { label: 'Başarısız', bg: 'rgba(239,68,68,0.15)', color: '#EF4444' },
+const STATUS_LABELS: Record<string, { bg: string; color: string }> = {
+    draft: { bg: 'var(--horizon)', color: 'var(--mist)' },
+    scheduled: { bg: 'rgba(212,118,59,0.15)', color: 'var(--copper)' },
+    sent: { bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
+    delivered: { bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
+    failed: { bg: 'rgba(239,68,68,0.15)', color: '#EF4444' },
 };
 
-
-const LANGS = {
-    TR: {
-        page_title: 'Mesajlarım',
-        new_message_button: '+ Yeni Mesaj',
-        no_messages_title: 'Henüz mesaj yok',
-        no_messages_subtitle: 'Sevdiklerine geleceğe mesaj bırak',
-        create_first_message_button: 'İlk Mesajını Oluştur',
-        loading: 'Yükleniyor...',
-    },
-    EN: {
-        page_title: 'My Messages',
-        new_message_button: '+ New Message',
-        no_messages_title: 'No messages yet',
-        no_messages_subtitle: 'Leave a message for your loved ones in the future',
-        create_first_message_button: 'Create First Message',
-        loading: 'Loading...',
-    },
-    DE: { // TODO: translate
-        page_title: 'Meine Nachrichten',
-        new_message_button: '+ Neue Nachricht',
-        no_messages_title: 'Noch keine Nachrichten',
-        no_messages_subtitle: 'Hinterlasse deinen Lieben eine Nachricht für die Zukunft',
-        create_first_message_button: 'Erste Nachricht erstellen',
-        loading: 'Wird geladen...',
-    },
-    FR: { // TODO: translate
-        page_title: 'Mes Messages',
-        new_message_button: '+ Nouveau Message',
-        no_messages_title: 'Aucun message pour l\'instant',
-        no_messages_subtitle: 'Laissez un message à vos proches pour le futur',
-        create_first_message_button: 'Créer le premier message',
-        loading: 'Chargement...',
-    },
-    ES: { // TODO: translate
-        page_title: 'Mis Mensajes',
-        new_message_button: '+ Nuevo Mensaje',
-        no_messages_title: 'Aún no hay mensajes',
-        no_messages_subtitle: 'Deja un mensaje para tus seres queridos en el futuro',
-        create_first_message_button: 'Crear primer mensaje',
-        loading: 'Cargando...',
-    },
-    AR: { // TODO: translate
-        page_title: 'رسائلي',
-        new_message_button: '+ رسالة جديدة',
-        no_messages_title: 'لا توجد رسائل بعد',
-        no_messages_subtitle: 'اترك رسالة لأحبائك في المستقبل',
-        create_first_message_button: 'إنشاء أول رسالة',
-        loading: 'جاري التحميل...',
-    },
-};
 
 const Messages: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const lang = 'TR'; // This should be dynamic based on user preference or browser settings
+    const [lang] = useLang();
 
     useEffect(() => {
         apiFetch('/api/v1/messages')
@@ -90,24 +40,22 @@ const Messages: React.FC = () => {
             .finally(() => setLoading(false));
     }, []);
 
-    const t = LANGS[lang];
-
     return (
         <div style={{ padding: '24px' }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '36px' }}>
-                <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>{t.page_title}</h1>
+                <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>{t('msgs_title', lang)}</h1>
                 <button
                     onClick={() => router.push('/messages/new')}
                     className="btn btn-primary btn-md"
                 >
-                    {t.new_message_button}
+                    {t('msgs_new', lang)}
                 </button>
             </div>
 
             {/* Message Cards */}
             {loading ? (
-                <p style={{ color: 'var(--mist)', fontSize: '14px' }}>Yükleniyor...</p>
+                <p style={{ color: 'var(--mist)', fontSize: '14px' }}>{t('common_loading', lang)}</p>
             ) : messages.length === 0 ? (
                 <div style={{
                     display: 'flex',
@@ -117,10 +65,10 @@ const Messages: React.FC = () => {
                     textAlign: 'center',
                 }}>
                     <span role="img" aria-label="letter">💌</span>
-                    <p style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)', margin: '12px 0 4px' }}>{t.no_messages_title}</p>
-                    <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '24px' }}>{t.no_messages_subtitle}</p>
+                    <p style={{ fontSize: '17px', fontWeight: 600, color: 'var(--cream)', margin: '12px 0 4px' }}>{t('msgs_empty_title', lang)}</p>
+                    <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '24px' }}>{t('msgs_empty_subtitle', lang)}</p>
                     <button onClick={() => router.push('/messages/new')} className="btn btn-primary btn-md">
-                        {t.create_first_message_button}
+                        {t('msgs_create_first', lang)}
                     </button>
                 </div>
             ) : (
@@ -157,7 +105,7 @@ const Messages: React.FC = () => {
                                         {msg.title}
                                     </p>
                                     <p style={{ color: 'var(--mist)', fontSize: '13px', margin: 0 }}>
-                                        {(msg.recipient_count ?? 0) + " alıcı · " + new Date(msg.created_at).toLocaleDateString("tr-TR")}
+                                        {(msg.recipient_count ?? 0) + " " + t('common_recipients', lang) + " · " + new Date(msg.created_at).toLocaleDateString("tr-TR")}
                                     </p>
                                 </div>
                                 <span style={{
@@ -168,7 +116,7 @@ const Messages: React.FC = () => {
                                     background: status.bg,
                                     color: status.color,
                                 }}>
-                                    {status.label}
+                                    {t('status_' + msg.status, lang)}
                                 </span>
                             </div>
                         );

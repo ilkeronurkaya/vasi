@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { useLang, t } from '@/lib/i18n';
 
 export const runtime = 'edge';
 
-const STEPS = ['İçerik', 'Alıcılar', 'Zamanlama', 'Önizleme', 'Oluştur'];
+const STEP_KEYS = ['new_step_content', 'new_step_recipients', 'new_step_schedule', 'new_step_preview', 'new_step_create'];
 const BODY_MAX = 5000;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -57,6 +58,7 @@ function yearsFromNow(years: number): string {
 
 const NewMessage: React.FC = () => {
     const router = useRouter();
+    const [lang] = useLang();
     const [step, setStep] = useState(1);
     const [form, setForm] = useState({
         title: '',
@@ -159,21 +161,21 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                     ←
                 </button>
                 <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>
-                    Yeni Mesaj
+                    {t('new_title', lang)}
                 </h1>
             </div>
             <p style={{ color: 'var(--mist)', fontSize: '14px', margin: '0 0 28px 36px' }}>
-                5 adımda mesajını oluştur
+                {t('new_subtitle', lang)}
             </p>
 
             {/* Progress Bar */}
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '28px' }}>
-                {STEPS.map((label, i) => {
+                {STEP_KEYS.map((key, i) => {
                     const n = i + 1;
                     const done = n < step;
                     const active = n === step;
                     return (
-                        <React.Fragment key={label}>
+                        <React.Fragment key={key}>
                             {i > 0 && (
                                 <div style={{ flex: 1, height: '2px', background: n <= step ? 'var(--copper)' : 'var(--horizon)', margin: '0 6px', marginBottom: '20px' }} />
                             )}
@@ -194,7 +196,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                                     {done ? '✓' : n}
                                 </div>
                                 <span style={{ fontSize: '11px', color: active ? 'var(--copper)' : 'var(--mist)', fontWeight: active ? 600 : 400 }}>
-                                    {label}
+                                    {t(key, lang)}
                                 </span>
                             </div>
                         </React.Fragment>
@@ -209,7 +211,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                 {step === 1 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                         <div>
-                            <label htmlFor="title" style={labelStyle}>Mesajına bir başlık ver</label>
+                            <label htmlFor="title" style={labelStyle}>{t('new_label_title', lang)}</label>
                             <input
                                 id="title"
                                 type="text"
@@ -222,7 +224,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                             />
                         </div>
                         <div>
-                            <label htmlFor="body" style={labelStyle}>Mesajını yaz</label>
+                            <label htmlFor="body" style={labelStyle}>{t('new_label_body', lang)}</label>
                             <textarea
                                 id="body"
                                 value={form.body}
@@ -244,7 +246,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                 {step === 2 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                         <div>
-                            <label htmlFor="recipientEmail" style={labelStyle}>Alıcı e-posta adresi</label>
+                            <label htmlFor="recipientEmail" style={labelStyle}>{t('new_label_recipient_email', lang)}</label>
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <input
                                     id="recipientEmail"
@@ -263,7 +265,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                                     className="btn btn-primary btn-md"
                                     style={{ marginTop: '6px', whiteSpace: 'nowrap' }}
                                 >
-                                    Ekle
+                                    {t('new_add', lang)}
                                 </button>
                             </div>
                         </div>
@@ -303,7 +305,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                 {step === 3 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                         <div>
-                            <label htmlFor="scheduledAt" style={labelStyle}>Gönderim tarihi</label>
+                            <label htmlFor="scheduledAt" style={labelStyle}>{t('new_label_send_date', lang)}</label>
                             <input
                                 id="scheduledAt"
                                 type="datetime-local"
@@ -316,7 +318,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                             />
                         </div>
                         <div>
-                            <span style={labelStyle}>Hızlı seç</span>
+                            <span style={labelStyle}>{t('new_quick_select', lang)}</span>
                             <div style={{ display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap' }}>
                                 {[1, 5, 10].map(y => (
                                     <button
@@ -325,7 +327,7 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                                         onClick={() => setForm(f => ({ ...f, scheduledAt: yearsFromNow(y) }))}
                                         className="btn btn-ghost btn-md"
                                     >
-                                        {y} Yıl Sonra
+                                        {t('new_years_later', lang).replace('%s', String(y))}
                                     </button>
                                 ))}
                             </div>
@@ -359,12 +361,12 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                 {step === 5 && (
                     <div style={{ textAlign: 'center', padding: '24px 0' }}>
                         {loading ? (
-                            <p style={{ color: 'var(--cream)', fontSize: '16px', margin: 0 }}>Oluşturuluyor...</p>
+                            <p style={{ color: 'var(--cream)', fontSize: '16px', margin: 0 }}>{t('new_loading', lang)}</p>
                         ) : submitError ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
                                 <p style={{ color: '#EF4444', fontSize: '14px', margin: 0 }}>{submitError}</p>
                                 <button type="button" onClick={handleSubmit} className="btn btn-primary btn-md">
-                                    Tekrar Dene
+                                    {t('new_retry', lang)}
                                 </button>
                             </div>
                         ) : null}
@@ -381,17 +383,17 @@ setSubmitError(e?.data?.error ?? 'Mesaj gönderilemedi. Tekrar deneyin.');
                     <div style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', marginTop: '24px' }}>
                         {step > 1 && (
                             <button type="button" onClick={goBack} className="btn btn-ghost btn-md">
-                                ← Geri
+                                {t('new_back', lang)}
                             </button>
                         )}
                         {step < 4 && (
                             <button type="button" onClick={goNext} className="btn btn-primary btn-md">
-                                İleri →
+                                {t('new_next', lang)}
                             </button>
                         )}
                         {step === 4 && (
                             <button type="button" onClick={handleSubmit} className="btn btn-primary btn-md">
-                                Oluştur ✓
+                                {t('new_create', lang)}
                             </button>
                         )}
                     </div>

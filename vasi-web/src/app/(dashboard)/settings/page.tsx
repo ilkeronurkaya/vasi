@@ -167,7 +167,7 @@ export default function SettingsPage() {
     }
 
     if (loading) {
-        return <div style={{ color: 'var(--mist)', fontSize: '14px' }}>Yükleniyor...</div>
+        return <div style={{ color: 'var(--mist)', fontSize: '14px' }}>{t('common_loading', lang)}</div>
     }
 
     const renderSection = (section: Section, title: string, description: string, fields: React.ReactNode) => {
@@ -200,12 +200,12 @@ export default function SettingsPage() {
                             style={{ marginTop: '16px' }}
                             onClick={() => handleRequestOtp(section)}
                         >
-                            Kaydet
+                            {t('settings_save', lang)}
                         </button>
                     </>
                 ) : (
                     <>
-                        <label style={labelStyle}>OTP Kodu</label>
+                        <label style={labelStyle}>{t('settings_otp_label', lang)}</label>
                         <input
                             type="text"
                             value={state.otpValue}
@@ -223,7 +223,7 @@ export default function SettingsPage() {
                                 className="btn btn-primary btn-md"
                                 onClick={() => handleSave(section)}
                             >
-                                Kaydet
+                                {t('settings_save', lang)}
                             </button>
                             <button
                                 className="btn btn-ghost btn-md"
@@ -232,7 +232,7 @@ export default function SettingsPage() {
                                     [section]: { ...prev[section], requesting: false },
                                 }))}
                             >
-                                İptal
+                                {t('settings_cancel', lang)}
                             </button>
                         </div>
                     </>
@@ -243,7 +243,7 @@ export default function SettingsPage() {
 
     return (
         <div style={{ maxWidth: '640px', margin: '0 auto', padding: '32px' }}>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--cream)', marginBottom: '24px' }}>Ayarlar</h1>
+            <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--cream)', marginBottom: '24px' }}>{t('settings_title', lang)}</h1>
 
             {error && (
                 <div style={{ background: 'rgba(212, 59, 59, 0.15)', color: '#d43b3b', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
@@ -268,16 +268,16 @@ export default function SettingsPage() {
             {/* Profil Bölümü */}
             {renderSection(
                 'profile',
-                'Profil',
-                'Ad, soyad ve telefon numaranızı güncelleyin.',
+                t('settings_profile_title', lang),
+                t('settings_profile_desc', lang),
                 <>
-                    <label style={labelStyle}>Ad</label>
+                    <label style={labelStyle}>{t('settings_label_firstname', lang)}</label>
                     <input value={firstName} onChange={(e) => setFirstName(e.target.value)} style={inputStyle} />
 
-                    <label style={{ ...labelStyle, marginTop: '16px' }}>Soyad</label>
+                    <label style={{ ...labelStyle, marginTop: '16px' }}>{t('settings_label_lastname', lang)}</label>
                     <input value={lastName} onChange={(e) => setLastName(e.target.value)} style={inputStyle} />
 
-                    <label style={{ ...labelStyle, marginTop: '16px' }}>Telefon</label>
+                    <label style={{ ...labelStyle, marginTop: '16px' }}>{t('settings_label_phone', lang)}</label>
                     <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} placeholder="+90 5XX XXX XX XX" />
                 </>
             )}
@@ -285,13 +285,13 @@ export default function SettingsPage() {
             {/* E-posta Bölümü */}
             {renderSection(
                 'email',
-                'E-posta',
-                'Yeni e-posta adresinizi girin. Değişiklik sonrası mevcut adresinize OTP gönderilecek.',
+                t('settings_email_title', lang),
+                t('settings_email_desc', lang),
                 <>
-                    <label style={labelStyle}>Mevcut E-posta</label>
+                    <label style={labelStyle}>{t('settings_label_current_email', lang)}</label>
                     <input value={meData?.user.email || ''} style={{ ...inputStyle, color: 'var(--mist)' }} disabled />
 
-                    <label style={{ ...labelStyle, marginTop: '16px' }}>Yeni E-posta</label>
+                    <label style={{ ...labelStyle, marginTop: '16px' }}>{t('settings_label_new_email', lang)}</label>
                     <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} style={inputStyle} placeholder="yeni@ornek.com" />
                 </>
             )}
@@ -299,19 +299,19 @@ export default function SettingsPage() {
             {/* Şifre Bölümü */}
             {renderSection(
                 'password',
-                'Şifre',
-                'Mevcut şifrenizi ve yeni şifrenizi girin. Yeni şifre en az 8 hane olmalıdır.',
+                t('settings_password_title', lang),
+                t('settings_password_desc', lang),
                 <>
-                    <label style={labelStyle}>Mevcut Şifre</label>
+                    <label style={labelStyle}>{t('settings_label_current_password', lang)}</label>
                     <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} style={inputStyle} placeholder="Mevcut şifreniz" />
 
-                    <label style={{ ...labelStyle, marginTop: '16px' }}>Yeni Şifre</label>
+                    <label style={{ ...labelStyle, marginTop: '16px' }}>{t('settings_label_new_password', lang)}</label>
                     <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={inputStyle} placeholder="En az 8 karakter" />
                 </>
             )}
 
             <button className="btn btn-secondary btn-sm" style={{ marginTop: '32px' }} onClick={() => router.back()}>
-                Geri
+                {t('common_back', lang)}
             </button>
         </div>
     )

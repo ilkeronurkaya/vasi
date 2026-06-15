@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { useLang, t } from '@/lib/i18n';
 
 export const runtime = 'edge';
 
@@ -32,14 +33,9 @@ const labelStyle: React.CSSProperties = {
     marginBottom: '6px',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-    draft: 'Taslak',
-    scheduled: 'Zamanlandı',
-    sent: 'Gönderildi',
-};
-
 const MessageDetail: React.FC = () => {
     const params = useParams<{ id: string }>();
+    const [lang] = useLang();
     const [message, setMessage] = useState<Message | null>(null);
     const [recipients, setRecipients] = useState<Recipient[]>([]);
     const [newName, setNewName] = useState('');
@@ -114,7 +110,7 @@ const handleDeleteMessage = async () => {
     if (!message) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px' }}>
-                <p style={{ color: 'var(--mist)', marginBottom: '6px', fontSize: '14px' }}>Yükleniyor...</p>
+                <p style={{ color: 'var(--mist)', marginBottom: '6px', fontSize: '14px' }}>{t('common_loading', lang)}</p>
             </div>
         );
     }
@@ -140,7 +136,7 @@ const handleDeleteMessage = async () => {
                         {message.title}
                     </h1>
                     <span style={{ fontSize: '12px', color: statusColor }}>
-                        {STATUS_LABELS[message.status] ?? message.status}
+                        {t('status_' + message.status, lang)}
                     </span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -148,13 +144,13 @@ const handleDeleteMessage = async () => {
 {message.status === 'scheduled' && (
     <>
         <button onClick={handleCancelSchedule} className="btn btn-ghost btn-sm">
-            İptal Et
+            {t('detail_cancel', lang)}
         </button>
         <button
             onClick={() => router.push(`/messages/${params.id}/schedule`)}
             className="btn btn-primary btn-sm"
         >
-            Yeniden Zamanla
+            {t('detail_reschedule', lang)}
         </button>
     </>
 )}
@@ -165,7 +161,7 @@ const handleDeleteMessage = async () => {
                             onClick={() => router.push(`/messages/${params.id}/schedule`)}
                             className="btn btn-primary btn-sm"
                         >
-                            Zamanla
+                            {t('detail_schedule', lang)}
                         </button>
                     )}
                     <button
@@ -173,7 +169,7 @@ const handleDeleteMessage = async () => {
                         className="btn btn-ghost btn-sm"
                         style={{ color: '#EF4444' }}
                     >
-                        Sil
+                        {t('detail_delete', lang)}
                     </button>
                 </div>
             </div>
@@ -188,7 +184,7 @@ const handleDeleteMessage = async () => {
                 marginBottom: '20px',
             }}>
                 <p style={{ color: 'var(--mist)', fontSize: '11px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>
-                    MESAJ İÇERİĞİ
+                    {t('detail_content_label', lang)}
                 </p>
                 <p style={{ color: 'var(--cream)', fontSize: '15px', lineHeight: '1.7', margin: 0, whiteSpace: 'pre-wrap' }}>
                     {message.content_text ?? message.content ?? '—'}
@@ -197,7 +193,7 @@ const handleDeleteMessage = async () => {
                     <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--copper)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span>⏰</span>
                         <span>
-                            Gönderilecek:{' '}
+                            {t('detail_will_send', lang)}{' '}
                             {new Date(message.scheduled_at).toLocaleString('tr-TR', {
                                 day: '2-digit', month: 'long', year: 'numeric',
                                 hour: '2-digit', minute: '2-digit',
@@ -216,7 +212,7 @@ const handleDeleteMessage = async () => {
                 padding: '24px',
             }}>
                 <p style={{ color: 'var(--mist)', fontSize: '11px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
-                    ALICILAR ({recipients.length})
+                    {t('detail_recipients_label', lang)} ({recipients.length})
                 </p>
 
                 {/* Alıcı listesi */}
@@ -241,7 +237,7 @@ const handleDeleteMessage = async () => {
                                     className="btn btn-ghost btn-sm"
                                     style={{ color: '#EF4444' }}
                                 >
-                                    Kaldır
+                                    {t('detail_remove', lang)}
                                 </button>
                             </div>
                         ))}
@@ -250,10 +246,10 @@ const handleDeleteMessage = async () => {
 
                 {/* Alıcı ekle */}
                 <div style={{ borderTop: recipients.length > 0 ? '1px solid var(--horizon)' : 'none', paddingTop: recipients.length > 0 ? '16px' : '0' }}>
-                    <p style={{ color: 'var(--cream)', fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>Alıcı Ekle</p>
+                    <p style={{ color: 'var(--cream)', fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>{t('detail_add_recipient_title', lang)}</p>
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                         <div style={{ flex: 1 }}>
-                            <label style={labelStyle}>Ad Soyad</label>
+                            <label style={labelStyle}>{t('detail_name_label', lang)}</label>
                             <input
                                 type="text"
                                 value={newName}
@@ -265,7 +261,7 @@ const handleDeleteMessage = async () => {
                             />
                         </div>
                         <div style={{ flex: 1 }}>
-                            <label style={labelStyle}>E-posta</label>
+                            <label style={labelStyle}>{t('detail_email_label', lang)}</label>
                             <input
                                 type="email"
                                 value={newEmail}
@@ -285,7 +281,7 @@ const handleDeleteMessage = async () => {
                         className="btn btn-primary btn-md"
                         style={{ opacity: addLoading ? 0.7 : 1 }}
                     >
-                        {addLoading ? 'Ekleniyor...' : '+ Alıcı Ekle'}
+                        {addLoading ? t('detail_adding', lang) : t('detail_add_recipient_btn', lang)}
                     </button>
                 </div>
             </div>

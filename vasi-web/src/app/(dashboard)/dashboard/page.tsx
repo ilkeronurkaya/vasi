@@ -11,12 +11,12 @@ export const runtime = 'edge';
 type MessageSummary = { id: string; title: string; status: string; created_at: string; recipient_count?: number };
 
 
-const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }> = {
-    draft: { label: 'Taslak', bg: 'var(--horizon)', color: 'var(--mist)' },
-    scheduled: { label: 'Zamanlanmış', bg: 'rgba(212,118,59,0.15)', color: 'var(--copper)' },
-    sent: { label: 'Gönderildi', bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
-    delivered: { label: 'Teslim Edildi', bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
-    failed: { label: 'Başarısız', bg: 'rgba(239,68,68,0.15)', color: '#EF4444' },
+const STATUS_LABELS: Record<string, { bg: string; color: string }> = {
+    draft: { bg: 'var(--horizon)', color: 'var(--mist)' },
+    scheduled: { bg: 'rgba(212,118,59,0.15)', color: 'var(--copper)' },
+    sent: { bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
+    delivered: { bg: 'rgba(34,197,94,0.15)', color: '#22C55E' },
+    failed: { bg: 'rgba(239,68,68,0.15)', color: '#EF4444' },
 };
 
 
@@ -141,7 +141,7 @@ const Dashboard: React.FC = () => {
                                     {msg.title}
                                 </p>
                                 <p style={{ color: 'var(--mist)', fontSize: '13px', margin: 0 }}>
-                                    {(msg.recipient_count ?? 0) + " alıcı · " + new Date(msg.created_at).toLocaleDateString("tr-TR")}
+                                    {(msg.recipient_count ?? 0) + " " + t('common_recipients', lang) + " · " + new Date(msg.created_at).toLocaleDateString("tr-TR")}
                                 </p>
                             </div>
                             <span style={{
@@ -152,7 +152,7 @@ const Dashboard: React.FC = () => {
                                 background: status.bg,
                                 color: status.color,
                             }}>
-                                {status.label}
+                                {t('status_' + msg.status, lang)}
                             </span>
                         </div>
                         );

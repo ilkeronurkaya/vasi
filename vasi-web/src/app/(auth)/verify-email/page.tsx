@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { useLang, t } from '@/lib/i18n';
 
 export const runtime = 'edge';
 
@@ -25,6 +26,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function VerifyEmailPage() {
+    const [lang] = useLang();
     const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -78,10 +80,10 @@ export default function VerifyEmailPage() {
             </div>
 
             <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', marginBottom: '8px' }}>
-                E-postanızı Doğrulayın
+                {t('verify_title', lang)}
             </h2>
             <p style={{ color: 'var(--mist)', fontSize: '14px', lineHeight: '1.5', marginBottom: '28px' }}>
-                E-postanıza gönderilen 6 haneli kodu girin.
+                {t('verify_subtitle', lang)}
             </p>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -109,19 +111,19 @@ export default function VerifyEmailPage() {
                     className="btn btn-primary btn-lg"
                     style={{ width: '100%', opacity: (loading || otp.length < 6) ? 0.7 : 1 }}
                 >
-                    {loading ? 'Doğrulanıyor...' : 'Doğrula'}
+                    {loading ? t('verify_loading', lang) : t('verify_submit', lang)}
                 </button>
             </form>
 
             <div style={{ marginTop: '20px' }}>
                 {resent ? (
-                    <p style={{ color: '#22C55E', fontSize: '13px' }}>Kod tekrar gönderildi.</p>
+                    <p style={{ color: '#22C55E', fontSize: '13px' }}>{t('verify_resent', lang)}</p>
                 ) : (
                     <button
                         onClick={handleResend}
                         style={{ background: 'none', border: 'none', color: 'var(--mist)', fontSize: '13px', cursor: 'pointer' }}
                     >
-                        Kodu almadınız mı? <span style={{ color: 'var(--copper)' }}>Tekrar gönder</span>
+                        {t('verify_resend_q', lang)} <span style={{ color: 'var(--copper)' }}>{t('verify_resend_link', lang)}</span>
                     </button>
                 )}
             </div>

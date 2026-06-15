@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
+import { useLang, t } from '@/lib/i18n';
 
 export const runtime = 'edge';
 
@@ -24,6 +25,7 @@ const labelStyle: React.CSSProperties = {
 
 const ScheduleMessage: React.FC = () => {
     const params = useParams<{ id: string }>();
+    const [lang] = useLang();
     const [message, setMessage] = useState<Message | null>(null);
     const [scheduleTime, setScheduleTime] = useState('');
     const [loading, setLoading] = useState(false);
@@ -63,7 +65,7 @@ const ScheduleMessage: React.FC = () => {
     if (!message) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px' }}>
-                <p style={{ color: 'var(--mist)', fontSize: '14px' }}>Yükleniyor...</p>
+                <p style={{ color: 'var(--mist)', fontSize: '14px' }}>{t('common_loading', lang)}</p>
             </div>
         );
     }
@@ -79,7 +81,7 @@ const ScheduleMessage: React.FC = () => {
                     ←
                 </button>
                 <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cream)', letterSpacing: '-0.01em', margin: 0 }}>
-                    Mesajı Zamanla
+                    {t('sched_title', lang)}
                 </h1>
             </div>
 
@@ -97,14 +99,14 @@ const ScheduleMessage: React.FC = () => {
                     borderRadius: 'var(--radius-input)',
                     marginBottom: '20px',
                 }}>
-                    <p style={{ color: 'var(--mist)', fontSize: '12px', margin: '0 0 4px' }}>Mesaj</p>
+                    <p style={{ color: 'var(--mist)', fontSize: '12px', margin: '0 0 4px' }}>{t('sched_message_label', lang)}</p>
                     <p style={{ color: 'var(--cream)', fontWeight: 600, fontSize: '14px', margin: 0 }}>{message.title}</p>
                 </div>
 
                 {/* Tarih/saat seçici */}
                 <div style={{ marginBottom: '20px' }}>
                     <label style={labelStyle}>
-                        Gönderilecek Tarih ve Saat
+                        {t('sched_datetime_label', lang)}
                     </label>
                     <input
                         type="datetime-local"
@@ -130,7 +132,7 @@ const ScheduleMessage: React.FC = () => {
                     className="btn btn-primary btn-lg"
                     style={{ width: '100%', opacity: loading ? 0.7 : 1 }}
                 >
-                    {loading ? 'Zamanlanıyor...' : 'Zamanla'}
+                    {loading ? t('sched_loading', lang) : t('sched_btn', lang)}
                 </button>
             </div>
         </div>
