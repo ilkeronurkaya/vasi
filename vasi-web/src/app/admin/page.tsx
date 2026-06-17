@@ -86,7 +86,7 @@ const AdminOverviewPage = () => {
         setStats(statsResponse)
         setPlans(plansResponse.plans)
       } catch (err) {
-        setError(true)
+        queueMicrotask(() => setError(true))
       } finally {
         setLoading(false)
       }
@@ -133,13 +133,13 @@ const AdminOverviewPage = () => {
         padding: '24px', marginTop: '32px',
         display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap',
       }}>
-        <button className="btn btn-primary" onClick={runDue} disabled={runDueBusy}>
+        <button className="btn btn-primary btn-md" onClick={runDue} disabled={runDueBusy}>
           {runDueBusy ? t.teslimat_calisiyor : t.teslimat_calistir}
         </button>
-        <div>
+        <div className="flex-1 min-w-0">
           {runDueResult
-            ? <span style={{ fontSize: '14px', color: 'var(--copper)', fontWeight: 600 }}>{runDueResult}</span>
-            : <span style={{ fontSize: '13px', color: 'var(--mist)' }}>{t.teslimat_aciklama}</span>}
+            ? <span className="text-sm" style={{ color: 'var(--copper)', fontWeight: 600 }}>{runDueResult}</span>
+            : <span className="text-xs" style={{ color: 'var(--mist)' }}>{t.teslimat_aciklama}</span>}
         </div>
       </div>
 

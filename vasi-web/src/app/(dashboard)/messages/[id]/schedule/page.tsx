@@ -55,8 +55,9 @@ const ScheduleMessage: React.FC = () => {
                 body: JSON.stringify({ scheduled_at: new Date(scheduleTime).toISOString() }),
             });
             router.push(`/messages/${params.id}`);
-        } catch (err: any) {
-            setError(err?.data?.error ?? 'Zamanlama başarısız. Tekrar deneyin.');
+        } catch (err: unknown) {
+            const msg = (err as { data?: { error?: string } })?.data?.error ?? 'Zamanlama başarısız. Tekrar deneyin.';
+            setError(msg);
         } finally {
             setLoading(false);
         }

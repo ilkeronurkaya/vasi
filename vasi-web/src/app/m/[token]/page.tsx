@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { VasiLogo } from '@/components/VasiLogo';
 
 export const runtime = 'edge';
@@ -188,7 +189,7 @@ const MessageViewPage: React.FC = () => {
                             : '6 haneli kodu e-posta adresine gönderdik.'}
                     </p>
                     <input
-                        type="text"
+                        type="password"
                         inputMode="numeric"
                         autoComplete="one-time-code"
                         maxLength={6}
@@ -266,9 +267,9 @@ const MessageViewPage: React.FC = () => {
                                 ? `Teslim: ${new Date(message.delivered_at).toLocaleDateString('tr-TR', { dateStyle: 'long' })}`
                                 : ''}
                         </span>
-                        <a href="/" style={{ color: 'var(--copper)', fontSize: '12px', textDecoration: 'none' }}>
+                        <Link href="/" style={{ color: 'var(--copper)', fontSize: '12px', textDecoration: 'none' }}>
                             Sen de geleceğe mesaj bırak →
-                        </a>
+                        </Link>
                     </div>
                 </div>
             )}

@@ -66,8 +66,9 @@ const MessageDetail: React.FC = () => {
             setRecipients(prev => [...prev, { id: created.id ?? '', full_name: newName, email: newEmail }]);
             setNewName('');
             setNewEmail('');
-        } catch (err: any) {
-            setAddError(err?.data?.error ?? 'Alıcı eklenemedi.');
+        } catch (err: unknown) {
+            const msg = (err as { data?: { error?: string } })?.data?.error ?? 'Alıcı eklenemedi.';
+            setAddError(msg);
         } finally {
             setAddLoading(false);
         }

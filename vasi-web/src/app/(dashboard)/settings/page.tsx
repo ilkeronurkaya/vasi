@@ -24,6 +24,15 @@ interface MeData {
 
 type Section = 'profile' | 'email' | 'password'
 
+const PW_RULES = (pw: string) => ({
+  len: pw.length >= 8,
+  lower: /[a-z]/.test(pw),
+  upper: /[A-Z]/.test(pw),
+  digit: /[0-9]/.test(pw),
+  alnum: pw.length > 0 && /^[A-Za-z0-9]+$/.test(pw),
+})
+const PW_OK = (pw: string) => Object.values(PW_RULES(pw)).every(Boolean)
+
 const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--mist)', marginBottom: '6px' }
 const inputStyle = { width: '100%', minHeight: '44px', padding: '10px 14px', background: 'var(--obsidian)', border: '1px solid var(--horizon)', borderRadius: 'var(--radius-input)', color: 'var(--cream)', fontSize: '15px', outline: 'none', transition: 'border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease)', boxSizing: 'border-box' as const }
 const cardStyle = { background: 'var(--midnight)', border: 'var(--border-subtle)', borderRadius: 'var(--radius-card)', boxShadow: 'var(--shadow-card)', padding: '24px' }
@@ -82,6 +91,10 @@ export default function SettingsPage() {
 
     const handleRequestOtp = async (section: Section) => {
         resetSectionMessage(section)
+        if (section === 'password' && !PW_OK(newPassword)) {
+            setSectionMessages(prev => ({ ...prev, [section]: { type: 'error', text: 'Şifre kuralları sağlanmadı.' } }))
+            return
+        }
         try {
             await apiFetch('/api/v1/me/profile/request-otp', { method: 'POST' })
             setSectionStates(prev => ({
@@ -129,6 +142,14 @@ export default function SettingsPage() {
                 setSectionMessages(prev => ({ ...prev, [section]: { type: 'error', text: 'Şifre en az 8 hane olmalı' } }))
                 return
             }
+            if (!PW_OK(newPassword)) {
+                setSectionMessages(prev => ({ ...prev, [section]: { type: 'error', text: 'Şifre kuralları sağlanmadı.' } }))
+                return
+            }
+            if (!currentPassword) {
+                setSectionMessages(prev => ({ ...prev, [section]: { type: 'error', text: 'Mevcut şifre zorunlu' } }))
+                return
+            }
             body.current_password = currentPassword
             body.new_password = newPassword
         }
@@ -170,7 +191,7 @@ export default function SettingsPage() {
         return <div style={{ color: 'var(--mist)', fontSize: '14px' }}>{t('common_loading', lang)}</div>
     }
 
-    const renderSection = (section: Section, title: string, description: string, fields: React.ReactNode) => {
+    const renderSection = (section: Section, title: string, description: string, fields: React.ReactNode, { buttonDisabled }: { buttonDisabled?: boolean } = {}) => {
         const state = sectionStates[section]
         const msg = sectionMessages[section]
 
@@ -198,6 +219,7 @@ export default function SettingsPage() {
                         <button
                             className="btn btn-primary btn-md"
                             style={{ marginTop: '16px' }}
+                            disabled={buttonDisabled}
                             onClick={() => handleRequestOtp(section)}
                         >
                             {t('settings_save', lang)}
@@ -207,7 +229,8 @@ export default function SettingsPage() {
                     <>
                         <label style={labelStyle}>{t('settings_otp_label', lang)}</label>
                         <input
-                            type="text"
+                            type="password"
+                            inputMode="numeric"
                             value={state.otpValue}
                             onChange={(e) => setSectionStates(prev => ({
                                 ...prev,
@@ -307,7 +330,18 @@ export default function SettingsPage() {
 
                     <label style={{ ...labelStyle, marginTop: '16px' }}>{t('settings_label_new_password', lang)}</label>
                     <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={inputStyle} placeholder="En az 8 karakter" />
-                </>
+                    {newPassword && (
+                        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {Object.entries(PW_RULES(newPassword)).map(([key, ok]) => (
+                                <span key={key} style={{ fontSize: '12px', color: ok ? '#4bb543' : 'var(--mist)' }}>
+                                    {ok ? '✓' : '✗'} {' '}
+                                    {key === 'len' ? '≥8 karakter' : key === 'lower' ? 'en az 1 küçük harf' : key === 'upper' ? 'en az 1 büyük harf' : key === 'digit' ? 'en az 1 rakam' : 'yalnız harf+rakam'}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </>,
+                { buttonDisabled: !PW_OK(newPassword) || !currentPassword }
             )}
 
             <button className="btn btn-secondary btn-sm" style={{ marginTop: '32px' }} onClick={() => router.back()}>

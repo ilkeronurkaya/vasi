@@ -78,12 +78,15 @@ const UsersPage: React.FC = () => {
     const LIMIT = 20;
 
     const load = (pageNum: number, query: string) => {
-        setLoading(true);
-        setError('');
+        queueMicrotask(() => setLoading(true));
+        queueMicrotask(() => setError(''));
         adminFetch(`/api/v1/admin/users?page=${pageNum}&limit=${LIMIT}&q=${encodeURIComponent(query)}`)
-            .then(data => { setUsers(data.users ?? []); setTotal(data.total ?? 0); })
-            .catch(() => setError('Kullanıcılar alınamadı'))
-            .finally(() => setLoading(false));
+            .then(data => {
+                queueMicrotask(() => setUsers(data.users ?? []));
+                queueMicrotask(() => setTotal(data.total ?? 0));
+            })
+            .catch(() => queueMicrotask(() => setError('Kullanıcılar alınamadı')))
+            .finally(() => queueMicrotask(() => setLoading(false)));
     };
 
     useEffect(() => { load(1, ''); }, []);

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
 import { useLang, t } from '@/lib/i18n';
 
@@ -53,8 +54,8 @@ export default function RegisterPage() {
             // Doğrulama ekranı e-postayı API'ye göndermek için saklar
             try { localStorage.setItem('verifyEmail', email); } catch {}
             router.push('/verify-email');
-        } catch (err: any) {
-            setError(err?.data?.error ?? t('register_error_default', lang));
+        } catch (err: unknown) {
+            setError((err as { data?: { error?: string }; message?: string })?.data?.error ?? (err as { message?: string })?.message ?? t('register_error_default', lang));
         } finally {
             setLoading(false);
         }
@@ -141,9 +142,9 @@ export default function RegisterPage() {
             </form>
 
             <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                <a href="/login" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none', fontWeight: 700 }}>
+                <Link href="/login" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none', fontWeight: 700 }}>
                     {t('register_login_link', lang)}
-                </a>
+                </Link>
             </div>
         </div>
     );

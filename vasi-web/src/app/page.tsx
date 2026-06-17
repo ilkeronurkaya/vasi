@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 
 export const runtime = 'edge'
 
@@ -379,7 +380,7 @@ export default function LandingPage() {
     const saved = localStorage.getItem('vasi_lang')
     const browser = (navigator.language || 'tr').split('-')[0]
     const detected = saved || (LANGS[browser] ? browser : 'tr')
-    if (detected !== 'tr') setLang(detected)
+    if (detected !== 'tr') queueMicrotask(() => setLang(detected))
   }, [])
   const [menuOpen, setMenuOpen] = useState(false)
   const langRef = useRef<HTMLDivElement>(null)
@@ -456,8 +457,8 @@ export default function LandingPage() {
                 </div>
               )}
             </div>
-            <a href="/login" className="btn btn-ghost btn-md">{t.nav_login}</a>
-            <a href="/register" className="btn btn-primary btn-md">{t.nav_cta}</a>
+            <Link href="/login" className="btn btn-ghost btn-md">{t.nav_login}</Link>
+            <Link href="/register" className="btn btn-primary btn-md">{t.nav_cta}</Link>
           </div>
         </div>
       </nav>
@@ -478,7 +479,7 @@ export default function LandingPage() {
           <p className="hero-sub">{t.hero_sub}</p>
 
           <div className="hero-actions">
-            <a href="/register" className="btn btn-primary btn-lg">{t.hero_cta1}</a>
+            <Link href="/register" className="btn btn-primary btn-lg">{t.hero_cta1}</Link>
             <a href="#how" className="btn btn-secondary btn-lg">{t.hero_cta2}</a>
           </div>
 
@@ -662,7 +663,7 @@ export default function LandingPage() {
             <h2 className="cta-title">{t.cta_title}</h2>
             <p className="cta-sub">{t.cta_sub}</p>
             <div className="cta-actions">
-              <a href="/register" className="btn btn-primary btn-lg">{t.cta_btn1}</a>
+              <Link href="/register" className="btn btn-primary btn-lg">{t.cta_btn1}</Link>
               <a href="#how" className="btn btn-ghost btn-lg">{t.cta_btn2}</a>
             </div>
           </div>

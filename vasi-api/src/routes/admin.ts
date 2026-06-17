@@ -39,7 +39,7 @@ admin.post('/auth/login', async (c) => {
   // Token DÖNDERMEE — OTP iki adımlı doğrulama
   const otp = generateOTP()
   const otpHash = await hashOTP(otp)
-  await EmailVerificationsDB.create(c.env, user.id, otpHash)
+  await EmailVerificationsDB.create(c.env, user.id, otpHash, 'admin_login')
   try {
     await DeliveryService.sendOtpEmail(c.env, { name: user.first_name as string, email: user.email }, otp)
   } catch (error) {
@@ -64,7 +64,7 @@ admin.post('/auth/verify-otp', async (c) => {
   }
 
   // Aktif doğrulama kontrolü
-  const verification = await EmailVerificationsDB.findActiveByUser(c.env, user.id)
+  const verification = await EmailVerificationsDB.findActiveByUser(c.env, user.id, 'admin_login')
   if (!verification) {
     return c.json({ error: 'Geçersiz veya süresi dolmuş doğrulama kodu', code: 'INVALID_OTP' }, 401)
   }

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { apiFetch } from '@/lib/api';
 import { useLang, t } from '@/lib/i18n';
 
@@ -50,8 +51,9 @@ export default function LoginPage() {
             });
             localStorage.setItem('authToken', response.accessToken);
             router.push('/dashboard');
-        } catch (err: any) {
-            setError(err?.data?.error ?? t('login_error_default', lang));
+        } catch (err: unknown) {
+            const msg = (err as { data?: { error?: string }; message?: string })?.data?.error ?? (err as { message?: string })?.message;
+            setError(msg ?? t('login_error_default', lang));
         } finally {
             setLoading(false);
         }
@@ -110,9 +112,9 @@ export default function LoginPage() {
                 <a href="#" style={{ fontSize: '13px', color: 'var(--mist)', textDecoration: 'none' }}>
                     {t('login_forgot', lang)}
                 </a>
-                <a href="/register" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none', fontWeight: 700 }}>
+                <Link href="/register" style={{ fontSize: '13px', color: 'var(--copper)', textDecoration: 'none', fontWeight: 700 }}>
                     {t('login_register_link', lang)}
-                </a>
+                </Link>
             </div>
         </div>
     );

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { VasiLogo } from '@/components/VasiLogo';
 
 export const runtime = 'edge';
@@ -25,7 +26,7 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 width: '100%',
                 maxWidth: '440px',
             }}>
-                <a href="/" style={{
+                <Link href="/" style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -40,17 +41,17 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         color: 'var(--cream)',
                         letterSpacing: '-0.3px',
                     }}>Vasi</span>
-                </a>
+                </Link>
                 {children}
             </div>
-            <a href="/" style={{
+            <Link href="/" style={{
                 marginTop: '20px',
                 color: 'var(--mist)',
                 fontSize: '13px',
                 textDecoration: 'none',
             }}>
                 ← Ana sayfaya dön
-            </a>
+            </Link>
         </div>
     );
 };

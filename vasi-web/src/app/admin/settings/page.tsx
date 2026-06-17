@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/api';
 
 export const runtime = 'edge';
@@ -44,27 +44,28 @@ const SettingsPage: React.FC = () => {
     const [error, setError] = useState('');
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
 
-    const fetchPlans = async () => {
+    const fetchPlans = useCallback(async () => {
         try {
             const data = await adminFetch('/api/v1/admin/plans');
-            setPlans(data.plans ?? []);
+            queueMicrotask(() => setPlans(data.plans ?? []));
         } catch {
-            setError('Paketler alınamadı');
+            queueMicrotask(() => setError('Paketler alınamadı'));
         } finally {
-            setLoading(false);
+            queueMicrotask(() => setLoading(false));
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchPlans();
-    }, []);
+    }, [fetchPlans]);
 
     const deletePlan = async (id: string) => {
         try {
             await adminFetch(`/api/v1/admin/plans/${id}`, { method: 'DELETE' });
             await fetchPlans();
-        } catch (e: any) {
-             if (e.status === 409) {
+        } catch (e: unknown) {
+             const status = (e as { status?: number }).status;
+             if (status === 409) {
                  alert('Bu paketi kullanan kullanıcı var, silinemez.');
              } else {
                  setError('Paket silinemedi');
@@ -124,9 +125,12 @@ const SettingsPage: React.FC = () => {
                         <h2 style={{ color: 'var(--cream)' }}>{editingPlan.id === 'new' ? 'Yeni Paket' : 'Paketi Düzenle'}</h2>
                         <input style={inputStyle} placeholder="Slug (örn: pro)" value={editingPlan.slug} onChange={e => setEditingPlan({ ...editingPlan, slug: e.target.value })} />
                         <input style={inputStyle} placeholder="İsim (örn: Pro)" value={editingPlan.name} onChange={e => setEditingPlan({ ...editingPlan, name: e.target.value })} />
-                        <input type="number" style={inputStyle} placeholder="Fiyat (₺)" value={editingPlan.price_monthly} onChange={e => setEditingPlan({ ...editingPlan, price_monthly: parseInt(e.target.value) })} />
-                        <input type="number" style={inputStyle} placeholder="Mesaj Limiti" value={editingPlan.message_limit} onChange={e => setEditingPlan({ ...editingPlan, message_limit: parseInt(e.target.value) })} />
-                        <input type="number" style={inputStyle} placeholder="Alıcı Limiti" value={editingPlan.recipient_limit} onChange={e => setEditingPlan({ ...editingPlan, recipient_limit: parseInt(e.target.value) })} />
+                        <label style={{ color: 'var(--mist)', fontSize: '13px', marginBottom: '4px', display: 'block' }}>Fiyat (₺)</label>
+                        <input type="number" style={inputStyle} placeholder="Fiyat (₺)" value={editingPlan.price_monthly === 0 ? '' : editingPlan.price_monthly} onChange={e => setEditingPlan({ ...editingPlan, price_monthly: parseInt(e.target.value) || 0 })} />
+                        <label style={{ color: 'var(--mist)', fontSize: '13px', marginBottom: '4px', display: 'block' }}>Mesaj Limiti</label>
+                        <input type="number" style={inputStyle} placeholder="Mesaj Limiti" value={editingPlan.message_limit === 0 ? '' : editingPlan.message_limit} onChange={e => setEditingPlan({ ...editingPlan, message_limit: parseInt(e.target.value) || 0 })} />
+                        <label style={{ color: 'var(--mist)', fontSize: '13px', marginBottom: '4px', display: 'block' }}>Alıcı Limiti</label>
+                        <input type="number" style={inputStyle} placeholder="Alıcı Limiti" value={editingPlan.recipient_limit === 0 ? '' : editingPlan.recipient_limit} onChange={e => setEditingPlan({ ...editingPlan, recipient_limit: parseInt(e.target.value) || 0 })} />
                         <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                             <button className="btn btn-primary btn-md" onClick={() => savePlan(editingPlan)}>Kaydet</button>
                             <button className="btn btn-ghost btn-md" onClick={() => setEditingPlan(null)}>İptal</button>

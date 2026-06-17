@@ -46,8 +46,8 @@ export default function VerifyEmailPage() {
             });
             try { localStorage.removeItem('verifyEmail'); } catch {}
             router.push('/login');
-        } catch (err: any) {
-            setError(err?.data?.error ?? 'Kod hatalı veya süresi dolmuş.');
+        } catch (err: unknown) {
+            setError((err as { data?: { error?: string }; message?: string })?.data?.error ?? (err as { message?: string })?.message ?? 'Kod hatalı veya süresi dolmuş.');
         } finally {
             setLoading(false);
         }
@@ -89,7 +89,8 @@ export default function VerifyEmailPage() {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                     <input
-                        type="text"
+                        type="password"
+                        inputMode="numeric"
                         value={otp}
                         onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                         onFocus={() => setFocused(true)}

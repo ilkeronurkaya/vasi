@@ -16,6 +16,15 @@ export async function hashPassword(password: string): Promise<string> {
   return `pbkdf2:sha256:100000:${saltHex}:${hashHex}`;
 }
 
+export function isValidPassword(pw: string): boolean {
+  return typeof pw === 'string'
+    && /^[A-Za-z0-9]+$/.test(pw)
+    && pw.length >= 8
+    && /[a-z]/.test(pw)
+    && /[A-Z]/.test(pw)
+    && /[0-9]/.test(pw)
+}
+
 export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
   const [algorithm, hashFunction, iterationsStr, saltHex, hashHex] = storedHash.split(':');
   if (algorithm !== 'pbkdf2' || hashFunction !== 'sha256') throw new Error('Invalid hash format');

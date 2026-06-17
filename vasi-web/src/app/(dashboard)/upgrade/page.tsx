@@ -6,24 +6,25 @@ import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
 import { useLang, t } from '@/lib/i18n'
 
+interface Plan {
+    slug: string
+    name: string
+    price_monthly: number
+    message_limit: number
+    recipient_limit: number
+    is_active: boolean
+}
+
 export default function UpgradePage() {
   const router = useRouter()
   const [lang] = useLang()
   const [currentPlan, setCurrentPlan] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [plans, setPlans] = useState<any[]>([])
+  const [plans, setPlans] = useState<Plan[]>([])
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Query'i client-only oku (useSearchParams Next 15'te Suspense ister; window ile gerek kalmaz)
-    const payment = new URLSearchParams(window.location.search).get('payment')
-    if (payment === 'success') {
-      setMessage('Ödeme başarılı, planın artık Premium.')
-    } else if (payment === 'failed') {
-      setError('Ödeme tamamlanamadı, tekrar deneyebilirsin.')
-    }
-
     Promise.all([
       apiFetch('/api/v1/me'),
       apiFetch('/api/v1/public/pricing')
@@ -32,6 +33,12 @@ export default function UpgradePage() {
         setCurrentPlan(meData.plan)
         setPlans(pricingData.plans)
         setLoading(false)
+        const payment = new URLSearchParams(window.location.search).get('payment')
+        if (payment === 'success') {
+          setMessage('Ödeme başarılı, planın artık Premium.')
+        } else if (payment === 'failed') {
+          setError('Ödeme tamamlanamadı, tekrar deneyebilirsin.')
+        }
       })
       .catch(error => {
         console.error('Error fetching data:', error)
@@ -41,10 +48,10 @@ export default function UpgradePage() {
 
   const handleUpgrade = async (plan_slug: string) => {
     try {
-        const response = await apiFetch('/api/v1/payment/checkout/init', { method:'POST', body: JSON.stringify({ plan_slug }) })
-        window.location.href = response.paymentPageUrl
-    } catch (e: any) {
-        setError('Ödeme başlatılamadı: ' + (e.message || 'Hata'))
+        const { paymentPageUrl } = await apiFetch('/api/v1/payment/checkout/init', { method:'POST', body: JSON.stringify({ plan_slug }) })
+        window.location.assign(paymentPageUrl)
+    } catch (e: unknown) {
+        setError('Ödeme başlatılamadı: ' + ((e as Error).message || 'Hata'))
     }
   }
 
@@ -67,7 +74,7 @@ export default function UpgradePage() {
       <h1 style={{ fontSize: '22px', fontWeight: '700', letterSpacing: '-0.01em', color: 'var(--cream)' }}>{t('upgrade_title', lang)}</h1>
       <p style={{ fontSize: '15px', color: 'var(--mist)', marginBottom: '32px' }}>{t('upgrade_subtitle', lang)}</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '32px' }}>
-        {plans.map((plan: any) => (
+        {plans.map((plan: Plan) => (
           <div key={plan.slug} style={{
             ...cardStyle,
             border: currentPlan === plan.slug ? '1px solid var(--copper)' : cardStyle.border,

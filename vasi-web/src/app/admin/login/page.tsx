@@ -95,7 +95,7 @@ export default function AdminLogin() {
                             E-posta adresinize gönderilen 6 haneli OTP kodunu girin.
                         </p>
                         <label style={labelStyle}>OTP Kodu</label>
-                        <input type="text" value={otpValue} onChange={(e) => setOtpValue(e.target.value)} style={inputStyle} required maxLength={10} autoFocus />
+                        <input type="password" inputMode="numeric" value={otpValue} onChange={(e) => setOtpValue(e.target.value)} style={inputStyle} required maxLength={10} autoFocus />
                         <button type="submit" style={{ ...buttonStyle, marginTop: '24px', width: '100%' }}>
                             {loading ? 'Doğrulanıyor...' : 'Doğrula'}
                         </button>

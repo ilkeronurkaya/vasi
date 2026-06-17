@@ -4,7 +4,7 @@ import { authMiddleware } from '../middleware/auth'
 import { findById, findByEmail, updateProfile, updateEmail, updatePassword } from '../db/users.db'
 import * as EmailVerificationsDB from '../db/email-verifications.db'
 import { generateOTP, hashOTP } from '../lib/otp'
-import { verifyPassword, hashPassword } from '../lib/password'
+import { verifyPassword, hashPassword, isValidPassword } from '../lib/password'
 import { DeliveryService } from '../services/delivery.service'
 import type { Env } from '../types'
 
@@ -53,7 +53,7 @@ me.post('/profile/request-otp', async (c) => {
 
   const otp = generateOTP()
   const otpHash = await hashOTP(otp)
-  await EmailVerificationsDB.create(c.env, userId, otpHash)
+  await EmailVerificationsDB.create(c.env, userId, otpHash, 'profile')
 
   try {
     await DeliveryService.sendOtpEmail(c.env, { name: (user.first_name as string) || '', email: user.email as string }, otp)
@@ -81,7 +81,7 @@ me.patch('/profile', async (c) => {
     return c.json({ error: 'User not found' }, 404)
   }
 
-  const verification = await EmailVerificationsDB.findActiveByUser(c.env, userId)
+  const verification = await EmailVerificationsDB.findActiveByUser(c.env, userId, 'profile')
   if (!verification) {
     return c.json({ error: 'Geçersiz veya süresi dolmuş doğrulama kodu', code: 'INVALID_OTP' }, 401)
   }
@@ -89,6 +89,20 @@ me.patch('/profile', async (c) => {
   const otpHash = await hashOTP(otp)
   if (verification.code_hash !== otpHash) {
     return c.json({ error: 'Geçersiz doğrulama kodu', code: 'INVALID_OTP' }, 401)
+  }
+
+  // B6: şifre doğrulaması OTP TÜKETİLMEDEN ÖNCE
+  if (new_password !== undefined && new_password !== '') {
+    if (typeof new_password !== 'string' || !isValidPassword(new_password as string)) {
+      return c.json({ error: 'Şifre en az 8 hane; en az 1 küçük, 1 büyük harf ve 1 rakam; özel karakter içeremez.', code: 'WEAK_PASSWORD' }, 400)
+    }
+    if (!current_password || typeof current_password !== 'string') {
+      return c.json({ error: 'Mevcut şifre zorunlu', code: 'VALIDATION_ERROR' }, 400)
+    }
+    const ok = await verifyPassword(current_password as string, user.password_hash as string)
+    if (!ok) {
+      return c.json({ error: 'Geçersiz mevcut şifre', code: 'INVALID_PASSWORD' }, 401)
+    }
   }
 
   // OTP kullanıldı işaretle
@@ -115,7 +129,7 @@ me.patch('/profile', async (c) => {
     // Yeni e-postaya doğrulama OTP'si gönder
     const newOtp = generateOTP()
     const newOtpHash = await hashOTP(newOtp)
-    await EmailVerificationsDB.create(c.env, userId, newOtpHash)
+    await EmailVerificationsDB.create(c.env, userId, newOtpHash, 'email_verify')
     try {
       await DeliveryService.sendOtpEmail(c.env, { name: (user.first_name as string) || '', email: newEmail }, newOtp)
     } catch (error) {
@@ -127,16 +141,6 @@ me.patch('/profile', async (c) => {
 
   // Şifre değişikliği
   if (new_password && typeof new_password === 'string') {
-    if (!current_password || typeof current_password !== 'string') {
-      return c.json({ error: 'Mevcut şifre zorunlu', code: 'VALIDATION_ERROR' }, 400)
-    }
-    const valid = await verifyPassword(current_password, user.password_hash as string)
-    if (!valid) {
-      return c.json({ error: 'Geçersiz mevcut şifre', code: 'INVALID_PASSWORD' }, 401)
-    }
-    if (new_password.length < 8) {
-      return c.json({ error: 'Şifre en az 8 hane olmalı', code: 'VALIDATION_ERROR' }, 400)
-    }
     const pwHash = await hashPassword(new_password)
     await updatePassword(c.env, userId, pwHash)
   }

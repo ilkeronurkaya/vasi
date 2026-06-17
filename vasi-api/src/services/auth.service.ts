@@ -21,7 +21,7 @@ export async function register(env: Env, userData: Record<string, string>): Prom
   const userId = await UsersDB.create(env, { email, password_hash, first_name, last_name, phone, status: 'active' })
   const otp = generateOTP()
   const otpHash = await hashOTP(otp)
-  await EmailVerificationsDB.create(env, userId as string, otpHash)
+  await EmailVerificationsDB.create(env, userId as string, otpHash, 'email_verify')
 
   // Doğrulama kodunu e-postala; gönderim başarısızsa kayıt YİNE başarılı —
   // lokal/test ortamında kod dev-api.log'dan okunabilir (Resend test modu
@@ -54,7 +54,7 @@ export async function verifyEmail(env: Env, email: string, otp: string): Promise
   const user = await UsersDB.findByEmail(env, email) as Record<string, unknown> | null
   if (!user) return { error: 'Kullanıcı bulunamadı', code: 'USER_NOT_FOUND', status: 404 }
 
-  const verification = await EmailVerificationsDB.findActiveByUser(env, user.id as string) as Record<string, unknown> | null
+  const verification = await EmailVerificationsDB.findActiveByUser(env, user.id as string, 'email_verify') as Record<string, unknown> | null
   if (!verification) return { error: 'Geçersiz veya kullanılmış doğrulama kodu', code: 'INVALID_OTP', status: 401 }
 
   const otpHash = await hashOTP(otp)
