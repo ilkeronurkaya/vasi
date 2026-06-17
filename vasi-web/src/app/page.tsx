@@ -690,7 +690,7 @@ export default function LandingPage() {
                 <a href="#">{t.fl1}</a>
                 <a href="#">{t.fl2}</a>
                 <a href="#">{t.fl3}</a>
-                <a href="#">{t.fl4}</a>
+                <Link href="/cerez-politikasi">{t.fl4}</Link>
               </div>
             </div>
           </div>

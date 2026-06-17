@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { CookieConsent } from '@/components/CookieConsent';
 
 const font = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
-      <body className={font.variable}>{children}</body>
+      <body className={font.variable}>{children}<CookieConsent /></body>
     </html>
   );
 }
