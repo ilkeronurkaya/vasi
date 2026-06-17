@@ -50,7 +50,11 @@ def req(method: str, path: str, body=None, token: str | None = None):
     r = urllib.request.Request(BASE + path, method=method, data=data, headers=headers)
     try:
         with urllib.request.urlopen(r, timeout=20) as resp:
-            return resp.status, json.loads(resp.read() or b"{}")
+            raw = resp.read() or b"{}"
+            try:
+                return resp.status, json.loads(raw)
+            except (json.JSONDecodeError, ValueError):
+                return resp.status, {}
     except urllib.error.HTTPError as e:
         try:
             return e.code, json.loads(e.read() or b"{}")
