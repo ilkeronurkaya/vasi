@@ -1,0 +1,11 @@
+Vasi projesine devam. Beyin takımı: sen (Claude) + ben (iko) — strateji, roadmap, sprint tasarımı, diff incelemesi, mimari. Uygulayıcı: OpenHands + yerel Qwen3.6-35B-A3B (LM Studio), YALNIZCA kod+test yazar (klonda); branch/commit/push BENDE.
+
+Proje: ~/Projects/vasi — erişim iste, önce HANDOFF.md'yi oku, durumu `git log --oneline -8 --all` ile çapraz doğrula (Read bayat olabilir).
+
+Durum: S1–S27 KAPALI. S27 (güvenlik: B5 cross-context OTP + B6 şifre + B7 OTP maske + B8 run-due + B9/B2 plan formu + B3 lint) `sprint-27-security` dalında commit/push'lu (main'e merge ettiysem main'de — git ile doğrula). Sıradaki: S28 — stabilite & temizlik. Tasarım ve promtlar HAZIR: SPRINT_28_STABILITY.md + AGENT_PROMPT_SPRINT_28.md.
+
+İlk iş: önce ajan klonunu senkronla — `cd ~/Projects/vasi-agent && git fetch origin && git checkout main && git reset --hard origin/main` (S27'de klon main'in gerisinde kalıp working tree karışmıştı; bir daha olmasın). Sonra SPRINT_28_STABILITY.md + AGENT_PROMPT_SPRINT_28.md'yi oku, B4 ile başlayalım — PROMT 1'i (smoke :3000 JSON toleransı) gözden geçir, ben OpenHands'te koşacağım (ya da küçük olduğu için doğrudan beraber yapabiliriz), sen diff'i doğrulayacaksın. Sıra: B4 → B1 → B11 → B10.
+
+S28 kapsamı: B4 (P1 — `api_smoke.py` req() 302→:3000'de HTML'i json.loads edip çöküyor → non-JSON tolere et), B1 (P2 — premium.test@vasi.app seed hash'i sahte → gerçek PBKDF2 + UPDATE migration 0019), B11 (P2 — `/public/pricing` cache max-age 300→30, yeni plan gecikmesin), B10 (P1, EN HACİMLİ — landing fiyat kartları sabit kodlu + yanlış API alanı okuyor → `page.tsx`'i /upgrade gibi `d.plans`'ten TAM DİNAMİK yap, 7 dilli i18n; diff dikkatli incelenir, model zorlanırsa iko+Claude yazar). Hepsi sıfır maliyet. S28 dışı (ertelendi): B6d OTP SMS (NetGSM = maliyet), İyzico gerçek sandbox (merchant hesabı).
+
+Kurallar: ajan asıl repoya DOKUNMAZ, git yapmaz, task_tracker KULLANMAZ; raporuna GÜVENME (git diff ile doğrula); B4 sonrası smoke'u `:3000` AÇIK ve KAPALI iki senaryoda BEN koşarım; B1 sonrası migration apply + Chrome'dan premium giriş; her mini-promt için YENİ OpenHands konuşması; LM Studio context 65536 + Condenser AÇIK; terminal komut örneklerine yorum (#) koyma; push hep benden; aktarımda yalnız o sprintin DOKUNDUĞU dosyaları taşı (S27 dersi). Sprint sonu kapanış ritüeli zorunlu.

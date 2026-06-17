@@ -9,11 +9,7 @@
 
 | ID | Şiddet | Açıklama | Bulundu | Hedef sprint | Durum |
 |----|--------|----------|---------|--------------|-------|
-| B1 | P2 | `premium.test@vasi.app` seed kullanıcısının şifre hash'i sahte → onunla **giriş yapılamıyor** (panelde sadece görünür). Giriş gerekirse `test@vasi.app`'inki gibi gerçek PBKDF2 hash koy. | S20 | S28 | Açık |
-| B4 | P1 | Smoke, payment callback'i başarı 302'siyle `APP_URL`=:3000'e yönlenince, **3000'de bir şey çalışıyorsa** HTML'i JSON sanıp `JSONDecodeError` ile TÜM smoke'u çökertiyor (web kapalıyken URLError yutuluyordu). `req()` redirect'i izlememeli ya da non-JSON'u tolere etmeli. Geçici workaround: smoke öncesi `:3000`'i kapat. | S24 (review) | S28 | Açık |
 | B6d | P1 | **OTP SMS kanalı (B6'nın ertelenen parçası).** Şifre kuralları sağlanınca OTP'nin e-posta yerine **SMS** ile gelmesi (NetGSM). S27'de a–c (politika + canlı kural + OTP'den önce doğrulama) kapandı; d (SMS) **NetGSM hesabı + mesaj başına maliyet** gerektirdiği için ertelendi. | (06-15) | ileride (NetGSM hazır olunca) | Açık |
-| B10 | P1 | **Landing fiyat bölümü DB'den gelmiyor, admin'le tutarsız.** `page.tsx` fiyat kartları **sabit kodlu** (yalnız Free+Personal, çok-dilli küratör maddeler) ve API yanıtının yanlış alanını okuyor: `setPricing(d.pricing ?? {})` ama `/public/pricing` artık `{plans:[...]}` döndürüyor (S21'de değişti) → fiyat hep `₺49`/`₺0` fallback. Admin `plans` tablosunu canlı okuyor → ikisi farklı. **Fix (karar: tam dinamik):** landing'i `/upgrade` gibi `d.plans`'ten her aktif plan için dinamik kart üretecek şekilde yeniden yaz; küratör maddeler yerine isim+fiyat+mesaj/alıcı limiti. | (06-16) ikotest | S28 | Açık |
-| B11 | P2 | **Yeni paket landing/upgrade'de geç/hiç görünmüyor.** Landing sabit olduğu için yeni plan hiç düşmez (B10 ile çözülür). `/upgrade` dinamik ama `/public/pricing` `Cache-Control: max-age=300` → yeni plan 5 dk'ya kadar gecikir. **Fix:** `public.ts` `/pricing` cache'ini kısalt/kaldır (örn. `max-age=30` veya `no-store`). Plan kaydı doğru (`is_active=1` default+form+API). | (06-16) ikotest | S28 | Açık |
 
 ## Kapalı buglar
 
@@ -26,6 +22,10 @@
 | B8 | P2 | Admin "Teslimatları Şimdi Çalıştır" buton/UI tasarım dışı. | Buton Sistemi v2 (`btn btn-primary btn-md`) + sonuç/mesaj yerleşimi; davranış değişmedi. | S27 |
 | B9 + B2 | P2 | Plan formu: alan label'ları yok + `0` default `099` gösteriyor. | Her sayısal input'a label (Fiyat ₺ / Mesaj / Alıcı Limiti) + `value 0?''` + `parseInt||0`. | S27 |
 | B3 | P1 | `next build` ESLint'te kırılıyordu (kod tabanı geneli) → prod deploy bloke. | Kural-kural temizlik (`no-html-link-for-pages`→`<Link>`, `no-explicit-any`→tip, `set-state-in-effect`→`queueMicrotask`/async, `no-unescaped-entities`); `next lint` **0 error**. FIX turu: `fetchPlans` regresyonu `useCallback` ile düzeltildi. | S27 |
+| B4 | P1 | Smoke, payment callback 302'siyle `:3000`'e yönlenince web açıksa HTML'i JSON sanıp `JSONDecodeError` ile TÜM smoke'u çökertiyordu. | `req()` başarı yolundaki `json.loads` try/except ile sarıldı; non-JSON → `(status, {})`. `HTTPError`/`URLError` aynen. Doğrulandı: `:3000` açık VE kapalı → 58/58. | S28 |
+| B1 | P2 | `premium.test@vasi.app` seed'inin şifre hash'i sahte (`$` ayraçlı, 260000) → giriş **401**. | `migrations/0019` mevcut DB'ler için `UPDATE` (gerçek PBKDF2, parola `Test1234!`); `0010_seed_dev.sql` taze DB için aynı hash. Doğrulandı: apply → DB güncel, `/auth/login` premium **200**+token, yanlış şifre **401**. | S28 |
+| B11 | P2 | `/public/pricing` `Cache-Control: max-age=300` → admin'in eklediği yeni plan landing/upgrade'de 5 dk'ya kadar gecikiyordu. | `public.ts` cache `max-age=300`→`30`. | S28 |
+| B10 | P1 | Landing fiyat kartları sabit kodlu + yanlış API alanı (`d.pricing`, oysa API `{plans:[...]}` döner) → admin'le tutarsız, fiyat hep fallback. | `page.tsx` `/public/pricing`'ten `plans.map` ile tam dinamik (N plan); isim+fiyat+mesaj/alıcı limiti + CTA. Featured = `{premium,personal}` slug; grid `auto-fit minmax(260px,1fr)` ile N plana ortalanmış responsive; 6 dile `plan_msgs/plan_recips/plan_cta`. Doğrulandı (runtime): 3 plan 3-up + Premium featured, AR rtl, `tsc`/lint 0, smoke 58/58. | S28 |
 | B-h1 | P0 | UI kayıt kırık — `register/page.tsx` camelCase (`firstName`) gönderiyordu, API snake_case bekliyor → 400. | snake_case'e çevrildi. | (06-13) `e2eae52` |
 | B-h2 | P0 | UI e-posta doğrulama kırık — `verify-email` body'de email göndermiyordu. | email `localStorage('verifyEmail')` ile taşınıyor. | (06-13) `e2eae52` |
 
