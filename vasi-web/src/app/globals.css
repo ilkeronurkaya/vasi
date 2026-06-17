@@ -376,6 +376,11 @@ body {
   justify-content: center;
 }
 @media (max-width: 640px) { .pricing-grid--two { grid-template-columns: 1fr; } }
+/* Plan sayısına göre dinamik: auto-fit ile ortalanmış N kart, media query'siz responsive */
+.pricing-grid--dynamic {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  justify-content: center;
+}
 .plan-card {
   background: var(--midnight);
   border: var(--border-subtle);

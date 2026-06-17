@@ -18,6 +18,8 @@ const VasiLogo = () => (
 )
 
 const RTL_LANGS = new Set(['ar'])
+// Landing'de "En Popüler" vurgusu alacak plan slug'ları (admin slug'ı değişse de sağlam)
+const FEATURED_SLUGS = new Set(['premium', 'personal'])
 
 type Lang = Record<string, string>
 
@@ -57,7 +59,7 @@ const LANGS: Record<string, Lang> = {
     step4_title: 'İletildi', step4_desc: 'Mesajın doğru anda güvenle teslim edilir.',
     pricing_tag: 'Fiyatlandırma', pricing_title: 'Sana uygun planı seç',
     pricing_sub: 'Her plan ücretsiz başlar. İstediğin zaman yükselt veya iptal et.',
-    plan_popular: 'En Popüler', plan_per: '/ay',
+    plan_popular: 'En Popüler', plan_per: '/ay', plan_msgs: 'mesaj', plan_recips: 'alıcı', plan_cta: 'Başla',
     plan_free_name: 'Ücretsiz', plan_free_desc: 'Başlamak için ideal.',
     plan_free_f1: '3 mesaj', plan_free_f2: '1 alıcı / mesaj', plan_free_f3: 'E-posta teslimat', plan_free_cta: 'Başla',
     plan_personal_name: 'Premium', plan_personal_desc: 'Kişisel kullanım için tam donanımlı.',
@@ -112,7 +114,7 @@ const LANGS: Record<string, Lang> = {
     step4_title: 'Delivered', step4_desc: 'Your message is delivered safely at the right moment.',
     pricing_tag: 'Pricing', pricing_title: 'Choose the right plan for you',
     pricing_sub: 'Every plan starts free. Upgrade or cancel anytime.',
-    plan_popular: 'Most Popular', plan_per: '/mo',
+    plan_popular: 'Most Popular', plan_per: '/mo', plan_msgs: 'messages', plan_recips: 'recipients', plan_cta: 'Get Started',
     plan_free_name: 'Free', plan_free_desc: 'Ideal to get started.',
     plan_free_f1: '3 messages', plan_free_f2: '1 recipient / message', plan_free_f3: 'Email delivery', plan_free_cta: 'Get Started',
     plan_personal_name: 'Personal', plan_personal_desc: 'Fully equipped for personal use.',
@@ -167,7 +169,7 @@ const LANGS: Record<string, Lang> = {
     step4_title: 'Zugestellt', step4_desc: 'Deine Nachricht wird sicher zum richtigen Moment zugestellt.',
     pricing_tag: 'Preise', pricing_title: 'Wähle den richtigen Plan',
     pricing_sub: 'Jeder Plan beginnt kostenlos. Jederzeit upgraden oder kündigen.',
-    plan_popular: 'Beliebteste', plan_per: '/Monat',
+    plan_popular: 'Beliebteste', plan_per: '/Monat', plan_msgs: 'Nachrichten', plan_recips: 'Empfänger', plan_cta: 'Loslegen',
     plan_free_name: 'Kostenlos', plan_free_desc: 'Ideal für den Einstieg.',
     plan_free_f1: '3 Nachrichten', plan_free_f2: '1 Empfänger / Nachricht', plan_free_f3: 'E-Mail-Zustellung', plan_free_cta: 'Loslegen',
     plan_personal_name: 'Persönlich', plan_personal_desc: 'Vollständig ausgestattet für persönlichen Gebrauch.',
@@ -222,7 +224,7 @@ const LANGS: Record<string, Lang> = {
     step4_title: 'Livré', step4_desc: 'Votre message est livré en toute sécurité au bon moment.',
     pricing_tag: 'Tarifs', pricing_title: 'Choisissez le bon plan',
     pricing_sub: 'Chaque plan commence gratuitement. Mettez à niveau ou annulez à tout moment.',
-    plan_popular: 'Le plus populaire', plan_per: '/mois',
+    plan_popular: 'Le plus populaire', plan_per: '/mois', plan_msgs: 'messages', plan_recips: 'destinataires', plan_cta: 'Commencer',
     plan_free_name: 'Gratuit', plan_free_desc: 'Idéal pour commencer.',
     plan_free_f1: '3 messages', plan_free_f2: '1 destinataire / message', plan_free_f3: 'Livraison par e-mail', plan_free_cta: 'Commencer',
     plan_personal_name: 'Personnel', plan_personal_desc: 'Entièrement équipé pour un usage personnel.',
@@ -277,7 +279,7 @@ const LANGS: Record<string, Lang> = {
     step4_title: 'Entregado', step4_desc: 'Tu mensaje se entrega de forma segura en el momento adecuado.',
     pricing_tag: 'Precios', pricing_title: 'Elige el plan adecuado',
     pricing_sub: 'Cada plan comienza gratis. Mejora o cancela en cualquier momento.',
-    plan_popular: 'Más popular', plan_per: '/mes',
+    plan_popular: 'Más popular', plan_per: '/mes', plan_msgs: 'mensajes', plan_recips: 'destinatarios', plan_cta: 'Comenzar',
     plan_free_name: 'Gratis', plan_free_desc: 'Ideal para empezar.',
     plan_free_f1: '3 mensajes', plan_free_f2: '1 destinatario / mensaje', plan_free_f3: 'Entrega por email', plan_free_cta: 'Comenzar',
     plan_personal_name: 'Personal', plan_personal_desc: 'Completamente equipado para uso personal.',
@@ -332,7 +334,7 @@ const LANGS: Record<string, Lang> = {
     step4_title: 'تم التسليم', step4_desc: 'تُسلَّم رسالتك بأمان في اللحظة المناسبة.',
     pricing_tag: 'الأسعار', pricing_title: 'اختر الخطة المناسبة لك',
     pricing_sub: 'كل خطة تبدأ مجانًا. يمكنك الترقية أو الإلغاء في أي وقت.',
-    plan_popular: 'الأكثر شعبية', plan_per: '/شهر',
+    plan_popular: 'الأكثر شعبية', plan_per: '/شهر', plan_msgs: 'رسائل', plan_recips: 'مستلمون', plan_cta: 'ابدأ',
     plan_free_name: 'مجاني', plan_free_desc: 'مثالي للبدء.',
     plan_free_f1: '٣ رسائل', plan_free_f2: 'مستلم واحد / رسالة', plan_free_f3: 'تسليم بالبريد الإلكتروني', plan_free_cta: 'ابدأ',
     plan_personal_name: 'شخصي', plan_personal_desc: 'مجهز بالكامل للاستخدام الشخصي.',
@@ -385,16 +387,14 @@ export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const langRef = useRef<HTMLDivElement>(null)
 
-  // Admin panelindeki fiyat/limit ayarlarıyla senkron (Sprint 15 Task 7)
-  const [pricing, setPricing] = useState<Record<string, string>>({})
+  // Admin panelindeki planlarla senkron — DB'den dinamik (/public/pricing => {plans:[...]})
+  const [plans, setPlans] = useState<{ slug: string; name: string; price_monthly: number; message_limit: number; recipient_limit: number }[]>([])
   useEffect(() => {
     fetch('/api/v1/public/pricing')
       .then(r => r.json())
-      .then(d => setPricing(d.pricing ?? {}))
+      .then(d => setPlans(d.plans ?? []))
       .catch(() => {})
   }, [])
-  const withLimit = (text: string, limit?: string) =>
-    limit ? text.replace(/^[\d.,]+/, limit) : text
 
   useEffect(() => {
     document.documentElement.dir = RTL_LANGS.has(lang) ? 'rtl' : 'ltr'
@@ -617,41 +617,26 @@ export default function LandingPage() {
             <h2 className="sec-title">{t.pricing_title}</h2>
             <p className="sec-sub">{t.pricing_sub}</p>
           </div>
-          <div className="pricing-grid pricing-grid--two">
-            {/* Free */}
-            <div className="plan-card">
-              <div className="plan-name">{t.plan_free_name}</div>
-              <div className="plan-price">
-                <span className="plan-amount">₺0</span>
-                <span className="plan-per">{t.plan_per}</span>
-              </div>
-              <div className="plan-desc">{t.plan_free_desc}</div>
-              <div className="plan-line" />
-              <div className="plan-feats">
-                {[withLimit(t.plan_free_f1, pricing.plan_limit_free), t.plan_free_f2, t.plan_free_f3].map(f => (
-                  <div key={f} className="plan-feat"><span className="plan-check">✓</span><span>{f}</span></div>
-                ))}
-              </div>
-              <a href="#" className="btn btn-secondary btn-md plan-btn">{t.plan_free_cta}</a>
-            </div>
-
-            {/* Personal — featured */}
-            <div className="plan-card featured">
-              <div className="plan-popular">{t.plan_popular}</div>
-              <div className="plan-name">{t.plan_personal_name}</div>
-              <div className="plan-price">
-                <span className="plan-amount">₺{pricing.price_personal_monthly ?? '49'}</span>
-                <span className="plan-per">{t.plan_per}</span>
-              </div>
-              <div className="plan-desc">{t.plan_personal_desc}</div>
-              <div className="plan-line" />
-              <div className="plan-feats">
-                {[withLimit(t.plan_personal_f1, pricing.plan_limit_personal), t.plan_personal_f2, t.plan_personal_f3, t.plan_personal_f4, t.plan_personal_f5].map(f => (
-                  <div key={f} className="plan-feat"><span className="plan-check">✓</span><span>{f}</span></div>
-                ))}
-              </div>
-              <a href="#" className="btn btn-primary btn-md plan-btn">{t.plan_personal_cta}</a>
-            </div>
+          <div className="pricing-grid pricing-grid--dynamic">
+            {plans.map((p) => {
+              const featured = FEATURED_SLUGS.has(p.slug)
+              return (
+                <div key={p.slug} className={`plan-card${featured ? ' featured' : ''}`}>
+                  {featured && <div className="plan-popular">{t.plan_popular}</div>}
+                  <div className="plan-name">{p.name}</div>
+                  <div className="plan-price">
+                    <span className="plan-amount">₺{p.price_monthly}</span>
+                    <span className="plan-per">{t.plan_per}</span>
+                  </div>
+                  <div className="plan-line" />
+                  <div className="plan-feats">
+                    <div className="plan-feat"><span className="plan-check">✓</span><span>{p.message_limit} {t.plan_msgs}</span></div>
+                    <div className="plan-feat"><span className="plan-check">✓</span><span>{p.recipient_limit} {t.plan_recips}</span></div>
+                  </div>
+                  <Link href="/register" className={`btn btn-md plan-btn ${featured ? 'btn-primary' : 'btn-secondary'}`}>{t.plan_cta}</Link>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
