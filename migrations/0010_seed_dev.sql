@@ -79,7 +79,7 @@ INSERT OR IGNORE INTO users (id, email, password_hash, first_name, last_name, st
 VALUES (
   '550e8400-e29b-41d4-a716-446655440004',
   'premium.test@vasi.app',
-  'pbkdf2:sha256:260000$dev_salt_premium$hashedpassword_premium_user_dev_only',
+  'pbkdf2:sha256:100000:aabbccddeeff0011aabbccddeeff0011:1520fe7f853df2783cb6efd66c356ea3e714071bb2e0b0a5805e011103b0fa33',
   'Premium',
   'Test',
   'active',
