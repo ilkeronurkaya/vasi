@@ -12,7 +12,7 @@ pub.get('/pricing', async (c) => {
     `SELECT slug, name, price_monthly, message_limit, recipient_limit FROM plans WHERE is_active = 1 ORDER BY sort_order ASC`
   ).all()
   
-  c.header('Cache-Control', 'public, max-age=300')
+  c.header('Cache-Control', 'public, max-age=30')
   return c.json({ plans: result.results })
 })
 
