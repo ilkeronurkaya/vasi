@@ -1,9 +1,6 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-
-export const runtime = 'edge'
+import { useEffect, useState } from 'react';
 
 const CONTENT: Record<string, Record<string, string>> = {
   tr: {
@@ -20,7 +17,7 @@ const CONTENT: Record<string, Record<string, string>> = {
     s3_body: 'Yukarıdaki kalemler hizmetin çalışması için zorunlu olduğundan, mevzuat gereği ön onay gerektirmez. Dilersen tarayıcı ayarlarından yerel depolamayı temizleyebilirsin; bu durumda oturumun kapanır ve dil tercihin sıfırlanır.',
     s4_title: 'Haklarınız (KVKK / GDPR)',
     s4_body: 'KVKK m.11 ve GDPR kapsamında; kişisel verilerine erişme, düzeltme, silme ve işlemeye itiraz etme haklarına sahipsin. Talepler için: info@vasiapp.com',
-    back: '← Ana sayfaya dön',
+    close: 'Kapat',
   },
   en: {
     title: 'Cookie Policy',
@@ -36,7 +33,7 @@ const CONTENT: Record<string, Record<string, string>> = {
     s3_body: 'Because the items above are strictly necessary for the service, they do not require prior consent under applicable law. You may clear local storage in your browser settings at any time; this will log you out and reset your language preference.',
     s4_title: 'Your rights (KVKK / GDPR)',
     s4_body: 'Under KVKK Art. 11 and the GDPR, you have the right to access, correct, delete, and object to the processing of your personal data. For requests: info@vasiapp.com',
-    back: '← Back to home',
+    close: 'Close',
   },
   de: {
     title: 'Cookie-Richtlinie',
@@ -52,7 +49,7 @@ const CONTENT: Record<string, Record<string, string>> = {
     s3_body: 'Da die oben genannten Elemente für den Dienst unbedingt erforderlich sind, ist nach geltendem Recht keine vorherige Einwilligung erforderlich. Du kannst den lokalen Speicher jederzeit in deinen Browsereinstellungen löschen; dadurch wirst du abgemeldet und deine Sprachauswahl zurückgesetzt.',
     s4_title: 'Deine Rechte (KVKK / DSGVO)',
     s4_body: 'Gemäß KVKK Art. 11 und der DSGVO hast du das Recht auf Auskunft, Berichtigung, Löschung und Widerspruch gegen die Verarbeitung deiner personenbezogenen Daten. Für Anfragen: info@vasiapp.com',
-    back: '← Zurück zur Startseite',
+    close: 'Schließen',
   },
   fr: {
     title: 'Politique relative aux cookies',
@@ -68,7 +65,7 @@ const CONTENT: Record<string, Record<string, string>> = {
     s3_body: 'Comme les éléments ci-dessus sont strictement nécessaires au service, ils ne requièrent pas de consentement préalable selon la loi applicable. Vous pouvez effacer le stockage local dans les paramètres de votre navigateur à tout moment ; cela vous déconnectera et réinitialisera votre préférence de langue.',
     s4_title: 'Vos droits (KVKK / RGPD)',
     s4_body: 'En vertu de l’art. 11 de la KVKK et du RGPD, vous disposez d’un droit d’accès, de rectification, d’effacement et d’opposition au traitement de vos données personnelles. Pour toute demande : info@vasiapp.com',
-    back: '← Retour à l’accueil',
+    close: 'Fermer',
   },
   es: {
     title: 'Política de cookies',
@@ -84,7 +81,7 @@ const CONTENT: Record<string, Record<string, string>> = {
     s3_body: 'Dado que los elementos anteriores son estrictamente necesarios para el servicio, no requieren consentimiento previo según la ley aplicable. Puedes borrar el almacenamiento local en la configuración de tu navegador en cualquier momento; esto cerrará tu sesión y restablecerá tu preferencia de idioma.',
     s4_title: 'Tus derechos (KVKK / RGPD)',
     s4_body: 'Conforme al art. 11 de la KVKK y al RGPD, tienes derecho a acceder, rectificar, suprimir y oponerte al tratamiento de tus datos personales. Para solicitudes: info@vasiapp.com',
-    back: '← Volver al inicio',
+    close: 'Cerrar',
   },
   ar: {
     title: 'سياسة ملفات تعريف الارتباط',
@@ -100,49 +97,93 @@ const CONTENT: Record<string, Record<string, string>> = {
     s3_body: 'بما أن العناصر المذكورة أعلاه ضرورية تمامًا للخدمة، فهي لا تتطلب موافقة مسبقة بموجب القانون المعمول به. يمكنك مسح التخزين المحلي من إعدادات متصفحك في أي وقت؛ سيؤدي ذلك إلى تسجيل خروجك وإعادة تعيين تفضيل اللغة.',
     s4_title: 'حقوقك (KVKK / GDPR)',
     s4_body: 'بموجب المادة 11 من KVKK واللائحة العامة لحماية البيانات (GDPR)، لديك الحق في الوصول إلى بياناتك الشخصية وتصحيحها وحذفها والاعتراض على معالجاتها. للطلبات: info@vasiapp.com',
-    back: '← العودة إلى الصفحة الرئيسية',
+    close: 'إغلاق',
   },
-}
+};
 
-const RTL = new Set(['ar'])
+const RTL = new Set(['ar']);
 
-export default function CerezPolitikasiPage() {
-  const [lang, setLang] = useState('tr')
+export function CookiePolicyModal() {
+  const [open, setOpen] = useState(false);
+  const [lang, setLang] = useState('tr');
 
   useEffect(() => {
-    try {
-      const l = localStorage.getItem('vasi_lang') || 'tr'
-      queueMicrotask(() => setLang(CONTENT[l] ? l : 'tr'))
-    } catch {}
-  }, [])
+    const readLang = () => {
+      try {
+        const l = localStorage.getItem('vasi_lang') || 'tr';
+        return CONTENT[l] ? l : 'tr';
+      } catch {
+        return 'tr';
+      }
+    };
+    queueMicrotask(() => setLang(readLang()));
+    const openHandler = () => {
+      setLang(readLang());
+      setOpen(true);
+    };
+    window.addEventListener('vasi-open-cookie-policy', openHandler);
+    return () => window.removeEventListener('vasi-open-cookie-policy', openHandler);
+  }, []);
 
-  const t = CONTENT[lang]
+  if (!open) return null;
+
+  const t = CONTENT[lang];
+  const rtl = RTL.has(lang);
+  const close = () => setOpen(false);
 
   return (
-    <div dir={RTL.has(lang) ? 'rtl' : 'ltr'}>
-      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '48px 24px', color: 'var(--cream)', lineHeight: '1.7' }}>
-        <h1 style={{ color: 'var(--cream)' }}>{t.title}</h1>
+    <div
+      onClick={close}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 300,
+        background: 'rgba(0,0,0,.6)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        dir={rtl ? 'rtl' : 'ltr'}
+        style={{
+          background: 'var(--midnight)',
+          border: '1px solid var(--horizon)',
+          borderRadius: '16px',
+          maxWidth: '640px',
+          width: '100%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
+          padding: '32px',
+          color: 'var(--cream)',
+          lineHeight: '1.7',
+          boxShadow: '0 20px 60px rgba(0,0,0,.4)',
+        }}
+      >
+        <h2 style={{ color: 'var(--cream)', marginTop: 0 }}>{t.title}</h2>
         <p style={{ color: 'var(--mist)', fontSize: '13px' }}>{t.updated}</p>
         <p>{t.intro}</p>
 
-        <h2 style={{ marginTop: '28px' }}>{t.s1_title}</h2>
+        <h3 style={{ marginTop: '24px' }}>{t.s1_title}</h3>
         <p>{t.s1_session}</p>
         <p>{t.s1_verify}</p>
         <p>{t.s1_lang}</p>
 
-        <h2 style={{ marginTop: '28px' }}>{t.s2_title}</h2>
+        <h3 style={{ marginTop: '24px' }}>{t.s2_title}</h3>
         <p>{t.s2_body}</p>
 
-        <h2 style={{ marginTop: '28px' }}>{t.s3_title}</h2>
+        <h3 style={{ marginTop: '24px' }}>{t.s3_title}</h3>
         <p>{t.s3_body}</p>
 
-        <h2 style={{ marginTop: '28px' }}>{t.s4_title}</h2>
+        <h3 style={{ marginTop: '24px' }}>{t.s4_title}</h3>
         <p>{t.s4_body}</p>
 
-        <div style={{ marginTop: '32px' }}>
-          <Link href="/" style={{ color: 'var(--copper)' }}>{t.back}</Link>
+        <div style={{ marginTop: '28px', textAlign: rtl ? 'left' : 'right' }}>
+          <button className="btn btn-primary btn-sm" onClick={close}>{t.close}</button>
         </div>
       </div>
     </div>
-  )
+  );
 }

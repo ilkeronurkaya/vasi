@@ -690,7 +690,7 @@ export default function LandingPage() {
                 <a href="#">{t.fl1}</a>
                 <a href="#">{t.fl2}</a>
                 <a href="#">{t.fl3}</a>
-                <Link href="/cerez-politikasi">{t.fl4}</Link>
+                <a href="#" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new Event('vasi-open-cookie-policy')); }}>{t.fl4}</a>
               </div>
             </div>
           </div>

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 const COPY: Record<string, { text: string; link: string; btn: string }> = {
   tr: { text: '🍪 Vasi yalnızca zorunlu çerezleri kullanır (oturum ve dil tercihi). İzleme veya analitik çerez yok.', link: 'Çerez Politikası', btn: 'Anladım' },
@@ -57,9 +56,12 @@ export function CookieConsent() {
     >
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '12px 16px' }}>
         <span style={{ fontSize: '14px' }}>{t.text}</span>
-        <Link href="/cerez-politikasi" style={{ color: 'var(--copper)', fontSize: '14px', textDecoration: 'underline' }}>
+        <button
+          onClick={() => window.dispatchEvent(new Event('vasi-open-cookie-policy'))}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--copper)', fontSize: '14px', textDecoration: 'underline', padding: 0 }}
+        >
           {t.link}
-        </Link>
+        </button>
         <button className="btn btn-primary btn-sm" onClick={accept}>
           {t.btn}
         </button>
