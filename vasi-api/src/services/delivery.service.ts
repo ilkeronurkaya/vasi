@@ -1,5 +1,6 @@
 
 import type { Env } from '../types';
+import { SmsService } from './sms.service';
 import { findDueMessages, setTrigger, markDelivered, markFailed } from '../db/triggers.db';
 import { findById } from '../db/messages.db';
 import { findByMessage } from '../db/recipients.db';
@@ -191,6 +192,17 @@ export class DeliveryService {
       'Vasi doğrulama kodun',
       buildOtpEmail({ recipientName: to.name, otp })
     );
+  }
+
+  /**
+   * Kimlik/işlem OTP'si — telefon varsa SMS (mock-öncelikli), yoksa e-postaya düş.
+   */
+  static async sendAuthOtp(env: Env, user: { first_name?: string; email: string; phone?: string | null }, otp: string) {
+    if (user.phone) {
+      await SmsService.sendOtp(env, user.phone, otp)
+      return
+    }
+    await this.sendOtpEmail(env, { name: user.first_name ?? '', email: user.email }, otp)
   }
 
   static async sendEmail(env: Env, to: { name: string; email: string }, subject: string, html: string) {

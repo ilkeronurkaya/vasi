@@ -56,9 +56,9 @@ me.post('/profile/request-otp', async (c) => {
   await EmailVerificationsDB.create(c.env, userId, otpHash, 'profile')
 
   try {
-    await DeliveryService.sendOtpEmail(c.env, { name: (user.first_name as string) || '', email: user.email as string }, otp)
+    await DeliveryService.sendAuthOtp(c.env, { first_name: (user.first_name as string) || '', email: user.email as string, phone: (user.phone as string | null) ?? null }, otp)
   } catch (error) {
-    console.error('OTP e-postası gönderilemedi:', error)
+    console.error('OTP gönderilemedi:', error)
   }
   console.log(`Profile OTP (${user.email}): ${otp}`)
 

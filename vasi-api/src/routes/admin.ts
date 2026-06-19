@@ -41,9 +41,9 @@ admin.post('/auth/login', async (c) => {
   const otpHash = await hashOTP(otp)
   await EmailVerificationsDB.create(c.env, user.id, otpHash, 'admin_login')
   try {
-    await DeliveryService.sendOtpEmail(c.env, { name: user.first_name as string, email: user.email }, otp)
+    await DeliveryService.sendAuthOtp(c.env, { first_name: user.first_name as string, email: user.email as string, phone: (user.phone as string | null) ?? null }, otp)
   } catch (error) {
-    console.error('OTP e-postası gönderilemedi:', error)
+    console.error('OTP gönderilemedi:', error)
   }
   console.log(`Admin OTP (${user.email}): ${otp}`)
 
