@@ -34,6 +34,12 @@ export async function updateEmailVerified(env: Env, userId: string): Promise<voi
     .run()
 }
 
+export async function updateLanguage(env: Env, userId: string, language: string): Promise<void> {
+  await env.DB.prepare('UPDATE users SET language = ? WHERE id = ?')
+    .bind(language, userId)
+    .run()
+}
+
 export async function updateProfile(env: Env, userId: string, fields: { first_name?: string; last_name?: string; phone?: string }): Promise<void> {
   const parts: string[] = []
   const bindings: any[] = []

@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { VasiLogo } from '@/components/VasiLogo';
 import { apiFetch } from '@/lib/api';
-import { useLang, t } from '@/lib/i18n';
+import { useLang, t, setStoredLang } from '@/lib/i18n';
 
 interface Me {
     user: {
         first_name: string;
         last_name: string;
         email: string;
+        language: string;
     };
     plan: string;
     usage: {
@@ -108,7 +109,10 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         if (!token) router.push('/login');
 
         apiFetch('/api/v1/me')
-            .then(setMe)
+            .then((data) => {
+                setMe(data);
+                if (data?.user?.language) setStoredLang(data.user.language as 'tr' | 'en');
+            })
             .catch(() => {});
     }, [router]);
 

@@ -280,7 +280,11 @@ export default function SettingsPage() {
                 <p style={{ fontSize: '13px', color: 'var(--mist)', marginBottom: '20px' }}>{t('settings_lang_desc', lang)}</p>
                 <select
                     value={lang}
-                    onChange={(e) => setLang(e.target.value as 'tr' | 'en')}
+                    onChange={(e) => {
+                        const next = e.target.value as 'tr' | 'en';
+                        setLang(next);
+                        apiFetch('/api/v1/me/language', { method: 'PATCH', body: JSON.stringify({ language: next }) }).catch(() => {});
+                    }}
                     style={{ ...inputStyle, cursor: 'pointer' }}
                 >
                     <option value="tr">{t('settings_lang_tr', lang)}</option>

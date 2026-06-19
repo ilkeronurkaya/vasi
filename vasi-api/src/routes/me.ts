@@ -1,7 +1,7 @@
 
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
-import { findById, findByEmail, updateProfile, updateEmail, updatePassword } from '../db/users.db'
+import { findById, findByEmail, updateProfile, updateEmail, updatePassword, updateLanguage } from '../db/users.db'
 import * as EmailVerificationsDB from '../db/email-verifications.db'
 import { generateOTP, hashOTP } from '../lib/otp'
 import { verifyPassword, hashPassword, isValidPassword } from '../lib/password'
@@ -34,13 +34,27 @@ me.get('/', async (c) => {
     
     // Return the response
     return c.json({
-      user: { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name, phone: user.phone },
+      user: { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name, phone: user.phone, language: (user.language as string) ?? 'tr' },
       plan: planSlug,
       usage: { messages_used: messages_used, messages_limit: messages_limit }
     })
   } catch (error: any) {
     return c.json({ error: error.message }, 400)
   }
+})
+
+// ── Dil tercihi: kaydet (OTP YOK) ───────────────────────────────────────────
+const SUPPORTED_LANGS = ['tr', 'en', 'de', 'fr', 'es', 'ar']
+
+me.patch('/language', async (c) => {
+  const userId = c.get('userId')
+  const body = await c.req.json().catch(() => ({})) as Record<string, unknown>
+  const language = body.language
+  if (typeof language !== 'string' || !SUPPORTED_LANGS.includes(language)) {
+    return c.json({ error: 'Geçersiz dil', code: 'VALIDATION_ERROR' }, 400)
+  }
+  await updateLanguage(c.env, userId, language)
+  return c.json({ language }, 200)
 })
 
 // ── Profile OTP: İstek (public) ──────────────────────────────────────────────

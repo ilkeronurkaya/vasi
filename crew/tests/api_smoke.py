@@ -172,6 +172,25 @@ def api_tests() -> None:
            status == 200 and changed_name,
            f"status={status} first_name={str(me_after)[:120]}")
 
+    # ── SPRINT 32: Dil tercihi kalıcılığı (B14) ──
+    # PATCH /me/language geçerli dil → 200 (OTP gerektirmez)
+    status, lang_ok = req("PATCH", "/api/v1/me/language", {"language": "en"}, token)
+    record("Me language PATCH gecerli dil 200 (OTP'siz)", "profile", "Backend Ajani",
+           status == 200 and (lang_ok or {}).get("language") == "en",
+           f"status={status} body={str(lang_ok)[:120]}")
+
+    # GET /me language alanını yansıtıyor mu?
+    status, me_lang = req("GET", "/api/v1/me", None, token)
+    record("GET /me language alanini yansitir", "profile", "Backend Ajani",
+           status == 200 and (me_lang or {}).get("user", {}).get("language") == "en",
+           f"status={status} body={str(me_lang)[:120]}")
+
+    # PATCH /me/language geçersiz dil → 400
+    status, lang_bad = req("PATCH", "/api/v1/me/language", {"language": "xx"}, token)
+    record("Me language PATCH gecersiz dil 400", "profile", "Backend Ajani",
+           status == 400 and (lang_bad or {}).get("code") == "VALIDATION_ERROR",
+           f"status={status} body={str(lang_bad)[:120]}")
+
     # Admin login (2 adım: OTP akışı)
     status, auth = req("POST", "/api/v1/admin/auth/login", {"email": TEST_EMAIL, "password": TEST_PASS})
     record("Admin login otpRequired döner", "admin", "Backend Ajani",
