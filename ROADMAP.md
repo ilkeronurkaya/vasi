@@ -48,9 +48,12 @@ Kaynak: ikotest #1
 
 ### S31 — Bug-fix sprinti  ·  **SIRADAKİ**  ·  iko kararı: sadece bug
 Kaynak: 06-19 elle test. Tasarım+promt çıkacak (`SPRINT_31_*.md` + `AGENT_PROMPT_SPRINT_31.md`).
-- **B13 (P1, kod):** çerez politikasını ayrı `/cerez-politikasi` route'tan **popup/modal**'a çevir; route'u kaldır. Saf frontend, yerel ajana uygun.
-- **B12 (P0, çoğu dış):** e-posta yalnız hesap sahibine gidiyor — Resend TEST modu (`onboarding@resend.dev` + doğrulanmış domain yok). **iko:** Resend'de domain doğrula (DNS) → kod tarafı `EMAIL_FROM` env güncellemesi → key rotate. Kod kısmı küçük; asıl iş iko'nun DNS aksiyonu.
-- (B6d gerçek SMS hâlâ NetGSM hesabı bekliyor — bu sprint değil.)
+- **B13 (P1, kod):** çerez politikasını ayrı `/cerez-politikasi` route'tan **popup/modal**'a çevir; iki giriş noktası (çerez banner'ı + landing footer link) modal açsın; route'u sil. Saf frontend, yerel ajana uygun. **S31 = yalnız bu.**
+
+### Proje sonrasına ertelenen dış/paralı işler (iko: domain/SMS proje bitince)
+- **B12 (e-posta domain):** Resend TEST modu — e-posta yalnız hesap sahibine gidiyor. Çözüm domain doğrulama (DNS) gerektirir; **iko'da henüz domain yok** → proje sonrası.
+- **B6d gerçek SMS:** NetGSM hesabı + onaylı gönderici başlığı (İYS) + kredi gerektirir → proje sonrası. Mock-mod dev'de çalışıyor.
+- Resend domain doğrulama + key rotate; gerçek İyzico sandbox; canlıya çıkış (deploy) — hepsi domain/hesap sonrası.
 
 ## Zamanlanmamış backlog
 - Resend domain doğrulama → test modu kısıtını kaldırır → ardından API key rotate.
