@@ -9,7 +9,9 @@
 
 | ID | Şiddet | Açıklama | Bulundu | Hedef sprint | Durum |
 |----|--------|----------|---------|--------------|-------|
-| B6d | P1 | **OTP SMS kanalı (B6'nın ertelenen parçası).** Şifre kuralları sağlanınca OTP'nin e-posta yerine **SMS** ile gelmesi (NetGSM). S27'de a–c (politika + canlı kural + OTP'den önce doğrulama) kapandı; d (SMS) **NetGSM hesabı + mesaj başına maliyet** gerektirdiği için ertelendi. | (06-15) | ileride (NetGSM hazır olunca) | Açık |
+| B12 | P0 | **E-posta teslimatı yalnız hesap sahibine gidiyor.** Admin OTP (hesap sahibi olmayan adresler) + kullanıcı mesaj teslimatı + diğer OTP'ler ulaşmıyor. Kök neden: `EMAIL_FROM=Vasi <onboarding@resend.dev>` (Resend paylaşımlı TEST göndericisi) + doğrulanmış domain yok → Resend yalnız hesap sahibine (`ilkeronurkaya@gmail.com`) yollar. Kanıt (06-19): hesap sahibine diagnostik gönderim `200`+id döndü; key/kod ÇALIŞIYOR. Çözüm: Resend'de domain doğrula (DNS kayıtları) + `EMAIL_FROM`'u o domaine çevir + sonra key rotate. **iko dış aksiyonu (DNS) gerektirir;** kod tarafı küçük (EMAIL_FROM). | (06-19) | bug-fix sprinti (S31) | Açık |
+| B13 | P1 | **Çerez politikası ayrı sayfa, popup olmalı.** Girişten sonra çerez politikası açılıp "Ana Sayfaya Dön" linkine basınca landing'e gidiyor → kullanıcı uygulamadan çıkıyor. İstenen: `/cerez-politikasi` ayrı route DEĞİL, **popup/modal** olsun. Çözüm: `CookieConsent`'teki politika linki modal açsın; `/cerez-politikasi` route'u kaldır (veya modal'a yönlendir). Saf frontend. | (06-19) | bug-fix sprinti (S31) | Açık |
+| B6d | P1 | **OTP SMS kanalı (B6'nın ertelenen parçası).** Şifre kuralları sağlanınca OTP'nin e-posta yerine **SMS** ile gelmesi (NetGSM). S27'de a–c kapandı. **S30'da mock-modda yapıldı** (`sprint-30-sms-otp`: admin login + profil/şifre OTP'si telefon varsa SMS-mock, yoksa e-posta; `SmsService`, `SMS_MODE` anahtarı). Geriye yalnız **gerçek gönderim** kaldı: NetGSM hesabı + kredi → `SMS_MODE=live`. | (06-15) | gerçek SMS: ileride (NetGSM) | Açık (mock tamam) |
 
 ## Kapalı buglar
 

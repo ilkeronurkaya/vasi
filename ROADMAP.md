@@ -5,11 +5,10 @@
 > **İlke (proje kuralı):** stabil + en az maliyet → iç/ucuz işler önce, dış hesap + tekrarlayan maliyet gerektirenler (SMS, OAuth) sona.
 > Akış: iko + Claude sprint'i tasarlar (kapsam + kabul kriteri) → ayrı `SPRINT_NN_*.md` + `AGENT_PROMPT_SPRINT_NN.md` çıkar → yerel ajan (Qwen3.6-35B-A3B) kod yazar → iko+Claude bağımsız doğrular → iko commit/push.
 
-## Durum (2026-06-16)
-- **S1–S26 KAPALI.** S23–S26 push'lu/main'de. Smoke 58/58.
-- Uygulayıcı: **yerel Qwen3.6-35B-A3B** (LM Studio + OpenHands); S23–S26 başarıyla koşuldu. Kurulum: `LOCAL_AGENT_SETUP.md`. **Context taşması dersi:** hacimli sprintler bug-bug/dosya-dosya promtlanır (S26 PERFILE + S27).
-- **S26** (i18n turu 2) tamam + bağımsız doğrulandı: 8 sayfa Chrome'dan TR↔EN canlı kontrol, tsc temiz, smoke 58/58. main'e FF (`124587d`). Tasarım: `SPRINT_26_I18N2.md`.
-- **SIRADAKİ: S27** — güvenlik + OTP & UX + lint (B5 P0, B6 a–c, B7, B8, B9, B2, B3). Tasarım: `SPRINT_27_SECURITY.md`; promt: `AGENT_PROMPT_SPRINT_27.md` (bug-bug, B3 ayrı turlar). Sıra: B5→B6→B7→B8→B9/B2→B3.
+## Durum (2026-06-19)
+- **S1–S28 + çerez onayı KAPALI ve main'de** (`41e3fef`). Smoke 58/58. Uygulayıcı: yerel Qwen3.6-35B-A3B (LM Studio + OpenHands), klonda; Claude şef (git+push+doğrulama).
+- **S30 SMS-OTP (B6d mock)** `sprint-30-sms-otp` dalında push'lu, tsc 0 + smoke 58/58 → **iko merge onayı bekliyor.**
+- **SIRADAKİ: S31 — bug-fix sprinti** (aşağıda). iko kararı: bir sonraki sprint yalnız bug düzeltme.
 
 ## Planlanan sprintler
 
@@ -46,6 +45,12 @@ Kaynak: ikotest #2, B6d, ikotest #7 (cookie S27'den kaydı).
 Kaynak: ikotest #1
 - Login + kayıta **Google + Apple**. Admin hariç (admin email+şifre+OTP, S24).
 - Gerektirir: Google Cloud + Apple Developer hesabı, redirect URI, edge-uyumlu OAuth. En riskli/pahalı → **en sona**. Önce Google, sonra Apple (gerekirse iki sprite böl).
+
+### S31 — Bug-fix sprinti  ·  **SIRADAKİ**  ·  iko kararı: sadece bug
+Kaynak: 06-19 elle test. Tasarım+promt çıkacak (`SPRINT_31_*.md` + `AGENT_PROMPT_SPRINT_31.md`).
+- **B13 (P1, kod):** çerez politikasını ayrı `/cerez-politikasi` route'tan **popup/modal**'a çevir; route'u kaldır. Saf frontend, yerel ajana uygun.
+- **B12 (P0, çoğu dış):** e-posta yalnız hesap sahibine gidiyor — Resend TEST modu (`onboarding@resend.dev` + doğrulanmış domain yok). **iko:** Resend'de domain doğrula (DNS) → kod tarafı `EMAIL_FROM` env güncellemesi → key rotate. Kod kısmı küçük; asıl iş iko'nun DNS aksiyonu.
+- (B6d gerçek SMS hâlâ NetGSM hesabı bekliyor — bu sprint değil.)
 
 ## Zamanlanmamış backlog
 - Resend domain doğrulama → test modu kısıtını kaldırır → ardından API key rotate.
