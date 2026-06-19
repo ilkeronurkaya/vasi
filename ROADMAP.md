@@ -6,9 +6,9 @@
 > Akış: iko + Claude sprint'i tasarlar (kapsam + kabul kriteri) → ayrı `SPRINT_NN_*.md` + `AGENT_PROMPT_SPRINT_NN.md` çıkar → yerel ajan (Qwen3.6-35B-A3B) kod yazar → iko+Claude bağımsız doğrular → iko commit/push.
 
 ## Durum (2026-06-19)
-- **S1–S28 + çerez onayı KAPALI ve main'de** (`41e3fef`). Smoke 58/58. Uygulayıcı: yerel Qwen3.6-35B-A3B (LM Studio + OpenHands), klonda; Claude şef (git+push+doğrulama).
-- **S30 SMS-OTP (B6d mock)** `sprint-30-sms-otp` dalında push'lu, tsc 0 + smoke 58/58 → **iko merge onayı bekliyor.**
-- **SIRADAKİ: S31 — bug-fix sprinti** (aşağıda). iko kararı: bir sonraki sprint yalnız bug düzeltme.
+- **S1–S31 KAPALI ve main'de** (`b6eeb16`). Smoke 58/58. Uygulayıcı: yerel Qwen3.6-35B-A3B (LM Studio + OpenHands), klonda; Claude şef (git+push+doğrulama).
+- **S30** SMS-OTP (B6d mock) merge edildi. **S31** B13 çerez popup merge edildi + iko doğruladı.
+- Açık bug: **B14** (dil tercihi sıfırlanıyor) → **SIRADAKİ S32** (kapsam netleşince). Ertelenen dış işler: B12 e-posta domain, B6d gerçek SMS (aşağıda).
 
 ## Planlanan sprintler
 
@@ -46,9 +46,11 @@ Kaynak: ikotest #1
 - Login + kayıta **Google + Apple**. Admin hariç (admin email+şifre+OTP, S24).
 - Gerektirir: Google Cloud + Apple Developer hesabı, redirect URI, edge-uyumlu OAuth. En riskli/pahalı → **en sona**. Önce Google, sonra Apple (gerekirse iki sprite böl).
 
-### S31 — Bug-fix sprinti  ·  **SIRADAKİ**  ·  iko kararı: sadece bug
-Kaynak: 06-19 elle test. Tasarım+promt çıkacak (`SPRINT_31_*.md` + `AGENT_PROMPT_SPRINT_31.md`).
-- **B13 (P1, kod):** çerez politikasını ayrı `/cerez-politikasi` route'tan **popup/modal**'a çevir; iki giriş noktası (çerez banner'ı + landing footer link) modal açsın; route'u sil. Saf frontend, yerel ajana uygun. **S31 = yalnız bu.**
+### S31 — Çerez popup (B13)  ·  ✅ KAPANDI (2026-06-19, `b6eeb16`)
+B13: çerez politikası ayrı `/cerez-politikasi` route'tan `CookiePolicyModal` popup'a çevrildi (event-driven; banner + landing footer modal açar); route silindi. tsc/lint 0; iko doğruladı. Tasarım: `SPRINT_31_COOKIE_MODAL.md`.
+
+### S32 — Dil tercihi tutarlılığı (B14)  ·  **SIRADAKİ** (kapsam netleşince)
+B14: dil tercihi sıfırlanıyor — landing 6 dil yazıyor `vasi_lang`'a, dashboard i18n yalnız tr/en (`getLang` `en` değilse `tr`); sunucu tarafı per-user dil yok. iko isteği: dil **kalıcı saklansın + yalnız dashboard ayarlarından değişsin**. **Kapsam kararı bekliyor** (sunucu tarafı per-user dil mi yoksa client-only tutarlılık mı; landing seçici kalsın/kalkacak mı; dashboard 6 dile mi çıksın). iko + Claude netleştirip tasarlayacak.
 
 ### Proje sonrasına ertelenen dış/paralı işler (iko: domain/SMS proje bitince)
 - **B12 (e-posta domain):** Resend TEST modu — e-posta yalnız hesap sahibine gidiyor. Çözüm domain doğrulama (DNS) gerektirir; **iko'da henüz domain yok** → proje sonrası.
