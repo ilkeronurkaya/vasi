@@ -5,7 +5,7 @@ export const runtime = 'edge'
 import { apiFetch } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
-import { useLang, t } from '@/lib/i18n'
+import { useLang, t, type Lang } from '@/lib/i18n'
 
 interface MeData {
     user: {
@@ -281,7 +281,7 @@ export default function SettingsPage() {
                 <select
                     value={lang}
                     onChange={(e) => {
-                        const next = e.target.value as 'tr' | 'en';
+                        const next = e.target.value as Lang;
                         setLang(next);
                         apiFetch('/api/v1/me/language', { method: 'PATCH', body: JSON.stringify({ language: next }) }).catch(() => {});
                     }}
@@ -289,6 +289,10 @@ export default function SettingsPage() {
                 >
                     <option value="tr">{t('settings_lang_tr', lang)}</option>
                     <option value="en">{t('settings_lang_en', lang)}</option>
+                    <option value="de">{t('settings_lang_de', lang)}</option>
+                    <option value="fr">{t('settings_lang_fr', lang)}</option>
+                    <option value="es">{t('settings_lang_es', lang)}</option>
+                    <option value="ar">{t('settings_lang_ar', lang)}</option>
                 </select>
             </div>
 

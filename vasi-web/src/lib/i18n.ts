@@ -2,11 +2,13 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 
-export type Lang = 'tr' | 'en';
+export type Lang = 'tr' | 'en' | 'de' | 'fr' | 'es' | 'ar';
+export const SUPPORTED_LANGS: Lang[] = ['tr', 'en', 'de', 'fr', 'es', 'ar'];
+export const RTL_LANGS = new Set<Lang>(['ar']);
 export const LANG_STORAGE_KEY = 'vasi_lang';
 const LANG_CHANGE_EVENT = 'vasi-lang-change';
 
-export const DICT: Record<Lang, Record<string, string>> = {
+export const DICT: Partial<Record<Lang, Record<string, string>>> = {
     tr: {
         // login
         login_title: 'Giriş Yap',
@@ -55,6 +57,10 @@ export const DICT: Record<Lang, Record<string, string>> = {
         settings_lang_desc: 'Arayüz dilini seçin. Değişiklik anında uygulanır.',
         settings_lang_tr: 'Türkçe',
         settings_lang_en: 'İngilizce',
+        settings_lang_de: 'Almanca',
+        settings_lang_fr: 'Fransızca',
+        settings_lang_es: 'İspanyolca',
+        settings_lang_ar: 'Arapça',
         // status labels
         status_draft: 'Taslak',
         status_scheduled: 'Zamanlanmış',
@@ -189,6 +195,10 @@ export const DICT: Record<Lang, Record<string, string>> = {
         settings_lang_desc: 'Choose the interface language. Changes apply instantly.',
         settings_lang_tr: 'Turkish',
         settings_lang_en: 'English',
+        settings_lang_de: 'German',
+        settings_lang_fr: 'French',
+        settings_lang_es: 'Spanish',
+        settings_lang_ar: 'Arabic',
         // status labels
         status_draft: 'Draft',
         status_scheduled: 'Scheduled',
@@ -284,8 +294,8 @@ export const DICT: Record<Lang, Record<string, string>> = {
 
 export function getLang(): Lang {
     if (typeof window === 'undefined') return 'tr';
-    const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
-    return saved === 'en' ? 'en' : 'tr';
+    const saved = window.localStorage.getItem(LANG_STORAGE_KEY) as Lang | null;
+    return saved && SUPPORTED_LANGS.includes(saved) ? saved : 'tr';
 }
 
 export function setStoredLang(lang: Lang): void {
@@ -295,7 +305,7 @@ export function setStoredLang(lang: Lang): void {
 }
 
 export function t(key: string, lang: Lang): string {
-    return DICT[lang][key] ?? DICT.tr[key] ?? key;
+    return DICT[lang]?.[key] ?? DICT.tr?.[key] ?? key;
 }
 
 function subscribeLang(callback: () => void): () => void {

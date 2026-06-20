@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { VasiLogo } from '@/components/VasiLogo';
 import { apiFetch } from '@/lib/api';
-import { useLang, t, setStoredLang } from '@/lib/i18n';
+import { useLang, t, setStoredLang, RTL_LANGS, type Lang } from '@/lib/i18n';
 
 interface Me {
     user: {
@@ -111,10 +111,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         apiFetch('/api/v1/me')
             .then((data) => {
                 setMe(data);
-                if (data?.user?.language) setStoredLang(data.user.language as 'tr' | 'en');
+                if (data?.user?.language) setStoredLang(data.user.language as Lang);
             })
             .catch(() => {});
     }, [router]);
+
+    useEffect(() => {
+        document.documentElement.dir = RTL_LANGS.has(lang) ? 'rtl' : 'ltr';
+    }, [lang]);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--obsidian)' }}>
