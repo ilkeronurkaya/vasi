@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLang } from '@/lib/i18n';
 
 const COPY: Record<string, { text: string; link: string; btn: string }> = {
   tr: { text: '🍪 Vasi yalnızca zorunlu çerezleri kullanır (oturum ve dil tercihi). İzleme veya analitik çerez yok.', link: 'Çerez Politikası', btn: 'Anladım' },
@@ -15,14 +16,12 @@ const RTL = new Set(['ar']);
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
-  const [lang, setLang] = useState('tr');
+  const [lang] = useLang();
 
   useEffect(() => {
     try {
       const ack = localStorage.getItem('vasi_cookie_notice');
-      const l = localStorage.getItem('vasi_lang') || 'tr';
       queueMicrotask(() => {
-        setLang(COPY[l] ? l : 'tr');
         if (!ack) setVisible(true);
       });
     } catch {}

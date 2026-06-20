@@ -669,27 +669,27 @@ export default function LandingPage() {
             <div>
               <div className="col-title">{t.col_product}</div>
               <div className="col-links">
-                <a href="#">{t.fp1}</a>
-                <a href="#">{t.fp2}</a>
-                <a href="#">{t.fp3}</a>
-                <a href="#">{t.fp4}</a>
+                <Link href="/ozellikler">{t.fp1}</Link>
+                <Link href="/#pricing">{t.fp2}</Link>
+                <Link href="/guvenlik">{t.fp3}</Link>
+                <Link href="/yol-haritasi">{t.fp4}</Link>
               </div>
             </div>
             <div>
               <div className="col-title">{t.col_company}</div>
               <div className="col-links">
-                <a href="#">{t.fc1}</a>
-                <a href="#">{t.fc2}</a>
-                <a href="#">{t.fc3}</a>
-                <a href="#">{t.fc4}</a>
+                <Link href="/hakkimizda">{t.fc1}</Link>
+                <Link href="/blog">{t.fc2}</Link>
+                <Link href="/kariyer">{t.fc3}</Link>
+                <Link href="/iletisim">{t.fc4}</Link>
               </div>
             </div>
             <div>
               <div className="col-title">{t.col_legal}</div>
               <div className="col-links">
-                <a href="#">{t.fl1}</a>
-                <a href="#">{t.fl2}</a>
-                <a href="#">{t.fl3}</a>
+                <Link href="/gizlilik">{t.fl1}</Link>
+                <Link href="/kosullar">{t.fl2}</Link>
+                <Link href="/kvkk">{t.fl3}</Link>
                 <a href="#" onClick={(e) => { e.preventDefault(); window.dispatchEvent(new Event('vasi-open-cookie-policy')); }}>{t.fl4}</a>
               </div>
             </div>
