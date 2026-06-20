@@ -5,10 +5,10 @@
 > **İlke (proje kuralı):** stabil + en az maliyet → iç/ucuz işler önce, dış hesap + tekrarlayan maliyet gerektirenler (SMS, OAuth) sona.
 > Akış: iko + Claude sprint'i tasarlar (kapsam + kabul kriteri) → ayrı `SPRINT_NN_*.md` + `AGENT_PROMPT_SPRINT_NN.md` çıkar → yerel ajan (Qwen3.6-35B-A3B) kod yazar → iko+Claude bağımsız doğrular → iko commit/push.
 
-## Durum (2026-06-19)
-- **S1–S31 KAPALI ve main'de** (`b6eeb16`). Smoke 58/58. Uygulayıcı: yerel Qwen3.6-35B-A3B (LM Studio + OpenHands), klonda; Claude şef (git+push+doğrulama).
-- **S30** SMS-OTP (B6d mock) merge edildi. **S31** B13 çerez popup merge edildi + iko doğruladı.
-- Açık bug: **B14** (dil tercihi sıfırlanıyor) → **SIRADAKİ S32** (kapsam netleşince). Ertelenen dış işler: B12 e-posta domain, B6d gerçek SMS (aşağıda).
+## Durum (2026-06-20)
+- **S1–S32 (Faz 1) KAPALI ve main'de** (`4dbcdae`). Smoke 61/61. Uygulayıcı: yerel Qwen3.6-35B-A3B (LM Studio + OpenHands), klonda; Claude şef (git+push+doğrulama).
+- **S30** SMS-OTP (B6d mock), **S31** B13 çerez popup, **S32 Faz 1** B14 dil kalıcılık — hepsi merge.
+- Açık bug yok. **SIRADAKİ:** S32 Faz 2 (6 dil i18n altyapısı) + Faz 3 (DE/FR/ES/AR çeviri) — iko isterse. Ertelenen dış işler: B12 e-posta domain, B6d gerçek SMS (proje sonrası).
 
 ## Planlanan sprintler
 
@@ -49,8 +49,11 @@ Kaynak: ikotest #1
 ### S31 — Çerez popup (B13)  ·  ✅ KAPANDI (2026-06-19, `b6eeb16`)
 B13: çerez politikası ayrı `/cerez-politikasi` route'tan `CookiePolicyModal` popup'a çevrildi (event-driven; banner + landing footer modal açar); route silindi. tsc/lint 0; iko doğruladı. Tasarım: `SPRINT_31_COOKIE_MODAL.md`.
 
-### S32 — Dil tercihi tutarlılığı (B14)  ·  **SIRADAKİ** (kapsam netleşince)
-B14: dil tercihi sıfırlanıyor — landing 6 dil yazıyor `vasi_lang`'a, dashboard i18n yalnız tr/en (`getLang` `en` değilse `tr`); sunucu tarafı per-user dil yok. iko isteği: dil **kalıcı saklansın + yalnız dashboard ayarlarından değişsin**. **Kapsam kararı bekliyor** (sunucu tarafı per-user dil mi yoksa client-only tutarlılık mı; landing seçici kalsın/kalkacak mı; dashboard 6 dile mi çıksın). iko + Claude netleştirip tasarlayacak.
+### S32 — Dil tercihi (B14) + 6 dil  ·  Faz 1 ✅ KAPANDI (2026-06-20, `4dbcdae`)
+iko kararı: sunucu tarafı per-user dil + tüm uygulama 6 dile.
+- **Faz 1 ✅** (B14 fix): migration `0020` `users.language`; `PATCH /me/language` (OTP'siz); `/me` `language` döner; dashboard login'de DB dilini uygular + settings DB'ye yazar (landing artık ezmez). smoke 61/61. Tasarım: `SPRINT_32_LANG_PERSIST.md`.
+- **Faz 2 (bekliyor):** `lib/i18n.ts` Lang→6 (`tr|en|de|fr|es|ar`) + AR RTL (dashboard `document.dir`) + dashboard dil seçici 6 dil.
+- **Faz 3 (bekliyor):** DE/FR/ES/AR tam `DICT` çevirisi (~140 anahtar × 4) — **Claude yazar** (yerel model çeviri driftliyor); ajan/Claude transkripsiyon.
 
 ### Proje sonrasına ertelenen dış/paralı işler (iko: domain/SMS proje bitince)
 - **B12 (e-posta domain):** Resend TEST modu — e-posta yalnız hesap sahibine gidiyor. Çözüm domain doğrulama (DNS) gerektirir; **iko'da henüz domain yok** → proje sonrası.
