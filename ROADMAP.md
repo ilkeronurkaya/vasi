@@ -6,9 +6,9 @@
 > Akış: iko + Claude sprint'i tasarlar (kapsam + kabul kriteri) → ayrı `SPRINT_NN_*.md` + `AGENT_PROMPT_SPRINT_NN.md` çıkar → yerel ajan (Qwen3.6-35B-A3B) kod yazar → iko+Claude bağımsız doğrular → iko commit/push.
 
 ## Durum (2026-06-20)
-- **S1–S32 (Faz 1) KAPALI ve main'de** (`4dbcdae`). Smoke 61/61. Uygulayıcı: yerel Qwen3.6-35B-A3B (LM Studio + OpenHands), klonda; Claude şef (git+push+doğrulama).
-- **S30** SMS-OTP (B6d mock), **S31** B13 çerez popup, **S32 Faz 1** B14 dil kalıcılık — hepsi merge.
-- Açık bug yok. **SIRADAKİ:** S32 Faz 2 (6 dil i18n altyapısı) + Faz 3 (DE/FR/ES/AR çeviri) — iko isterse. Ertelenen dış işler: B12 e-posta domain, B6d gerçek SMS (proje sonrası).
+- **S1–S32 KAPALI ve main'de** (`24d6823`). Smoke 61/61. Uygulayıcı: yerel Qwen3.6-35B-A3B (LM Studio + OpenHands), klonda; Claude şef (git+push+doğrulama).
+- **S30** SMS-OTP (B6d mock), **S31** B13 çerez popup, **S32** B14 dil + 6 dil (3 faz) — hepsi merge.
+- Açık buglar: **B15** (çerez bar dil reaktif değil), **B16** (landing eksik sayfalar) → **SIRADAKİ S33**. Ertelenen dış işler: B12 e-posta domain, B6d gerçek SMS (proje sonrası).
 
 ## Planlanan sprintler
 
@@ -49,11 +49,19 @@ Kaynak: ikotest #1
 ### S31 — Çerez popup (B13)  ·  ✅ KAPANDI (2026-06-19, `b6eeb16`)
 B13: çerez politikası ayrı `/cerez-politikasi` route'tan `CookiePolicyModal` popup'a çevrildi (event-driven; banner + landing footer modal açar); route silindi. tsc/lint 0; iko doğruladı. Tasarım: `SPRINT_31_COOKIE_MODAL.md`.
 
-### S32 — Dil tercihi (B14) + 6 dil  ·  Faz 1 ✅ KAPANDI (2026-06-20, `4dbcdae`)
-iko kararı: sunucu tarafı per-user dil + tüm uygulama 6 dile.
-- **Faz 1 ✅** (B14 fix): migration `0020` `users.language`; `PATCH /me/language` (OTP'siz); `/me` `language` döner; dashboard login'de DB dilini uygular + settings DB'ye yazar (landing artık ezmez). smoke 61/61. Tasarım: `SPRINT_32_LANG_PERSIST.md`.
-- **Faz 2 (bekliyor):** `lib/i18n.ts` Lang→6 (`tr|en|de|fr|es|ar`) + AR RTL (dashboard `document.dir`) + dashboard dil seçici 6 dil.
-- **Faz 3 (bekliyor):** DE/FR/ES/AR tam `DICT` çevirisi (~140 anahtar × 4) — **Claude yazar** (yerel model çeviri driftliyor); ajan/Claude transkripsiyon.
+### S32 — Dil tercihi (B14) + 6 dil  ·  ✅ KAPANDI (2026-06-20, `24d6823`)
+iko kararı: sunucu tarafı per-user dil + tüm uygulama 6 dile. Üç faz da tamam, main'de.
+- **Faz 1 ✅** (`4dbcdae`): migration `0020` `users.language`; `PATCH /me/language` (OTP'siz); `/me` `language` döner; dashboard login'de DB dilini uygular + settings DB'ye yazar.
+- **Faz 2 ✅** (`4ac71a7`): `lib/i18n.ts` Lang→6 + `SUPPORTED_LANGS`/`RTL_LANGS` + dashboard AR RTL effect + seçici 6 dil + `t()` TR fallback.
+- **Faz 3 ✅** (`24d6823`): DE/FR/ES/AR tam `DICT` (Claude yazdı, 127 anahtar tam parity). smoke 61/61.
+
+### S33 — Eksik landing sayfaları (B16) + çerez bar dil fix (B15)  ·  **SIRADAKİ**
+iko kararı: landing footer'daki TÜM eksik linklere sayfa; hukuki olanlar gerçek route. Plan: `SPRINT_33_PAGES.md`.
+- **B15 (P2, küçük):** çerez bar'ı `useLang` ile reaktif yap (dil değişince çevrilsin).
+- **Hukuki (gerçek sayfa, Claude taslak + iko hukuk onayı):** `/gizlilik` (Gizlilik Politikası), `/kosullar` (Kullanım Şartları), `/kvkk` (KVKK/GDPR) — 6 dil, çerez politikası şablonu gibi.
+- **Ürün:** Özellikler/Güvenlik/Yol Haritası sayfaları (Claude taslak); Fiyatlandırma → mevcut bölüm/`/upgrade`.
+- **Şirket:** Hakkımızda/İletişim (Claude taslak) + Blog/Kariyer (**iko gerçek içerik** ya da "yakında" sayfası).
+- Not: About/Blog/Kariyer/İletişim/Yol Haritası gerçek içerik iko'da → içerik kaynağı netleşince. Hepsi 6 dil + edge runtime.
 
 ### Proje sonrasına ertelenen dış/paralı işler (iko: domain/SMS proje bitince)
 - **B12 (e-posta domain):** Resend TEST modu — e-posta yalnız hesap sahibine gidiyor. Çözüm domain doğrulama (DNS) gerektirir; **iko'da henüz domain yok** → proje sonrası.
